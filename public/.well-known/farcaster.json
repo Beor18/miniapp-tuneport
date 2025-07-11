@@ -3,9 +3,9 @@
     "version": "1",
     "name": "Tuneport",
     "iconUrl": "https://pbs.twimg.com/profile_images/1942391632520695808/2XvLiCf2_400x400.png",
-    "homeUrl": "https://testnet.tuneport.xyz",
-    "imageUrl": "https://testnet.tuneport.xyz/preview.png",
-    "buttonTitle": "Ingresar",
+    "homeUrl": "https://miniapp.tuneport.xyz",
+    "imageUrl": "https://miniapp.tuneport.xyz/preview.png",
+    "buttonTitle": "Join us!",
     "splashImageUrl": "https://pbs.twimg.com/profile_images/1942391632520695808/2XvLiCf2_400x400.png",
     "splashBackgroundColor": "#18181b"
   }
