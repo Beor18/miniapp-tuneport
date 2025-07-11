@@ -285,7 +285,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
               ? "pb-36 md:pb-28" // Player activo: ~144px móvil (player compacto + nav + margen), ~112px desktop (player completo + margen)
               : layoutFlags.showNavigation && layoutFlags.showFooter
               ? "pb-20 md:pb-8" // Solo navegación móvil: 80px móvil, 32px desktop
-              : "pb-4 md:pb-6" // Sin player ni navegación: 16px móvil, 24px desktop
+              : "pb-0 md:pb-0" // Sin player ni navegación: 16px móvil, 24px desktop
           }
           overflow-y-auto
           scrollbar-thin scrollbar-track-zinc-900 scrollbar-thumb-zinc-800 
