@@ -10,17 +10,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@Src/ui/components/ui/dropdown-menu";
-import { Coins, LogOut, Copy } from "lucide-react";
+import { Coins, LogOut, Copy, User } from "lucide-react";
 import { base, baseSepolia } from "viem/chains";
 import { useState, useEffect } from "react";
 import { usePlayer } from "@Src/contexts/PlayerContext";
+import Link from "next/link";
 
 interface CustomUserPillProps {
   handleLogout: () => void;
   profile?: any;
+  locale?: string;
+  userNickname?: string;
 }
 
-export function CustomUserPill({ handleLogout, profile }: CustomUserPillProps) {
+export function CustomUserPill({
+  handleLogout,
+  profile,
+  locale = "en",
+  userNickname,
+}: CustomUserPillProps) {
   const { ready, authenticated, user } = usePrivy();
   const { wallets } = useWallets();
   const { fundWallet } = useFundWallet();
@@ -157,6 +165,23 @@ export function CustomUserPill({ handleLogout, profile }: CustomUserPillProps) {
             }`}
           />
         </DropdownMenuItem>
+        <Link
+          href={userNickname ? `/${locale}/u/${userNickname}` : `/${locale}/u`}
+        >
+          <DropdownMenuItem
+            className="
+        group flex items-center gap-2 cursor-pointer
+        text-neutral-300
+        hover:!text-neutral-100
+        hover:bg-neutral-800/80
+        focus:bg-neutral-800/80
+        transition
+      "
+          >
+            <User className="w-4 h-4 mr-2 text-neutral-300 group-hover:!text-neutral-100 transition" />
+            Profile
+          </DropdownMenuItem>
+        </Link>
         <DropdownMenuItem
           className="
       group flex items-center gap-2 cursor-pointer

@@ -1,99 +1,113 @@
-## TUNEPORT - The new era of streaming in Web3
+# Tuneport Mini App - Farcaster Edition
 
-> Web3 platform where artists sell music, experiences, and podcasts as NFTs directly to their fans, turning each creation into a collectible and emotional experience, where every TUNE sets sail from the PORT powered by its community.
+Una **miniapp simplificada** para Farcaster que se enfoca en las funcionalidades esenciales de música NFT.
 
-![Hackathon Colosseum](https://img.shields.io/badge/Hackathon-Colosseum_2025-blue)
-![Category](https://img.shields.io/badge/Category-Consumer_Apps-green)
-![Base](https://img.shields.io/badge/Blockchain-Base-blue)
+## ✨ Funcionalidades
 
-## Milestones:
+### 🔑 **Autenticación**
 
-- 🥇 1st place in the Base Batches Latam Hackathon under the Consumer Apps category
-- 🚀 1st cohort – Founder School by Crecimiento
-- 🌱 1st cohort – Startup Club by Crecimiento
-- 🏗️ 1st cohort – IncuBase
+- Login con **Google, Twitter, Farcaster** y wallets
+- Integración completa con **Privy**
+- Soporte **multi-chain** (EVM + Solana)
 
-## Problem
+### 👤 **Perfil**
 
-- Limited remixes in Web3
-- Unfair revenue distribution
-- Poorly interactive streaming experience
-- Subpar user experience
+- Perfiles de usuario en `/u/[nickname]`
+- Colecciones NFT personales
+- Playlists guardadas
+- Estadísticas de usuario
 
-## Solution
+### 🎵 **For You - Vista TikTok**
 
-TUNEPORT is a decentralized music platform that puts the artist at the center, enabling a direct-to-fan economy based on music, experiences, and knowledge.
+- Feed de canciones aleatorias tipo TikTok
+- **Controles de reproducción**: play, pause, siguiente, anterior
+- **Acciones disponibles**:
+  - ❤️ **Like** - Sistema de likes globales
+  - 🎁 **Mint** - Reclamar NFTs de música
+  - 📝 **Add to Playlist** - Agregar a cola/playlist
+  - 🔇 **Silenciar** - Control de volumen
+  - 💰 **Trade Coins** - Trading de tokens de artistas
 
-### Built on 4 key principles:
+## 🏗️ Arquitectura Técnica
 
-- **Utility**: Features that solve real problems
-- **Scalability**: Architecture designed to grow
-- **Accessibility**: For both Web2 and Web3 users
-- **Passion for music**: Developed by and for music lovers
+### **Frontend**
 
-### Main features:
+- **Next.js 14** App Router con internacionalización
+- **TypeScript** + **Tailwind CSS**
+- **Farcaster Mini App SDK** integrado
+- **React Server Components** optimizado
 
-- Listen to music anywhere, anytime without hassle
-- Artists have control over revenue and content
-- Interact by creating remixes and tokenizing fragments
-- AI agents for music assistance
+### **Blockchain**
 
-## Value Proposition
+- **Solana** - NFTs con Candy Machine
+- **Base/Ethereum** - ERC1155 NFTs
+- **Zora Protocol** - Coin trading
+- **Privy** - Multi-chain wallet management
 
-- Comprehensive connection between artists, fans, and record labels
-- Elimination of technical barriers for Web2 and Web3 users
-- Fair and diversified monetization
-- Empowerment of the artist
+### **Características**
 
-## Key Innovation
+- **Reproductor** flotante con controles completos
+- **Sistema de likes** con estado global
+- **Trading interface** para tokens de música
+- **Mint modal** con selección de cantidad
+- **Responsive design** mobile-first
 
-**From NFTs as static products → to NFTs as the result of interaction**
+## 🚀 Desarrollo
 
-Tuneport turns every second into a collectible experience. Fans select, curate, or remix fragments directly from the stream, generating emotional and traceable value — not through speculation, but through connection.
+```bash
+# Instalar dependencias
+npm install
 
-## Zora Coins (FEATURE - Coinathon 2025)
+# Desarrollo local
+npm run dev
 
-[Live Demo](https://www.youtube.com/watch?v=-VJIG-bNzEo&ab_channel=FernandoGabrielLopez)
+# Build para producción
+npm run build
+```
 
-[Repo branch test](https://github.com/Beor18/tuneport-hackathon/tree/test)
+## 🔧 Configuración
 
-[Files Zora Coins](https://github.com/Beor18/tuneport-hackathon/tree/test/src/lib/hooks/base)
+### Farcaster Mini App
 
-## Privy + Metaplex Integration (FEATURE - Hackathon colosseum)
+- Manifest configurado en `public/.well-known/farcaster.json`
+- Meta tags para embed correcto
+- SDK de Farcaster integrado en providers
 
-We have successfully integrated **Privy** for identity and wallet management with **Metaplex** for NFT creation and management, allowing:
+### Variables de entorno requeridas
 
-- Seamless user experience with social login
-- Frictionless NFT creation and management
-- Optimized transaction signing
-- Unified wallet system for Solana users
+```env
+API_ELEI=https://api.tuneport.xyz
+NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
+```
 
-The integration enables users to interact with the blockchain without requiring prior technical knowledge, democratizing access to music in Web3.
+## 📱 Rutas Disponibles
 
-## Base Integration (FEATURE - Hackathon Base Bath LatAm)
+- `/` - Página principal con navegación
+- `/foryou` - Feed principal tipo TikTok
+- `/u/[nickname]` - Perfiles de usuario
+- `/album/[slug]` - Páginas de álbumes individuales
 
-We've expanded our blockchain support by integrating with **Base**, a secure, low-cost, EVM-compatible Layer 2 blockchain, offering:
+## ⚠️ Removido en versión simplificada
 
-- Gasless NFT minting through Privy's Smart Accounts
-- Paymaster integration for sponsored transactions
-- Seamless user experience without requiring ETH for gas
-- Transparent transaction tracking with direct block explorer links
+Para enfocar la experiencia, se removieron:
 
-The Base integration demonstrates our commitment to multi-chain support, allowing artists and fans to choose the most suitable blockchain for their needs while maintaining a consistent, user-friendly experience.
+- ❌ Página de exploración (`/explore`)
+- ❌ Página de tienda (`/store`)
+- ❌ Página de Base (`/base`)
+- ❌ Página de trading (`/trading`)
+- ❌ Navegación compleja
 
-Our implementation features:
+## 🎯 Enfoque de la miniapp
 
-- Smart wallet detection and management
-- Automatic transaction sponsoring
-- Real-time transaction status updates
-- Simplified NFT minting process
+Esta versión está **optimizada para Farcaster** con:
 
-## Team
-
-- Fernando Lopez (Founder and Fullstack Developer)
-- Kelvin Garcia (Founder and Marketing)
-- William Covarrubias Ramos (Founder and Senior Frontend Developer)
+1. **Onboarding rápido** - Login en un click
+2. **Experiencia simplificada** - Solo lo esencial
+3. **TikTok-style discovery** - Swipe, like, mint
+4. **Mobile-first** - Diseño para móviles
+5. **Web3 integrado** - NFTs y tokens sin fricción
 
 ---
 
-**[Live Demo](https://app.tuneport.xyz/) | [GitHub Repository](https://github.com/Beor18/tuneport-hackathon)**
+**Estado**: ✅ Funcional en testnet  
+**Próximo paso**: Migrar a producción y firmar manifest de Farcaster

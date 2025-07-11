@@ -87,20 +87,9 @@ const getNavItems = (
   tNav: any,
   locale: string
 ) => {
-  const baseItems = [
-    { href: `/${locale}`, icon: Home, label: tNav("home") },
-    {
-      href: `/${locale}/explore`,
-      icon: Search,
-      label: tNav("explore"),
-    },
-    // { href: `/${locale}/store`, icon: Store, label: tNav("store") },
-    { href: `/${locale}/base`, icon: BaseIcon, label: "BaseLatam" },
-  ];
-
+  // Si hay wallet conectado, mostrar For You y Profile
   if (publicKey?.toString()) {
     return [
-      ...baseItems,
       {
         href: `/${locale}/foryou`,
         icon: Music2Icon,
@@ -114,7 +103,8 @@ const getNavItems = (
     ];
   }
 
-  return baseItems;
+  // Si no hay wallet conectado, no mostrar navegación
+  return [];
 };
 
 export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
@@ -197,6 +187,8 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
       showPlayerMobile: pathname.startsWith("/u") || pathname.startsWith("/"),
       // Nuevo flag para detectar cuando el player está activo
       hasActivePlayer: isConnected && pathname !== "/foryou",
+      // Mostrar navegación solo en páginas de perfil
+      showNavigation: pathname.startsWith("/u"),
     }),
     [pathname, isConnected]
   );
@@ -243,39 +235,46 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <nav
-          className={`hidden flex-shrink-0 border-r border-zinc-800 bg-zinc-900 md:block transition-all duration-300 ${
-            isCollapsed ? "w-16" : "w-48"
-          }`}
-        >
-          <div className="flex h-full flex-col">
-            {/* Toggle Button */}
-            <div className="flex justify-center p-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="h-8 w-8 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full border border-zinc-800"
-              >
-                {isCollapsed ? (
-                  <ChevronRight className="h-4 w-4" />
-                ) : (
-                  <ChevronLeft className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
+        {/* Navegación de escritorio - solo mostrar en páginas de perfil */}
+        {layoutFlags.showNavigation && (
+          <nav
+            className={`hidden flex-shrink-0 border-r border-zinc-800 bg-zinc-900 md:block transition-all duration-300 ${
+              isCollapsed ? "w-16" : "w-48"
+            }`}
+          >
+            <div className="flex h-full flex-col">
+              {/* Toggle Button */}
+              <div className="flex justify-center p-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className="h-8 w-8 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full border border-zinc-800"
+                >
+                  {isCollapsed ? (
+                    <ChevronRight className="h-4 w-4" />
+                  ) : (
+                    <ChevronLeft className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
 
-            <div
-              className={`flex flex-1 flex-col gap-1 ${
-                isCollapsed ? "p-2" : "p-6"
-              }`}
-            >
-              {navItems.map((item) => (
-                <NavLink key={item.href} {...item} isCollapsed={isCollapsed} />
-              ))}
+              <div
+                className={`flex flex-1 flex-col gap-1 ${
+                  isCollapsed ? "p-2" : "p-6"
+                }`}
+              >
+                {navItems.map((item) => (
+                  <NavLink
+                    key={item.href}
+                    {...item}
+                    isCollapsed={isCollapsed}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        </nav>
+          </nav>
+        )}
 
         <main
           className={`
@@ -284,9 +283,9 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
           ${
             layoutFlags.hasActivePlayer
               ? "pb-36 md:pb-28" // Player activo: ~144px móvil (player compacto + nav + margen), ~112px desktop (player completo + margen)
-              : layoutFlags.showFooter
+              : layoutFlags.showNavigation && layoutFlags.showFooter
               ? "pb-20 md:pb-8" // Solo navegación móvil: 80px móvil, 32px desktop
-              : "pb-4 md:pb-6" // Sin player ni footer especial: 16px móvil, 24px desktop
+              : "pb-4 md:pb-6" // Sin player ni navegación: 16px móvil, 24px desktop
           }
           overflow-y-auto
           scrollbar-thin scrollbar-track-zinc-900 scrollbar-thumb-zinc-800 
@@ -297,14 +296,16 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
         </main>
       </div>
 
-      {/* Barra de navegación inferior para móviles */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-zinc-900/95 backdrop-blur border-t border-zinc-800 md:hidden">
-        <div className="flex items-center justify-around px-1 py-3 h-16">
-          {navItems.slice(0, 5).map((item) => (
-            <MobileNavLink key={item.href} {...item} />
-          ))}
-        </div>
-      </nav>
+      {/* Barra de navegación inferior para móviles - solo mostrar en páginas de perfil */}
+      {layoutFlags.showNavigation && (
+        <nav className="fixed bottom-0 left-0 right-0 z-30 bg-zinc-900/95 backdrop-blur border-t border-zinc-800 md:hidden">
+          <div className="flex items-center justify-around px-1 py-3 h-16">
+            {navItems.slice(0, 5).map((item) => (
+              <MobileNavLink key={item.href} {...item} />
+            ))}
+          </div>
+        </nav>
+      )}
 
       {/* FloatingPlayer solo si hay usuario autenticado */}
       {isConnected && (

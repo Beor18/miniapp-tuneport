@@ -23,6 +23,7 @@ import { checkUser, getUserData } from "@Src/app/actions/checkUser.actions";
 // import { useWallet } from "@solana/wallet-adapter-react";
 import { usePrivy } from "@privy-io/react-auth";
 import { CustomUserPill } from "../customUserPill";
+import { useLocale } from "next-intl";
 
 // Cache global para evitar re-verificaciones innecesarias
 const userDataCache = new Map<string, any>();
@@ -45,6 +46,7 @@ export default function WalletConnector() {
   );
 
   const { isReady, isAuthenticated } = useStableAuth();
+  const locale = useLocale();
   const verificationRef = useRef<boolean>(false);
   const addressKeyRef = useRef<string>("");
 
@@ -259,7 +261,12 @@ export default function WalletConnector() {
 
   return (
     <div className="flex items-center gap-3">
-      <CustomUserPill handleLogout={handleLogout} profile={userData} />
+      <CustomUserPill
+        handleLogout={handleLogout}
+        profile={userData}
+        locale={locale}
+        userNickname={userData?.nickname || null}
+      />
     </div>
   );
 }
