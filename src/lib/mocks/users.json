@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Juan Pérez",
+    "email": "juan.perez@example.com",
+    "address": "0x222220002222333345",
+    "address_solana": "7ydfsdf88453453492dfsdfwe8ew8r",
+    "key_solana": "SolanaKey1234567890",
+    "phase": "registro",
+    "key": "UserKey123456",
+    "nickname": "juanperez",
+    "biography": "Music Lover",
+    "twitter": "@juanperez",
+    "private_account": false,
+    "picture": "https://example.com/images/juanperez.jpg",
+    "verified": false,
+    "type": "fan"
+  },
+  {
+    "name": "Fernando López",
+    "email": "flopez@tuneport.xyz",
+    "address": "0xbF2E37A9805bf0f33C5F82f8d3f3D3931b189bAC",
+    "address_solana": "So1anAArtIstAddreSs0987654321",
+    "key_solana": "SolanaArtistKey0987654321",
+    "phase": "activo",
+    "key": "ArtistKey098765",
+    "nickname": "flopez",
+    "biography": "Founder Tuneport",
+    "twitter": "@beor22",
+    "private_account": false,
+    "picture": "https://avatars.githubusercontent.com/u/15000248?v=4",
+    "verified": true,
+    "type": "artist"
+  },
+  {
+    "name": "Estampa del Litoral",
+    "email": "info@estampadellitoral.com",
+    "address": "7ydfsdf88453453492dfsdfwe8ew8r",
+    "address_solana": "So1anAArtIstAddreSs0987654321",
+    "key_solana": "SolanaArtistKey0987654321",
+    "phase": "activo",
+    "key": "ArtistKey098765",
+    "nickname": "estampa-del-litoral",
+    "biography": "Artist",
+    "twitter": "@EstampaDelLitoral",
+    "private_account": false,
+    "picture": "/aires-de-taragui.webp",
+    "verified": true,
+    "type": "artist"
+  }
+]

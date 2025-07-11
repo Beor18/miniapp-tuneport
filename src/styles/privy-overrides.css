@@ -1,0 +1,43 @@
+/* Estilos para sobreescribir WalletConnect y eliminar la marca de Reown */
+
+/* Ocultar el footer de WalletConnect */
+.walletconnect-modal__footer,
+div[class*="walletconnect-modal__footer"],
+div[class*="-modal-footer"],
+div[data-id="walletconnect-footer"],
+div[data-testid="walletconnect-footer"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Estilos para divs que contengan texto de "UX by reown" */
+div:has(> span:contains("UX by")),
+div:has(> span:contains("reown")) {
+  display: none !important;
+}
+
+/* Personalización del modal WalletConnect */
+.walletconnect-modal__base {
+  max-width: 500px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+  border-radius: 16px !important;
+}
+
+/* Eliminar el logo de Reown del QR */
+.walletconnect-qrcode__image svg path[fill="#3B99FC"] {
+  fill: #6701e6 !important; /* Cambia el color del logo de WalletConnect al color de TunePort */
+}
+
+/* Limpiar espacio donde estaba el footer */
+.walletconnect-modal__mobile__toggle {
+  margin-bottom: 0 !important;
+}
+
+/* Agregar un margen inferior al QR para compensar por el footer eliminado */
+.walletconnect-qrcode__base {
+  padding-bottom: 20px !important;
+}

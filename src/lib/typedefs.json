@@ -1,0 +1,16 @@
+{
+  "ArtistsArtistType": {
+    "_enum": [
+      "Singer",
+      "Instrumentalist",
+      "Composer",
+      "Lyricist",
+      "Producer",
+      "DiscJokey",
+      "Conductor",
+      "Arranger",
+      "Engineer",
+      "Director"
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "El Santo de los Humildes",
+  "description": "This is the first collection Estampa del Litoral.",
+  "image": "gauchito-gil.webp",
+  "video": "el-santo-de-los-humildes.mpd",
+  "external_url": "https://www.tuneport.xyz",
+  "attributes": [
+    {
+      "trait_type": "Nationality",
+      "value": "Corrientes, Argentine"
+    },
+    {
+      "trait_type": "Band",
+      "value": "Estampa del Litoral"
+    },
+    {
+      "trait_type": "Style",
+      "value": "Chamame"
+    },
+    {
+      "trait_type": "Phrase",
+      "value": "Gauchito Gil"
+    }
+  ]
+}

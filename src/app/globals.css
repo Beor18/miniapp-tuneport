@@ -1,0 +1,420 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 10% 3.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply bg-[#18181b];
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-[#18181b] text-white;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Prevenir parpadeo blanco durante navegación */
+  html,
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.wallet-adapter-button-trigger {
+  background: none;
+  border-radius: 8px !important;
+  background-image: linear-gradient(180deg, #000000 94%, #111111);
+  padding: 10px !important;
+  height: 36px !important;
+  border: 1px solid #161616;
+  font-size: 0.875rem !important;
+}
+.wallet-adapter-dropdown-list,
+.wallet-adapter-button {
+  font-family: inherit !important;
+}
+
+.gradient-border-dark {
+  -o-border-image: linear-gradient(180deg, #062802 94%, #000000);
+  border-color: linear-gradient(180deg, #062802 94%, #000000);
+  border-image-slice: 1;
+}
+
+/* Estilos para el reproductor y transiciones de ruta */
+.transitioning {
+  opacity: 0.7;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.player-container {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.player-container.transitioning {
+  opacity: 0.6;
+  transform: translateY(5px);
+}
+
+.player-tiktok-mode {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.player-tiktok-mode:hover {
+  opacity: 1;
+}
+
+.player-disabled {
+  pointer-events: none;
+}
+
+.player-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.player-slider:disabled {
+  opacity: 0.5;
+}
+
+/* Animación para el cambio de ruta */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.route-transition {
+  animation: fadeInUp 0.3s ease forwards;
+}
+
+@layer utilities {
+  /* Animaciones personalizadas */
+  .animate-fadeIn {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  .animate-slideUp {
+    animation: slideUp 0.6s ease-out;
+  }
+
+  /* Definición de keyframes */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(15px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+/* Personalización de Privy para eliminar la marca de Reown */
+body {
+  /* Colores personalizados para Privy */
+  --privy-color-accent: #6701e6;
+  --privy-color-accent-light: #8c45e9;
+  --privy-color-accent-lightest: #b282f0;
+  --privy-color-accent-dark: #5200b3;
+  --privy-color-accent-darkest: #3e0086;
+
+  /* Estilos para ocultar el footer con "UX by reown" */
+  --privy-modal-footer-display: none !important;
+}
+
+/* Ocultar específicamente el footer de Privy */
+[data-privy-dialog] [role="dialog"] [data-privy-footer] {
+  display: none !important;
+}
+
+/* Personalizar el modal de WalletConnect para eliminar cualquier referencia a Reown */
+[data-walletconnect-modal] footer,
+[data-walletconnect-modal] [role="dialog"] footer {
+  display: none !important;
+}
+
+/* Ocultar cualquier elemento con clase que contenga "reown" o "walletconnect-footer" */
+[class*="reown"],
+[class*="walletconnect-footer"] {
+  display: none !important;
+}
+
+/* Estilos para carruseles sin barras de scroll */
+.scrollbar-hide {
+  /* Firefox */
+  scrollbar-width: none;
+  /* Safari y Chrome */
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mejoras adicionales para carruseles móviles */
+.carousel-container {
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+}
+
+.carousel-item {
+  scroll-snap-align: start;
+}
+
+/* Ocultar barras de scroll en todos los navegadores */
+.overflow-x-auto::-webkit-scrollbar {
+  height: 0px;
+  width: 0px;
+  background: transparent;
+}
+
+.overflow-x-auto {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Advanced Next.js optimizations for zero-flash transitions */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent any loading state flashes */
+.component-loading,
+.component-verifying {
+  display: none !important;
+}
+
+/* Smooth component appearances */
+.auth-component {
+  opacity: 0;
+  animation: fadeInSmooth 0.3s ease-out forwards;
+}
+
+@keyframes fadeInSmooth {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Language selector optimizations */
+
+/* WalletConnector Mobile Fix */
+@media (max-width: 640px) {
+  .wallet-connector-mobile {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 100 !important;
+    min-width: 70px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .wallet-connector-mobile * {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
+.language-selector-transition {
+  transition: all 0.2s ease-out;
+}
+
+/* Eliminate hydration flash */
+.hydration-safe {
+  visibility: hidden;
+}
+
+.hydration-safe.mounted {
+  visibility: visible;
+}
+
+/* Estilos específicos para transiciones de idioma */
+.language-transitioning {
+  /* Prevenir parpadeos durante cambio de idioma */
+  background-color: #18181b !important;
+  transition: background-color 0.1s ease;
+}
+
+.language-transitioning * {
+  /* Mantener elementos estables durante la transición */
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* Prevenir re-renders del player durante cambios de idioma */
+.language-transitioning [data-player-container] {
+  /* Mantener el player completamente estable */
+  position: fixed !important;
+  pointer-events: auto !important;
+  z-index: 9999 !important;
+}
+
+/* Optimizaciones para componentes memoizados */
+.component-stable {
+  /* Para componentes que no deben re-renderizarse durante transiciones */
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Estilos para componentes de autenticación estables */
+.auth-stable {
+  /* Mantener componentes de autenticación estables durante transiciones */
+  contain: layout style paint;
+}
+
+/* Transiciones suaves para navegación */
+.nav-transitioning {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Prevenir flash de contenido */
+.page-content {
+  opacity: 0;
+  animation: fadeInContent 0.3s ease-out forwards;
+}
+
+@keyframes fadeInContent {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Optimización para elementos de audio */
+audio {
+  /* Mantener elementos de audio estables */
+  contain: layout style;
+  will-change: currentTime, volume;
+}
+
+/* Prevenir reflows durante transiciones */
+.layout-stable {
+  contain: layout;
+  will-change: auto;
+}
+
+/* Estilos para memoización de componentes */
+.memo-component {
+  /* Optimizar componentes memoizados */
+  contain: style paint;
+}
+
+/* Transiciones específicas para el selector de idioma */
+.language-selector {
+  transition: all 0.15s ease;
+  will-change: background-color, border-color;
+}
+
+.language-selector:hover {
+  transition-duration: 0.1s;
+}
+
+/* Estabilización del header durante transiciones */
+.header-stable {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(12px);
+  background-color: rgba(39, 39, 42, 0.95);
+  transition: background-color 0.1s ease;
+}
+
+/* Mantener sidebar estable */
+.sidebar-stable {
+  will-change: width;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
