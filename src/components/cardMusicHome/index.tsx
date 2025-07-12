@@ -13,6 +13,10 @@ import {
   PlusIcon,
   MinusIcon,
   GiftIcon,
+  SkipBackIcon,
+  SkipForwardIcon,
+  Music,
+  Coins,
 } from "lucide-react";
 import PlayerHome from "../playerHome";
 import Link from "next/link";
@@ -24,6 +28,13 @@ import { toast } from "sonner";
 import { useAppKitAccount } from "@Src/lib/privy";
 import { motion } from "framer-motion";
 import { MintModal } from "@Src/components/MintModal";
+import { TradingInterface } from "@Src/components/TradingInterface";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@Src/ui/components/ui/dialog";
 
 export default function CardMusicHome({ nftData, collectionData }: any) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -31,6 +42,7 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isMintModalOpen, setIsMintModalOpen] = useState(false);
   const [selectedSongForMint, setSelectedSongForMint] = useState<any>(null);
+  const [isTradingModalOpen, setIsTradingModalOpen] = useState(false);
 
   // Hooks para minting
   const { mint, isMinting } = useCandyMachineMint();
@@ -71,9 +83,11 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
     setIsMuted,
     setShowFloatingPlayer,
     handleNextSong,
+    handlePrevSong,
     setNftData,
     isInPlaylist,
     handleTogglePlaylist,
+    handlePlayPause,
   } = useAudioControls();
 
   // Preparamos los datos una sola vez sin useEffect
@@ -92,6 +106,7 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
         mint_price: collection?.mint_price || 0,
         mint_currency: collection?.mint_currency || "",
         start_mint_date: collection?.start_mint_date || null,
+        coin_address: collection?.coin_address || "",
       };
     });
   }, [nftData, collectionData]);
@@ -127,8 +142,6 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
 
   // Referencia para controlar si es la primera renderización
   const isFirstRender = useRef(true);
-  // Nueva referencia para evitar operaciones duplicadas
-  const operationInProgressRef = useRef(false);
 
   // Efecto para ocultar el FloatingPlayer mientras estamos en esta página
   useEffect(() => {
@@ -239,54 +252,30 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
     setIsPlaying,
   ]);
 
-  // Función simple para reproducir/pausar
-  const handlePlayToggle = (song: any) => {
-    if (song._id === activePlayerId) {
-      setIsPlaying(!isPlaying);
-    } else {
-      setCurrentSong(song);
-      setActivePlayerId(song._id);
+  // Función simplificada para el botón play/pause
+  const togglePlay = () => {
+    if (!scrolling && currentSong) {
+      // Usar handlePlayPause del hook directamente
+      handlePlayPause();
+    } else if (!currentSong && enrichedNftData.length > 0) {
+      // Si no hay canción actual, seleccionar la primera
+      const firstSong = enrichedNftData[0];
+      setCurrentSong(firstSong);
+      setActivePlayerId(firstSong._id);
       setIsPlaying(true);
     }
   };
 
-  // Función para manejar el click del botón claim (abre el modal o mint directo)
-  const handleClaimClick = async (e: React.MouseEvent, song: any) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    // Verificar si hay alguna wallet conectada antes de continuar
-    if (!hasWalletConnected) {
-      toast.error("Wallet not connected", {
-        description: "You need to connect your wallet before minting an NFT",
-        duration: 4000,
-      });
-      return;
-    }
-
-    // Encontrar la colección correspondiente al NFT
-    const collection = collectionData.find(
-      (col: any) => col._id === song.collectionId
-    );
-
-    if (!collection) {
-      toast.error("Collection not found");
-      return;
-    }
-
-    // Para Solana, mint directo como antes
-    if (collection?.network === "solana") {
-      await processMint(song, 1);
-    } else if (collection?.network === "base") {
-      // Para Base, abrir modal para seleccionar cantidad
-      setSelectedSongForMint(song);
-      setIsMintModalOpen(true);
-    } else {
-      toast.error(`Unsupported network: ${collection?.network}`);
-    }
+  // Funciones para navegación de tracks
+  const handlePrevTrack = () => {
+    handlePrevSong();
   };
 
-  // Función para procesar el mint con la cantidad seleccionada
+  const handleNextTrack = () => {
+    handleNextSong();
+  };
+
+  // Función para manejar el procesamiento de minting
   const processMint = async (song: any, amount: number) => {
     try {
       // Mostrar toast de loading
@@ -318,30 +307,23 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
         let priceInWei = BigInt(0);
         if (song?.price && song.price > 0) {
           // Convertir el precio decimal a wei
-          // Si el precio es 0.000001, esto debe ser 1000000000000 wei
           const priceStr = song.price.toString();
           const priceNumber = parseFloat(priceStr);
           priceInWei = BigInt(Math.floor(priceNumber * 1e18));
         }
 
-        console.log("Original price:", song?.price);
-        console.log("Price in wei:", priceInWei.toString());
-        console.log("Price in ETH:", Number(priceInWei) / 1e18);
-        console.log("Amount to mint:", amount);
-
         // Mint NFT en Base usando ERC1155 con cantidad seleccionada
         const mintSuccess = await baseOperations.mintNFT({
           collectionAddress: collection?.address_collection || "",
           to: evmWalletAddress || address || "",
-          tokenId: song?.id_item || 0, // Usar el tokenId del NFT
-          amount: amount, // Cantidad seleccionada por el usuario
-          tokenMetadata: song?.metadata_uri || "", // Los metadatos se establecen al crear el NFT por primera vez
-          pricePerToken: Number(priceInWei), // Precio por token en wei como número
+          tokenId: song?.id_item || 0,
+          amount: amount,
+          tokenMetadata: song?.metadata_uri || "",
+          pricePerToken: Number(priceInWei),
         });
 
         if (mintSuccess) {
           result = `${collection?.address_collection}:${song?.id_item}`;
-          toast.success("Claimed successfully");
         } else {
           throw new Error("Error claiming NFT");
         }
@@ -411,7 +393,6 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
 
       // Cerrar modal si estaba abierto
       setIsMintModalOpen(false);
-      setSelectedSongForMint(null);
     } catch (error) {
       // Cerrar el toast de loading en caso de error también
       toast.dismiss();
@@ -425,6 +406,42 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
     }
   };
 
+  // Función para manejar el click del botón claim (abre el modal o mint directo)
+  const handleClaimClick = async (e: React.MouseEvent, song: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Verificar si hay alguna wallet conectada antes de continuar
+    if (!hasWalletConnected) {
+      toast.error("Wallet not connected", {
+        description: "You need to connect your wallet before minting an NFT",
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Encontrar la colección correspondiente al NFT
+    const collection = collectionData.find(
+      (col: any) => col._id === song.collectionId
+    );
+
+    if (!collection) {
+      toast.error("Collection not found");
+      return;
+    }
+
+    // Para Solana, mint directo como antes
+    if (collection?.network === "solana") {
+      await processMint(song, 1);
+    } else if (collection?.network === "base") {
+      // Para Base, abrir modal para seleccionar cantidad
+      setSelectedSongForMint(song);
+      setIsMintModalOpen(true);
+    } else {
+      toast.error(`Unsupported network: ${collection?.network}`);
+    }
+  };
+
   // Confirmar mint desde el modal
   const handleConfirmMint = (amount: number) => {
     if (selectedSongForMint) {
@@ -433,7 +450,7 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
   };
 
   return (
-    <div className="h-full sm:h-[870px] md:w-[540px] md:h-[960px] lg:w-[540px] lg:h-[960px] overflow-hidden font-sans mx-auto">
+    <div className="h-full w-full sm:h-[870px] sm:w-full md:w-[540px] md:h-[960px] lg:w-[540px] lg:h-[960px] overflow-hidden font-sans mx-auto">
       <div
         ref={containerRef}
         className="h-full snap-y snap-mandatory overflow-y-scroll scrollbar-hide"
@@ -455,29 +472,42 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
               key={song._id}
               className="snap-start h-full w-full flex items-center justify-center"
             >
-              <Card className="w-full h-full bg-black overflow-hidden border-none relative">
+              <Card className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 overflow-hidden border-none relative">
+                {/* Imagen de fondo */}
                 <div className="absolute inset-0">
                   <img
                     src={song.image}
                     alt={`${song.name} cover`}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black opacity-70" />
-                </div>
-
-                <div className="absolute pt-4 left-0 w-full text-center z-20">
-                  <Link href={`/album/${collection?.slug}`}>
-                    <div className="flex flex-row items-center justify-center gap-2 p-2 bg-gradient-to-r from-transparent via-black/50 to-transparent w-full">
-                      <span className="text-md text-white/80">Del álbum</span>
-                      <span className="text-md text-white font-semibold hover:underline">
-                        {collection?.name}
-                      </span>
-                    </div>
-                  </Link>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60" />
                 </div>
 
                 {/* Layout principal con flexbox */}
                 <div className="relative h-full flex flex-col">
+                  {/* Header mejorado */}
+                  <div className="flex-shrink-0 p-4 pb-2 z-20">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+                          <Music className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex flex-col">
+                          <Link href={`/album/${collection?.slug}`}>
+                            <span className="text-white font-bold text-sm tracking-wide truncate max-w-[200px] hover:underline">
+                              {collection?.name}
+                            </span>
+                          </Link>
+                          <Link href={`/u/${collection?.artist_name}`}>
+                            <span className="text-gray-300 font-light text-xs truncate max-w-[200px] hover:underline">
+                              {collection?.artist_name}
+                            </span>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Contenido central con botones laterales */}
                   <div className="flex-grow min-h-0 flex items-center md:items-end justify-end pr-4 z-20 sm:flex-1">
                     {/* Botones de acción laterales */}
@@ -534,6 +564,22 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
                           size="lg"
                           showCount={false}
                         />
+                      </motion.div>
+
+                      {/* Trading Button */}
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Button
+                          variant="default"
+                          size="icon"
+                          onClick={() => setIsTradingModalOpen(true)}
+                          title="Trade Tokens"
+                          className="bg-gradient-to-r from-yellow-500/80 to-orange-500/80 backdrop-blur-sm hover:from-yellow-400/90 hover:to-orange-400/90 text-white rounded-full border border-yellow-400/30 relative h-12 w-12"
+                        >
+                          <Coins className="h-5 w-5" />
+                        </Button>
                       </motion.div>
 
                       <motion.div
@@ -606,28 +652,69 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
                   <div className="flex-shrink-0 relative z-20 min-h-[200px] sm:min-h-[320px] flex flex-col justify-center items-center">
                     <div className="flex flex-col items-center space-y-2 sm:space-y-4 p-4 sm:p-6 pt-2">
                       {/* Título de la canción */}
-                      <h1 className="text-3xl font-bold text-white text-center">
-                        {song.name}
-                      </h1>
-                      <Link href={`/u/${collection?.artist_name}`}>
-                        <p className="text-xl text-white/80">
-                          {collection?.artist_name}
-                        </p>
-                      </Link>
-
-                      {/* Botón de reproducción principal */}
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handlePlayToggle(song)}
-                        className="bg-white text-black rounded-full h-16 w-16 hover:scale-105 hover:bg-white/90 transition-all duration-300 shadow-lg hover:shadow-white/20 group"
+                      <motion.h1
+                        className="text-xl sm:text-2xl md:text-3xl font-bold text-white text-center leading-tight max-w-[280px] truncate"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
                       >
-                        {isPlaying && activePlayerId === song._id ? (
-                          <PauseIcon className="h-8 w-8 group-hover:scale-110 transition-transform" />
-                        ) : (
-                          <PlayIcon className="h-8 w-8 group-hover:scale-110 transition-transform" />
-                        )}
-                      </Button>
+                        {song.name}
+                      </motion.h1>
+
+                      {/* Controles de reproducción mejorados */}
+                      <motion.div
+                        className="flex items-center space-y-0 space-x-3 sm:space-x-4"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                      >
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handlePrevTrack}
+                            className="text-white hover:bg-white/20 transition-all bg-black/20 backdrop-blur-sm rounded-full h-10 w-10 border border-white/20"
+                          >
+                            <SkipBackIcon className="h-5 w-5" />
+                          </Button>
+                        </motion.div>
+
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="relative"
+                        >
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={togglePlay}
+                            className="bg-gradient-to-r from-white to-gray-100 text-black rounded-full h-14 w-14 sm:h-16 sm:w-16 hover:from-gray-100 hover:to-white transition-all duration-300 shadow-2xl border-4 border-white/20"
+                          >
+                            {isPlaying && currentSong?._id === song._id ? (
+                              <PauseIcon className="h-7 w-7 sm:h-8 sm:w-8" />
+                            ) : (
+                              <PlayIcon className="h-7 w-7 sm:h-8 sm:w-8 ml-1" />
+                            )}
+                          </Button>
+                        </motion.div>
+
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleNextTrack}
+                            className="text-white hover:bg-white/20 transition-all bg-black/20 backdrop-blur-sm rounded-full h-10 w-10 border border-white/20"
+                          >
+                            <SkipForwardIcon className="h-5 w-5" />
+                          </Button>
+                        </motion.div>
+                      </motion.div>
                     </div>
                   </div>
 
@@ -650,6 +737,33 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
           );
         })}
       </div>
+
+      {/* Trading Modal */}
+      <Dialog open={isTradingModalOpen} onOpenChange={setIsTradingModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-neutral-800 shadow-2xl">
+          <DialogHeader className="border-b border-neutral-800 pb-4">
+            <DialogTitle className="flex items-center gap-3 text-white text-xl font-semibold">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
+                <Coins className="h-4 w-4 text-blue-400" />
+              </div>
+              Trade Tokens
+            </DialogTitle>
+            <p className="text-neutral-400 text-sm mt-2">
+              Buy tokens and use them to claim NFTs
+            </p>
+          </DialogHeader>
+          <TradingInterface
+            coinAddress={
+              currentSong?.coin_address ||
+              collectionData.find(
+                (col: any) => col._id === currentSong?.collectionId
+              )?.coin_address
+            }
+            title="Trade Tokens"
+            description="Buy tokens and use them to claim NFTs"
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Mint Modal */}
       {selectedSongForMint &&
