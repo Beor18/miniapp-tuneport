@@ -152,7 +152,10 @@ export function CustomUserPill({
           </span>
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent
+        align="end"
+        className="w-44 bg-neutral-900 border border-neutral-800"
+      >
         {/* 🆕 FARCASTER: Mostrar estado de Farcaster */}
         {farcasterConnected && farcasterData ? (
           <>
@@ -164,35 +167,59 @@ export function CustomUserPill({
                   className="w-6 h-6 rounded-full"
                 />
                 <div className="flex flex-col">
-                  <span className="text-green-500 text-xs">✓ Farcaster</span>
-                  <span className="text-gray-400 text-xs">
+                  <span className="text-neutral-300 text-xs">✓ Farcaster</span>
+                  <span className="text-neutral-400 text-xs">
                     @{farcasterData.username}
                   </span>
                 </div>
               </div>
             </div>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="border-neutral-700" />
           </>
         ) : (
           <>
-            <DropdownMenuItem onClick={handleLinkFarcaster}>
-              <LinkIcon className="mr-2 h-4 w-4" />
+            <DropdownMenuItem
+              onClick={handleLinkFarcaster}
+              className="
+                group flex items-center cursor-pointer
+                text-neutral-300
+                hover:!text-neutral-100
+                hover:bg-neutral-800/80
+                focus:bg-neutral-800/80
+                 border-b border-neutral-700
+                transition
+              "
+            >
+              <LinkIcon className="mr-2 h-4 w-4 text-neutral-300 group-hover:!text-neutral-100 transition" />
               Connect Farcaster
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
           </>
         )}
 
         {/* Perfil del usuario si tiene nickname */}
         {userNickname && (
           <>
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem
+              asChild
+              className="
+            group flex items-center cursor-pointer
+            text-neutral-300
+            hover:!text-neutral-100
+            hover:bg-neutral-800/80
+            focus:bg-neutral-800/80
+            sm:hidden
+            text-xs
+            font-mono
+            border-b border-neutral-700
+            mb-1
+           
+          "
+            >
               <Link href={`/${locale}/u/${userNickname}`}>
-                <User className="mr-2 h-4 w-4" />
+                <User className="mr-2 h-4 w-4 text-neutral-300 group-hover:!text-neutral-100 transition" />
                 View Profile
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
           </>
         )}
 
@@ -206,7 +233,7 @@ export function CustomUserPill({
             sm:hidden
             text-xs
             font-mono
-            border-b border-neutral-800
+            border-b border-neutral-700
             mb-1
             px-3 py-2
           "
@@ -217,7 +244,7 @@ export function CustomUserPill({
             className={`w-3 h-3 ml-2 flex-shrink-0 transition ${
               copied
                 ? "text-green-400"
-                : "text-neutral-400 group-hover:text-neutral-200"
+                : "text-neutral-300 group-hover:text-neutral-100"
             }`}
           />
         </DropdownMenuItem>
