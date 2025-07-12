@@ -14,6 +14,7 @@ interface LikeButtonProps {
   className?: string;
   showCount?: boolean;
   size?: "sm" | "md" | "lg";
+  disabled?: boolean;
 }
 
 const LikeButtonComponent = function LikeButton({
@@ -24,6 +25,7 @@ const LikeButtonComponent = function LikeButton({
   className,
   showCount = true,
   size = "md",
+  disabled = false,
 }: LikeButtonProps) {
   const { likesCount, isLiked, isLoading, handleToggleLike } = useLikes({
     nftId,
@@ -43,16 +45,25 @@ const LikeButtonComponent = function LikeButton({
     lg: "h-6 w-6",
   };
 
+  const isDisabled = disabled || isLoading;
+
   if (variant === "minimal") {
     return (
       <button
-        onClick={handleToggleLike}
-        disabled={isLoading}
+        onClick={isDisabled ? undefined : handleToggleLike}
+        disabled={isDisabled}
         className={cn(
           "flex items-center gap-1 text-white hover:text-red-500 transition-colors duration-200 disabled:opacity-50",
+          isDisabled ? "cursor-not-allowed" : "",
           className
         )}
-        title={isLiked ? "Quitar like" : "Dar like"}
+        title={
+          isDisabled
+            ? "Connect wallet to like"
+            : isLiked
+            ? "Quitar like"
+            : "Dar like"
+        }
       >
         <HeartIcon
           className={cn(
@@ -75,13 +86,20 @@ const LikeButtonComponent = function LikeButton({
       <Button
         variant="ghost"
         size="icon"
-        onClick={handleToggleLike}
-        disabled={isLoading}
+        onClick={isDisabled ? undefined : handleToggleLike}
+        disabled={isDisabled}
         className={cn(
           "text-white hover:bg-white/10 transition-all duration-200 group relative",
+          isDisabled ? "cursor-not-allowed" : "",
           className
         )}
-        title={isLiked ? "Quitar like" : "Dar like"}
+        title={
+          isDisabled
+            ? "Connect wallet to like"
+            : isLiked
+            ? "Quitar like"
+            : "Dar like"
+        }
       >
         <HeartIcon
           className={cn(
@@ -106,14 +124,21 @@ const LikeButtonComponent = function LikeButton({
     <Button
       variant="ghost"
       size="icon"
-      onClick={handleToggleLike}
-      disabled={isLoading}
+      onClick={isDisabled ? undefined : handleToggleLike}
+      disabled={isDisabled}
       className={cn(
         sizeClasses[size],
         "text-white hover:bg-white/10 transition-all duration-200 group bg-black/40 backdrop-blur-sm rounded-full border border-white/20",
+        isDisabled ? "cursor-not-allowed" : "",
         className
       )}
-      title={isLiked ? "Quitar like" : "Dar like"}
+      title={
+        isDisabled
+          ? "Connect wallet to like"
+          : isLiked
+          ? "Quitar like"
+          : "Dar like"
+      }
     >
       <div className="relative flex items-center justify-center">
         <HeartIcon

@@ -531,52 +531,81 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
                       </motion.div>
 
                       <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: hasWalletConnected ? 1.1 : 1 }}
+                        whileTap={{ scale: hasWalletConnected ? 0.95 : 1 }}
                       >
                         <Button
                           variant="default"
                           size="icon"
-                          onClick={() => handleTogglePlaylist(song)}
+                          onClick={() =>
+                            hasWalletConnected && handleTogglePlaylist(song)
+                          }
+                          disabled={!hasWalletConnected}
                           title={
-                            isInUserPlaylist
+                            !hasWalletConnected
+                              ? "Connect wallet to use playlist"
+                              : isInUserPlaylist
                               ? "Remove from queue"
                               : "Add to queue"
                           }
-                          className="bg-black/40 backdrop-blur-sm hover:bg-white/20 text-white rounded-full border border-white/20 relative h-12 w-12"
+                          className={`bg-black/40 backdrop-blur-sm hover:bg-white/20 text-white rounded-full border border-white/20 relative h-12 w-12 ${
+                            !hasWalletConnected
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
                         >
                           <ListMusicIcon className="h-5 w-5" />
-                          {isInUserPlaylist ? (
+                          {hasWalletConnected && isInUserPlaylist ? (
                             <MinusIcon className="h-3 w-3 absolute -top-1 -right-1 text-white bg-red-500 rounded-full p-[1px]" />
-                          ) : (
+                          ) : hasWalletConnected ? (
                             <PlusIcon className="h-3 w-3 absolute -top-1 -right-1 text-white bg-green-500 rounded-full p-[1px]" />
-                          )}
+                          ) : null}
                         </Button>
                       </motion.div>
 
                       <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: hasWalletConnected ? 1.1 : 1 }}
+                        whileTap={{ scale: hasWalletConnected ? 0.95 : 1 }}
                       >
-                        <LikeButton
-                          nftId={song._id}
-                          variant="default"
-                          size="lg"
-                          showCount={false}
-                        />
+                        <div
+                          className={
+                            !hasWalletConnected
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }
+                        >
+                          <LikeButton
+                            nftId={song._id}
+                            variant="default"
+                            size="lg"
+                            showCount={false}
+                            disabled={!hasWalletConnected}
+                          />
+                        </div>
                       </motion.div>
 
                       {/* Trading Button */}
                       <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: hasWalletConnected ? 1.1 : 1 }}
+                        whileTap={{ scale: hasWalletConnected ? 0.95 : 1 }}
                       >
                         <Button
                           variant="default"
                           size="icon"
-                          onClick={() => setIsTradingModalOpen(true)}
-                          title="Trade Tokens"
-                          className="bg-gradient-to-r from-yellow-500/80 to-orange-500/80 backdrop-blur-sm hover:from-yellow-400/90 hover:to-orange-400/90 text-white rounded-full border border-yellow-400/30 relative h-12 w-12"
+                          onClick={() =>
+                            hasWalletConnected && setIsTradingModalOpen(true)
+                          }
+                          disabled={!hasWalletConnected}
+                          title={
+                            !hasWalletConnected
+                              ? "Connect wallet to trade tokens"
+                              : "Trade Tokens"
+                          }
+                          className={`bg-gradient-to-r from-yellow-500/80 to-orange-500/80 backdrop-blur-sm hover:from-yellow-400/90 hover:to-orange-400/90 text-white rounded-full border border-yellow-400/30 relative h-12 w-12 ${
+                            !hasWalletConnected
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
                         >
                           <Coins className="h-5 w-5" />
                         </Button>
@@ -597,17 +626,27 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
 
                       {/* Botón Claim NFT */}
                       <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{
+                          scale: hasWalletConnected && !isMintingAny ? 1.1 : 1,
+                        }}
+                        whileTap={{
+                          scale: hasWalletConnected && !isMintingAny ? 0.95 : 1,
+                        }}
                       >
                         <Button
                           variant="secondary"
                           size="icon"
                           onClick={(e) => handleClaimClick(e, song)}
                           disabled={!hasWalletConnected || isMintingAny}
-                          className="h-12 w-12 rounded-full bg-gradient-to-r from-purple-600/90 to-blue-600/90 hover:from-purple-500 hover:to-blue-500 text-white transition-all duration-300 backdrop-blur-sm border border-white/20"
+                          className={`h-12 w-12 rounded-full bg-gradient-to-r from-purple-600/90 to-blue-600/90 hover:from-purple-500 hover:to-blue-500 text-white transition-all duration-300 backdrop-blur-sm border border-white/20 ${
+                            !hasWalletConnected || isMintingAny
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
                           title={
-                            !hasWalletConnected ? "Connect wallet" : "Claim NFT"
+                            !hasWalletConnected
+                              ? "Connect wallet to claim NFT"
+                              : "Claim NFT"
                           }
                         >
                           {isMintingAny ? (
