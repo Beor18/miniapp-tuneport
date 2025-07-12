@@ -17,14 +17,26 @@ export async function getUserByAddress({
   address_solana,
 }: GetUserInput) {
   try {
-    let queryString = "";
-    if (address) {
-      queryString += `address=${address}`;
+    // 🔧 VALIDACIÓN TEMPRANA: Verificar que al menos una dirección válida esté presente
+    const hasValidAddress =
+      (address && address.trim() !== "") ||
+      (address_solana && address_solana.trim() !== "");
+
+    if (!hasValidAddress) {
+      console.log(
+        "⚠️ [getUserByAddress] No valid addresses provided, skipping API call"
+      );
+      return null; // Retornar null sin hacer la llamada API
     }
-    if (address_solana) {
+
+    let queryString = "";
+    if (address && address.trim() !== "") {
+      queryString += `address=${encodeURIComponent(address.trim())}`;
+    }
+    if (address_solana && address_solana.trim() !== "") {
       queryString += queryString
-        ? `&address_solana=${address_solana}`
-        : `address_solana=${address_solana}`;
+        ? `&address_solana=${encodeURIComponent(address_solana.trim())}`
+        : `address_solana=${encodeURIComponent(address_solana.trim())}`;
     }
 
     const response = await fetch(
@@ -39,6 +51,12 @@ export async function getUserByAddress({
     );
 
     if (!response.ok) {
+      // Si es 404 (usuario no encontrado), no es un error crítico
+      if (response.status === 404) {
+        console.log("ℹ️ [getUserByAddress] User not found in database");
+        return null;
+      }
+
       throw new Error(`Error fetching user data. Status: ${response.status}`);
     }
 
@@ -54,7 +72,7 @@ export async function getUserByAddress({
       return null; // Si no cumple la condición, retorna null
     }
   } catch (error) {
-    console.error("Error checking user:", error);
+    console.error("❌ [getUserByAddress] Error checking user:", error);
     return null;
   }
 }

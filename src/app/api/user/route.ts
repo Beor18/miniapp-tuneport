@@ -6,21 +6,32 @@ export async function GET(request: Request) {
     const walletAddress = searchParams.get("address");
     const walletAddressSolana = searchParams.get("address_solana");
 
-    // Verificar que al menos uno de los dos parámetros esté presente
-    if (!walletAddress && !walletAddressSolana) {
+    // 🔧 VALIDACIÓN MEJORADA: Verificar que al menos uno de los parámetros esté presente y no vacío
+    const hasValidAddress =
+      (walletAddress && walletAddress.trim() !== "") ||
+      (walletAddressSolana && walletAddressSolana.trim() !== "");
+
+    if (!hasValidAddress) {
+      console.log("⚠️ [API /user] No valid addresses provided");
       return NextResponse.json(
-        { error: "At least one of 'address' or 'address_solana' is required" },
+        { error: "At least one valid address is required" },
         { status: 400 }
       );
     }
 
     // Construir la URL dinámica dependiendo de cuál parámetro esté presente
     let queryParams = [];
-    if (walletAddress) queryParams.push(`address=${walletAddress}`);
-    if (walletAddressSolana)
-      queryParams.push(`address_solana=${walletAddressSolana}`);
+    if (walletAddress && walletAddress.trim() !== "") {
+      queryParams.push(`address=${encodeURIComponent(walletAddress.trim())}`);
+    }
+    if (walletAddressSolana && walletAddressSolana.trim() !== "") {
+      queryParams.push(
+        `address_solana=${encodeURIComponent(walletAddressSolana.trim())}`
+      );
+    }
 
     const queryString = queryParams.join("&");
+    console.log(`🔍 [API /user] Fetching user data with query: ${queryString}`);
 
     const res = await fetch(
       `${process.env.API_ELEI}/api/users/getUserByAddress?${queryString}`,
@@ -30,16 +41,28 @@ export async function GET(request: Request) {
     );
 
     if (!res.ok) {
+      // Si es 404 (usuario no encontrado), retornar response específico
+      if (res.status === 404) {
+        console.log("ℹ️ [API /user] User not found in database");
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
       throw new Error(`HTTP error! Status: ${res.status}`);
     }
 
     const response = await res.json();
+    console.log(
+      `✅ [API /user] User found: ${
+        response.nickname || response.name || "No name"
+      }`
+    );
 
     return NextResponse.json(response);
   } catch (error) {
     // Manejo mejorado de errores
     const errorMessage =
       error instanceof Error ? error.message : "An unexpected error occurred";
+    console.error("❌ [API /user] Error:", errorMessage);
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

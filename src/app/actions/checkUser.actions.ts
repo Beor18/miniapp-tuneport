@@ -7,15 +7,27 @@ interface CheckUserInput {
 
 export async function checkUser({ address, address_solana }: CheckUserInput) {
   try {
+    // 🔧 VALIDACIÓN TEMPRANA: Verificar que al menos una dirección válida esté presente
+    const hasValidAddress =
+      (address && address.trim() !== "") ||
+      (address_solana && address_solana.trim() !== "");
+
+    if (!hasValidAddress) {
+      console.log(
+        "⚠️ [checkUser] No valid addresses provided, skipping API call"
+      );
+      return false; // Retornar false sin hacer la llamada API
+    }
+
     // Construir la query string con ambas direcciones si están presentes
     let queryString = "";
-    if (address) {
-      queryString += `address=${address}`;
+    if (address && address.trim() !== "") {
+      queryString += `address=${encodeURIComponent(address.trim())}`;
     }
-    if (address_solana) {
+    if (address_solana && address_solana.trim() !== "") {
       queryString += queryString
-        ? `&address_solana=${address_solana}`
-        : `address_solana=${address_solana}`;
+        ? `&address_solana=${encodeURIComponent(address_solana.trim())}`
+        : `address_solana=${encodeURIComponent(address_solana.trim())}`;
     }
 
     const response = await fetch(
@@ -30,6 +42,12 @@ export async function checkUser({ address, address_solana }: CheckUserInput) {
     );
 
     if (!response.ok) {
+      // Si es 404 (usuario no encontrado), no es un error crítico
+      if (response.status === 404) {
+        console.log("ℹ️ [checkUser] User not found in database");
+        return false;
+      }
+
       throw new Error(`Error fetching user data. Status: ${response.status}`);
     }
 
@@ -37,11 +55,12 @@ export async function checkUser({ address, address_solana }: CheckUserInput) {
 
     // Verificar si se encontró el usuario y comparar las direcciones
     return (
-      user.address?.toLowerCase() === address?.toLowerCase() ||
-      user.address_solana?.toLowerCase() === address_solana?.toLowerCase()
+      (address && user.address?.toLowerCase() === address.toLowerCase()) ||
+      (address_solana &&
+        user.address_solana?.toLowerCase() === address_solana.toLowerCase())
     );
   } catch (error) {
-    console.error("Error checking user:", error);
+    console.error("❌ [checkUser] Error checking user:", error);
     return false;
   }
 }
@@ -49,16 +68,32 @@ export async function checkUser({ address, address_solana }: CheckUserInput) {
 // Nueva función que retorna los datos completos del usuario
 export async function getUserData({ address, address_solana }: CheckUserInput) {
   try {
+    // 🔧 VALIDACIÓN TEMPRANA: Verificar que al menos una dirección válida esté presente
+    const hasValidAddress =
+      (address && address.trim() !== "") ||
+      (address_solana && address_solana.trim() !== "");
+
+    if (!hasValidAddress) {
+      console.log(
+        "⚠️ [getUserData] No valid addresses provided, skipping API call"
+      );
+      return null; // Retornar null sin hacer la llamada API
+    }
+
     // Construir la query string con ambas direcciones si están presentes
     let queryString = "";
-    if (address) {
-      queryString += `address=${address}`;
+    if (address && address.trim() !== "") {
+      queryString += `address=${encodeURIComponent(address.trim())}`;
     }
-    if (address_solana) {
+    if (address_solana && address_solana.trim() !== "") {
       queryString += queryString
-        ? `&address_solana=${address_solana}`
-        : `address_solana=${address_solana}`;
+        ? `&address_solana=${encodeURIComponent(address_solana.trim())}`
+        : `address_solana=${encodeURIComponent(address_solana.trim())}`;
     }
+
+    console.log(
+      `🔍 [getUserData] Fetching user data with query: ${queryString}`
+    );
 
     const response = await fetch(
       `${process.env.API_ELEI}/api/users/getUserByAddress?${queryString}`,
@@ -72,6 +107,12 @@ export async function getUserData({ address, address_solana }: CheckUserInput) {
     );
 
     if (!response.ok) {
+      // Si es 404 (usuario no encontrado), no es un error crítico
+      if (response.status === 404) {
+        console.log("ℹ️ [getUserData] User not found in database");
+        return null;
+      }
+
       throw new Error(`Error fetching user data. Status: ${response.status}`);
     }
 
@@ -79,16 +120,23 @@ export async function getUserData({ address, address_solana }: CheckUserInput) {
 
     // Verificar si se encontró el usuario y comparar las direcciones
     const isValidUser =
-      user.address?.toLowerCase() === address?.toLowerCase() ||
-      user.address_solana?.toLowerCase() === address_solana?.toLowerCase();
+      (address && user.address?.toLowerCase() === address.toLowerCase()) ||
+      (address_solana &&
+        user.address_solana?.toLowerCase() === address_solana.toLowerCase());
 
     if (isValidUser) {
+      console.log(
+        `✅ [getUserData] User found: ${
+          user.nickname || user.name || "No name"
+        }`
+      );
       return user; // Retorna todos los datos del usuario
     }
 
+    console.log("⚠️ [getUserData] User found but address mismatch");
     return null;
   } catch (error) {
-    console.error("Error getting user data:", error);
+    console.error("❌ [getUserData] Error getting user data:", error);
     return null;
   }
 }
