@@ -218,14 +218,14 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
               height={32}
               className="h-8 w-8"
             />
-            {/* <div className="flex items-center">
+            <div className="flex items-center">
               <h1 className="text-lg font-bold text-white">TUNEPORT</h1>
-              <span
+              {/* <span
                 className={`ml-2 rounded-md ${getEnvironmentColor()} px-1.5 py-0.5 text-[11px] font-medium text-white`}
               >
                 {getEnvironmentText()}
-              </span>
-            </div> */}
+              </span> */}
+            </div>
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
