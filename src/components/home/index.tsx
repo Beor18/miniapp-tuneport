@@ -130,7 +130,8 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   // Detectar entorno basado en hostname
   const isMainnet =
     hostname === "app.tuneport.xyz" || hostname === "tuneport.xyz";
-  const isTestnet = hostname === "testnet.tuneport.xyz";
+  const isTestnet =
+    hostname === "testnet.tuneport.xyz" || hostname === "miniapp.tuneport.xyz";
 
   // Determinar el texto del entorno
   const getEnvironmentText = () => {
@@ -217,14 +218,14 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
               height={32}
               className="h-8 w-8"
             />
-            <div className="flex items-center">
+            {/* <div className="flex items-center">
               <h1 className="text-lg font-bold text-white">TUNEPORT</h1>
               <span
                 className={`ml-2 rounded-md ${getEnvironmentColor()} px-1.5 py-0.5 text-[11px] font-medium text-white`}
               >
                 {getEnvironmentText()}
               </span>
-            </div>
+            </div> */}
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
