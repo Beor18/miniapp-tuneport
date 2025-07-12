@@ -1,4 +1,4 @@
-# Tuneport Mini App - Farcaster Edition
+# Tuneport Mini App - Farcaster
 
 Una **miniapp simplificada** para Farcaster que se enfoca en las funcionalidades esenciales de música NFT.
 
