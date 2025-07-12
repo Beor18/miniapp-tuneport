@@ -14,6 +14,7 @@ export function useAppKitAccount() {
     linkWallet,
     unlinkWallet,
     createWallet,
+    linkFarcaster,
   } = usePrivy();
 
   // Estado para controlar si ya ha pasado tiempo suficiente para considerar la carga completa
@@ -104,6 +105,11 @@ export function useAppKitAccount() {
       }
     }
 
+    // 🆕 FARCASTER: Obtener datos de Farcaster del usuario
+    const farcasterAccount = user?.linkedAccounts?.find(
+      (account) => account.type === "farcaster"
+    );
+
     // Combinamos las wallets EVM y Solana para tener una lista completa
     const allWallets = [...wallets, ...solanaWallets];
 
@@ -133,6 +139,18 @@ export function useAppKitAccount() {
           userId: user?.id,
         },
       },
+      // 🆕 FARCASTER: Información de Farcaster
+      farcasterAccount,
+      farcasterConnected: !!farcasterAccount,
+      farcasterData: farcasterAccount
+        ? {
+            fid: farcasterAccount.fid,
+            username: farcasterAccount.username,
+            displayName: farcasterAccount.displayName,
+            pfp: farcasterAccount.pfp,
+            bio: farcasterAccount.bio,
+          }
+        : null,
       // Mantener compatible con la API de AppKit pero ahora incluye ambos tipos de wallets
       wallets: allWallets,
       // Incluir las wallets específicas de cada cadena
@@ -145,6 +163,8 @@ export function useAppKitAccount() {
       linkWallet,
       unlinkWallet,
       createWallet,
+      // 🆕 FARCASTER: Función para vincular Farcaster
+      linkFarcaster,
       // Flag para saber si las wallets han terminado de cargar
       walletsLoaded: hasLoadedWallets,
     };
@@ -162,6 +182,7 @@ export function useAppKitAccount() {
     linkWallet,
     unlinkWallet,
     createWallet,
+    linkFarcaster,
     hasLoadedWallets,
   ]);
 

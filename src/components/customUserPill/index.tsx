@@ -9,12 +9,14 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@Src/ui/components/ui/dropdown-menu";
-import { Coins, LogOut, Copy, User } from "lucide-react";
+import { Coins, LogOut, Copy, User, Link as LinkIcon } from "lucide-react";
 import { base, baseSepolia } from "viem/chains";
 import { useState, useEffect } from "react";
 import { usePlayer } from "@Src/contexts/PlayerContext";
 import Link from "next/link";
+import { useAppKitAccount } from "@Src/lib/privy";
 
 interface CustomUserPillProps {
   handleLogout: () => void;
@@ -32,6 +34,11 @@ export function CustomUserPill({
   const { ready, authenticated, user } = usePrivy();
   const { wallets } = useWallets();
   const { fundWallet } = useFundWallet();
+
+  // 🆕 FARCASTER: Obtener datos de Farcaster del usuario
+  const { farcasterConnected, farcasterData, linkFarcaster } =
+    useAppKitAccount();
+
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [hostname, setHostname] = useState<string>("");
@@ -94,6 +101,15 @@ export function CustomUserPill({
     }
   };
 
+  // 🆕 FARCASTER: Función para manejar la vinculación de Farcaster
+  const handleLinkFarcaster = () => {
+    try {
+      linkFarcaster();
+    } catch (error) {
+      console.error("Error linking Farcaster:", error);
+    }
+  };
+
   const handleLogoutWithPlayerCleanup = async () => {
     try {
       // Parar completamente el audio antes del logout
@@ -136,10 +152,50 @@ export function CustomUserPill({
           </span>
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="w-44 bg-neutral-900 border border-neutral-800"
-      >
+      <DropdownMenuContent align="end" className="w-56">
+        {/* 🆕 FARCASTER: Mostrar estado de Farcaster */}
+        {farcasterConnected && farcasterData ? (
+          <>
+            <div className="px-2 py-1.5 text-sm font-medium">
+              <div className="flex items-center gap-2">
+                <img
+                  src={farcasterData.pfp || "/default-avatar.png"}
+                  alt="Farcaster PFP"
+                  className="w-6 h-6 rounded-full"
+                />
+                <div className="flex flex-col">
+                  <span className="text-green-500 text-xs">✓ Farcaster</span>
+                  <span className="text-gray-400 text-xs">
+                    @{farcasterData.username}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <DropdownMenuSeparator />
+          </>
+        ) : (
+          <>
+            <DropdownMenuItem onClick={handleLinkFarcaster}>
+              <LinkIcon className="mr-2 h-4 w-4" />
+              Connect Farcaster
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
+        {/* Perfil del usuario si tiene nickname */}
+        {userNickname && (
+          <>
+            <DropdownMenuItem asChild>
+              <Link href={`/${locale}/u/${userNickname}`}>
+                <User className="mr-2 h-4 w-4" />
+                View Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
         <DropdownMenuItem
           className="
             group flex items-center justify-between cursor-pointer
@@ -165,23 +221,6 @@ export function CustomUserPill({
             }`}
           />
         </DropdownMenuItem>
-        <Link
-          href={userNickname ? `/${locale}/u/${userNickname}` : `/${locale}/u`}
-        >
-          <DropdownMenuItem
-            className="
-        group flex items-center gap-2 cursor-pointer
-        text-neutral-300
-        hover:!text-neutral-100
-        hover:bg-neutral-800/80
-        focus:bg-neutral-800/80
-        transition
-      "
-          >
-            <User className="w-4 h-4 mr-2 text-neutral-300 group-hover:!text-neutral-100 transition" />
-            Profile
-          </DropdownMenuItem>
-        </Link>
         <DropdownMenuItem
           className="
       group flex items-center gap-2 cursor-pointer

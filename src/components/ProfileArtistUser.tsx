@@ -47,6 +47,7 @@ import { useRouter } from "next/navigation";
 import WalletAssets from "./WalletAssets";
 import PlaylistCarousel from "./PlaylistCarousel";
 import { useTranslations } from "next-intl";
+import { useFarcaster } from "@Src/lib/hooks/useFarcaster";
 
 interface Album {
   id: string;
@@ -123,6 +124,15 @@ export default function ProfileArtistUser({
   const tCommon = useTranslations("common");
   const tMusic = useTranslations("music");
   const tTabs = useTranslations("tabs");
+
+  // 🆕 FARCASTER: Obtener datos de Farcaster
+  const {
+    isConnected: farcasterConnected,
+    username: farcasterUsername,
+    displayName: farcasterDisplayName,
+    pfp: farcasterPfp,
+    getFarcasterProfileUrl,
+  } = useFarcaster();
 
   const initialFollowersCount = profile.followers
     ? profile.followers?.length
@@ -432,6 +442,28 @@ export default function ProfileArtistUser({
 
           {/* Social links */}
           <div className="flex items-center gap-4">
+            {/* 🆕 FARCASTER: Mostrar enlace de Farcaster si está conectado */}
+            {farcasterConnected && farcasterUsername && (
+              <a
+                href={getFarcasterProfileUrl() || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-opacity hover:opacity-80"
+                title={`@${farcasterUsername} on Farcaster`}
+              >
+                <img
+                  src="/farcaster-icon.svg"
+                  className="h-5 w-5"
+                  alt="Farcaster"
+                  onError={(e) => {
+                    // Fallback si no existe el ícono
+                    (e.target as HTMLImageElement).src =
+                      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzljYTNhZiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNMTIgMkM2LjQ4IDIgMiA2LjQ4IDIgMTJzNC40OCAxMCAxMCAxMCAxMC00LjQ4IDEwLTEwUzE3LjUyIDIgMTIgMnptMCA4YzEuMSAwIDItLjkgMi0yaC4wMWMuNjMgMCAxLjA5LS43NSAxLjA5LTEuNXMtLjQ2LTEuNS0xLjA5LTEuNUgxM0MxMS45IDUgMTEgNS45IDExIDdWOWMwIDEuMS45IDIgMiAyeiIvPgo8L3N2Zz4K";
+                  }}
+                />
+              </a>
+            )}
+
             {profile.twitter && (
               <a
                 href={profile.twitter}
