@@ -17,6 +17,7 @@ import {
   SkipForwardIcon,
   Music,
   Coins,
+  X,
 } from "lucide-react";
 import PlayerHome from "../playerHome";
 import Link from "next/link";
@@ -779,28 +780,47 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
 
       {/* Trading Modal */}
       <Dialog open={isTradingModalOpen} onOpenChange={setIsTradingModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-neutral-800 shadow-2xl">
-          <DialogHeader className="border-b border-neutral-800 pb-4">
-            <DialogTitle className="flex items-center gap-3 text-white text-xl font-semibold">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
-                <Coins className="h-4 w-4 text-blue-400" />
+        <DialogContent className="max-w-[100vw] sm:max-w-2xl max-h-[95vh] overflow-y-auto overflow-x-hidden bg-[#0a0a0a] border-neutral-800 shadow-2xl p-0 m-0 w-full">
+          {/* Custom Close Button - Mobile Optimized */}
+          <div className="sticky top-0 z-50 bg-[#0a0a0a] border-b border-neutral-800 w-full">
+            <div className="flex items-center justify-between p-3 w-full">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <div className="w-6 h-6 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border border-blue-500/30 flex-shrink-0">
+                  <Coins className="h-3 w-3 text-blue-400" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-white text-base font-semibold truncate">
+                    Trade Tokens
+                  </h2>
+                  <p className="text-neutral-400 text-xs truncate">
+                    Buy tokens and use them to claim NFTs
+                  </p>
+                </div>
               </div>
-              Trade Tokens
-            </DialogTitle>
-            <p className="text-neutral-400 text-sm mt-2">
-              Buy tokens and use them to claim NFTs
-            </p>
-          </DialogHeader>
-          <TradingInterface
-            coinAddress={
-              currentSong?.coin_address ||
-              collectionData.find(
-                (col: any) => col._id === currentSong?.collectionId
-              )?.coin_address
-            }
-            title="Trade Tokens"
-            description="Buy tokens and use them to claim NFTs"
-          />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsTradingModalOpen(false)}
+                className="h-10 w-10 rounded-full bg-neutral-800/50 hover:bg-neutral-700/50 text-neutral-400 hover:text-white transition-all flex-shrink-0 ml-2"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Modal Content */}
+          <div className="w-full overflow-x-hidden">
+            <TradingInterface
+              coinAddress={
+                currentSong?.coin_address ||
+                collectionData.find(
+                  (col: any) => col._id === currentSong?.collectionId
+                )?.coin_address
+              }
+              title="Trade Tokens"
+              description="Buy tokens and use them to claim NFTs"
+            />
+          </div>
         </DialogContent>
       </Dialog>
 
