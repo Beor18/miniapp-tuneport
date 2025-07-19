@@ -1,4 +1,9 @@
 {
+  "accountAssociation": {
+    "header": "eyJmaWQiOjExMjk4OTgsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg3ODI1RkY2OUEwMkIwOThmMTA0MDI5MzMyMDlENGU2NURhMUY1QWExIn0",
+    "payload": "eyJkb21haW4iOiJtaW5pYXBwLnR1bmVwb3J0Lnh5eiJ9",
+    "signature": "MHgzMjE0ZWY3ZDczNjcwNjI2YjQ4YWVhM2U4YWJmMTkyYzU3OTE0ODhlNTlhOWIxNGQ1NDUyNGQ0ZDA4M2E5NWQ1NTJkZmQ1OTY0YWMzYjdlYjhlMzk5OGE5YjIyMzBlYzFhMjYyMjA0OGZhY2Q2MDA4ZTU4OTZlMGVmMjkwMjk5NDFj"
+  },
   "frame": {
     "version": "1",
     "name": "Tuneport",
@@ -7,6 +12,7 @@
     "imageUrl": "https://miniapp.tuneport.xyz/preview.png",
     "buttonTitle": "Join us!",
     "splashImageUrl": "https://pbs.twimg.com/profile_images/1942391632520695808/2XvLiCf2_400x400.png",
-    "splashBackgroundColor": "#18181b"
+    "splashBackgroundColor": "#18181b",
+    "webhookUrl": "https://miniapp.tuneport.xyz/api/webhook"
   }
 }
