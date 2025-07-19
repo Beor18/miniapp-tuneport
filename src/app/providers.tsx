@@ -56,19 +56,19 @@ const queryClient = new QueryClient();
 // });
 
 export const UserRegistrationContext = createContext<{
-  isRegistered: boolean;
-  setIsRegistered: React.Dispatch<React.SetStateAction<boolean>>;
+  isRegistered: boolean | null;
+  setIsRegistered: React.Dispatch<React.SetStateAction<boolean | null>>;
   userData: any;
   setUserData: React.Dispatch<React.SetStateAction<any>>;
 }>({
-  isRegistered: false,
+  isRegistered: null,
   setIsRegistered: () => {},
   userData: null,
   setUserData: () => {},
 });
 
 export default function Providers({ children }: { children: ReactNode }) {
-  const [isRegistered, setIsRegistered] = useState(false);
+  const [isRegistered, setIsRegistered] = useState<boolean | null>(null);
   const [userData, setUserData] = useState<any>(null);
   const [hostname, setHostname] = useState<string>("");
 

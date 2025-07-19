@@ -24,6 +24,11 @@ const FloatingPlayerWrapper = () => {
     return null;
   }
 
+  // No mostrar nada si no sabemos el estado aún
+  if (isRegistered === null) {
+    return null;
+  }
+
   if (!wallet.publicKey || !isRegistered) {
     return (
       <div className="fixed bottom-0 left-0 right-0 bg-primary text-white p-4 flex items-center justify-between">

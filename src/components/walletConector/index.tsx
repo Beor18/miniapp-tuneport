@@ -181,8 +181,11 @@ export default function WalletConnector() {
     }`;
 
     if (hasWalletConnected) {
-      // Solo verificar si realmente cambió la dirección
+      // Solo verificar si cambió la dirección Y hay al menos una dirección válida
+      const hasValidAddress = walletAddresses.evm || walletAddresses.solana;
+
       if (
+        hasValidAddress &&
         addressKeyRef.current !== currentAddressKey &&
         !verificationRef.current
       ) {
@@ -194,9 +197,9 @@ export default function WalletConnector() {
         });
       }
     } else {
-      // Reset solo si realmente había una wallet conectada antes
+      // Reset cuando no hay wallet
       if (addressKeyRef.current !== "") {
-        setIsRegistered(false);
+        setIsRegistered(null);
         setUserData(null);
         addressKeyRef.current = "";
       }
@@ -249,7 +252,13 @@ export default function WalletConnector() {
     );
   }
 
-  if (!isRegistered) {
+  // NO mostrar nada si no sabemos el estado aún
+  if (isRegistered === null) {
+    return null;
+  }
+
+  // Solo mostrar RegistrationForm cuando estamos 100% seguros de que NO está registrado
+  if (isRegistered === false) {
     return (
       <RegistrationForm
         walletAddressEvm={walletAddresses.evm || ""}
