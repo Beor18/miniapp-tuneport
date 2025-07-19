@@ -184,12 +184,12 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   // Memoizar flags de layout
   const layoutFlags = useMemo(
     () => ({
-      showFooter: pathname.startsWith("/u") || pathname.startsWith("/explore"),
-      showPlayerMobile: pathname.startsWith("/u") || pathname.startsWith("/"),
+      showFooter: pathname.includes("/u") || pathname.includes("/explore"),
+      showPlayerMobile: pathname.includes("/u") || pathname.startsWith("/"),
       // Nuevo flag para detectar cuando el player está activo
-      hasActivePlayer: isConnected && pathname !== "/foryou",
-      // Mostrar navegación solo en páginas de perfil
-      showNavigation: pathname.startsWith("/u"),
+      hasActivePlayer: isConnected && !pathname.includes("/foryou"),
+      // Mostrar navegación solo en páginas de perfil (considerando locale)
+      showNavigation: pathname.includes("/u"),
     }),
     [pathname, isConnected]
   );
@@ -300,7 +300,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
       {/* Barra de navegación inferior para móviles - solo mostrar en páginas de perfil */}
       {layoutFlags.showNavigation && (
         <nav className="fixed bottom-0 left-0 right-0 z-30 bg-zinc-900/95 backdrop-blur border-t border-zinc-800 md:hidden">
-          <div className="flex items-center justify-around px-1 py-3 h-16">
+          <div className="flex items-center justify-around px-1 py-3 h-16 max-w-screen-sm mx-auto">
             {navItems.slice(0, 5).map((item) => (
               <MobileNavLink key={item.href} {...item} />
             ))}
@@ -375,21 +375,22 @@ function MobileNavLink({
       className={`
         flex flex-col items-center justify-center px-2 py-1 min-w-0 flex-1 transition-all duration-200
         ${isActive ? "text-white" : "text-zinc-400 hover:text-zinc-200"}
+        active:scale-95 touch-manipulation
       `}
       prefetch={false}
     >
       <div
-        className={`p-1 rounded-lg transition-all duration-200 ${
-          isActive ? "bg-red-500/20" : ""
+        className={`p-2 rounded-lg transition-all duration-200 ${
+          isActive ? "bg-red-500/30 scale-110" : "hover:bg-zinc-800/50"
         }`}
       >
         <Icon
-          className={`h-5 w-5 ${isActive ? "text-red-400" : "text-zinc-400"}`}
+          className={`h-5 w-5 ${isActive ? "text-red-400" : "text-zinc-300"}`}
         />
       </div>
       <span
-        className={`text-[10px] font-medium truncate max-w-full mt-1 ${
-          isActive ? "text-white" : "text-zinc-400"
+        className={`text-[10px] font-medium truncate max-w-full mt-1 leading-none ${
+          isActive ? "text-white font-semibold" : "text-zinc-400"
         }`}
       >
         {label}
