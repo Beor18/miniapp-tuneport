@@ -15,30 +15,84 @@ interface CastData {
   parent?: string; // Para respuestas a casts
 }
 
-// Función para crear un cast usando Neynar API
-async function createFarcasterCast(castData: CastData, signerUuid: string) {
+// Función para crear un cast usando Neynar API con autenticación dinámica
+async function createFarcasterCast(castData: CastData, userToken?: string) {
   const neynarApiKey = process.env.NEYNAR_API_KEY;
 
   if (!neynarApiKey) {
     throw new Error("NEYNAR_API_KEY not configured");
   }
 
-  const response = await fetch(
-    "https://snapchain-api.neynar.com/v2/farcaster/cast",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${neynarApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        signer_uuid: signerUuid,
-        text: castData.text,
-        embeds: castData.embeds || [],
-        parent: castData.parent || null,
-      }),
+  // Si tenemos un token de usuario (Quick Auth), usarlo para obtener el signer dinámicamente
+  if (userToken) {
+    try {
+      // Verificar el token con Farcaster y obtener información del usuario
+      const userResponse = await fetch("https://api.farcaster.xyz/v2/me", {
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
+
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+
+        // Usar la información del usuario autenticado
+        const response = await fetch(
+          "https://api.neynar.com/v2/farcaster/cast",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${neynarApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              text: castData.text,
+              embeds: castData.embeds || [],
+              parent: castData.parent || null,
+              // Usar el FID del usuario autenticado
+              fid: userData.fid,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            `Neynar API error: ${response.status} - ${
+              errorData.message || "Unknown error"
+            }`
+          );
+        }
+
+        return await response.json();
+      }
+    } catch (error) {
+      console.log("Error con Quick Auth, intentando método fallback:", error);
     }
-  );
+  }
+
+  // Método fallback usando signer UUID estático (para desarrollo/hackathon)
+  const signerUuid = process.env.FARCASTER_SIGNER_UUID;
+
+  if (!signerUuid) {
+    throw new Error(
+      "FARCASTER_SIGNER_UUID not configured and no user token provided"
+    );
+  }
+
+  const response = await fetch("https://api.neynar.com/v2/farcaster/cast", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${neynarApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      signer_uuid: signerUuid,
+      text: castData.text,
+      embeds: castData.embeds || [],
+      parent: castData.parent || null,
+    }),
+  });
 
   if (!response.ok) {
     const errorData = await response.json();
@@ -71,40 +125,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Obtener el signer UUID del usuario autenticado
-    // Esto debe venir del contexto de autenticación de Farcaster Mini App
+    // Extraer token de Quick Auth si está disponible
     const authHeader = request.headers.get("authorization");
-    if (!authHeader) {
-      return NextResponse.json(
-        { error: "Token de autenticación requerido" },
-        { status: 401 }
-      );
-    }
+    const userToken = authHeader?.replace("Bearer ", "");
 
-    // Extraer el token y obtener el signer UUID
-    // En una implementación real, aquí validarías el token y obtendrías el signer UUID
-    // del contexto del usuario autenticado
-    const token = authHeader.replace("Bearer ", "");
+    console.log("Creating cast with user token:", !!userToken);
 
-    // TODO: Implementar validación real del token y obtención del signer UUID
-    // Por ahora, necesitaremos configurar esto según tu sistema de autenticación
-    const signerUuid = process.env.FARCASTER_SIGNER_UUID;
-
-    if (!signerUuid) {
-      return NextResponse.json(
-        { error: "Signer UUID no configurado" },
-        { status: 500 }
-      );
-    }
-
-    // Crear el cast usando Neynar API
+    // Crear el cast usando autenticación dinámica o fallback
     const castResult = await createFarcasterCast(
       {
         text,
         embeds: embeds || [],
         parent,
       },
-      signerUuid
+      userToken
     );
 
     // Construir URL del cast para Warpcast
@@ -121,6 +155,7 @@ export async function POST(request: NextRequest) {
       },
       castUrl,
       message: "Cast creado exitosamente",
+      method: userToken ? "quickauth" : "fallback",
     });
   } catch (error) {
     console.error("Error creating Farcaster cast:", error);
@@ -159,7 +194,7 @@ export async function GET(request: NextRequest) {
 
     // Obtener información del cast usando Neynar API
     const response = await fetch(
-      `https://snapchain-api.neynar.com/v2/farcaster/cast?identifier=${castHash}&type=hash`,
+      `https://api.neynar.com/v2/farcaster/cast?identifier=${castHash}&type=hash`,
       {
         headers: {
           Authorization: `Bearer ${neynarApiKey}`,

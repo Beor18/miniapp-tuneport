@@ -25,10 +25,11 @@ export function ShareToFarcaster({
   type = "song",
 }: ShareToFarcasterProps) {
   const [isSharing, setIsSharing] = useState(false);
-  const { isSDKLoaded } = useFarcasterMiniApp();
+  const { isSDKLoaded, context } = useFarcasterMiniApp();
   const t = useTranslations("farcaster");
 
   const handleShare = async () => {
+    // Verificar que el SDK esté listo
     if (!isSDKLoaded) {
       toast.error(t("farcasterNotAvailable"));
       return;
@@ -37,6 +38,9 @@ export function ShareToFarcaster({
     setIsSharing(true);
 
     try {
+      // Importar el SDK dinámicamente para evitar problemas de SSR
+      const { sdk } = await import("@farcaster/miniapp-sdk");
+
       // Crear texto personalizado según el tipo usando traducciones
       const getShareText = () => {
         const template = t(`shareTexts.${type}`);
@@ -56,10 +60,10 @@ export function ShareToFarcaster({
           .replace("{genreName}", nft.genre || "");
       };
 
-      // URL del contenido para el embed (estructura real de la app)
+      // URL del contenido para el embed
       const contentUrl = `https://miniapp.tuneport.xyz/album/${nft.collection_slug}`;
 
-      // Crear el cast con embed
+      // Crear el cast usando Quick Auth del SDK oficial
       const castData = {
         text: getShareText(),
         embeds: [
@@ -69,8 +73,8 @@ export function ShareToFarcaster({
         ],
       };
 
-      // Llamar a la API para crear el cast
-      const response = await fetch("/api/farcaster/cast", {
+      // Usar Quick Auth para hacer request autenticado
+      const response = await sdk.quickAuth.fetch("/api/farcaster/cast", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -79,7 +83,8 @@ export function ShareToFarcaster({
       });
 
       if (!response.ok) {
-        throw new Error(t("errorSharing"));
+        const errorData = await response.json();
+        throw new Error(errorData.details || t("errorSharing"));
       }
 
       const result = await response.json();
@@ -88,17 +93,73 @@ export function ShareToFarcaster({
         description: t("shareSuccessDescription"),
         action: {
           label: t("viewCast"),
-          onClick: () => window.open(result.castUrl, "_blank"),
+          onClick: () => {
+            // Usar navigator.clipboard en lugar de window.open
+            if (typeof window !== "undefined" && navigator.clipboard) {
+              navigator.clipboard.writeText(result.castUrl).then(() => {
+                toast.info("URL copiada al portapapeles");
+              });
+            }
+          },
         },
       });
     } catch (error) {
       console.error("Error sharing to Farcaster:", error);
-      toast.error(t("errorSharing"), {
-        description: t("shareErrorDescription"),
-      });
+
+      // Intentar fallback con método directo si Quick Auth falla
+      try {
+        await handleShareFallback();
+      } catch (fallbackError) {
+        toast.error(t("errorSharing"), {
+          description:
+            error instanceof Error ? error.message : t("shareErrorDescription"),
+        });
+      }
     } finally {
       setIsSharing(false);
     }
+  };
+
+  // Método fallback usando API directa
+  const handleShareFallback = async () => {
+    const getShareText = () => {
+      const template = t(`shareTexts.${type}`);
+      return template
+        .replace("{name}", nft.name)
+        .replace("{artist}", nft.artist)
+        .replace(
+          "{album}",
+          nft.album ? `�� ${t("music.album")}: ${nft.album}\n` : ""
+        )
+        .replace("{albumName}", nft.album || "")
+        .replace(
+          "{genre}",
+          nft.genre ? `🎤 ${t("music.genre")}: ${nft.genre}\n` : ""
+        )
+        .replace("{genreName}", nft.genre || "");
+    };
+
+    const contentUrl = `https://miniapp.tuneport.xyz/album/${nft.collection_slug}`;
+
+    const castData = {
+      text: getShareText(),
+      embeds: [{ url: contentUrl }],
+    };
+
+    const response = await fetch("/api/farcaster/cast", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(castData),
+    });
+
+    if (!response.ok) {
+      throw new Error("Fallback method failed");
+    }
+
+    const result = await response.json();
+    toast.success("Cast creado exitosamente (método alternativo)");
   };
 
   return (
@@ -108,15 +169,12 @@ export function ShareToFarcaster({
       variant="ghost"
       size="icon"
       className="text-white hover:bg-white/20 transition-all bg-black/40 backdrop-blur-sm rounded-full border border-white/20 h-12 w-12"
+      title="Compartir en Farcaster"
     >
       {isSharing ? (
-        <>
-          <Zap className="h-4 w-4 animate-pulse" />
-        </>
+        <Zap className="h-4 w-4 animate-pulse" />
       ) : (
-        <>
-          <Share className="h-4 w-4" />
-        </>
+        <Share className="h-4 w-4" />
       )}
     </Button>
   );

@@ -12,7 +12,7 @@
     "@allfeat/types": "https://github.com/Allfeat/js-types",
     "@coral-xyz/anchor": "0.27.0",
     "@farcaster/frame-wagmi-connector": "^1.0.0",
-    "@farcaster/miniapp-sdk": "^0.1.6",
+    "@farcaster/miniapp-sdk": "^0.1.7",
     "@hello-pangea/dnd": "^17.0.0",
     "@metaplex-foundation/mpl-core": "^1.4.0",
     "@metaplex-foundation/mpl-core-candy-machine": "^0.2.3",
