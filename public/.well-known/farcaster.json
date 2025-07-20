@@ -1,18 +1,20 @@
 {
-  "accountAssociation": {
-    "header": "eyJmaWQiOjExMjk4OTgsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg3ODI1RkY2OUEwMkIwOThmMTA0MDI5MzMyMDlENGU2NURhMUY1QWExIn0",
-    "payload": "eyJkb21haW4iOiJtaW5pYXBwLnR1bmVwb3J0Lnh5eiJ9",
-    "signature": "MHgzMjE0ZWY3ZDczNjcwNjI2YjQ4YWVhM2U4YWJmMTkyYzU3OTE0ODhlNTlhOWIxNGQ1NDUyNGQ0ZDA4M2E5NWQ1NTJkZmQ1OTY0YWMzYjdlYjhlMzk5OGE5YjIyMzBlYzFhMjYyMjA0OGZhY2Q2MDA4ZTU4OTZlMGVmMjkwMjk5NDFj"
-  },
   "frame": {
-    "version": "1",
     "name": "Tuneport",
+    "version": "1",
     "iconUrl": "https://pbs.twimg.com/profile_images/1942391632520695808/2XvLiCf2_400x400.png",
     "homeUrl": "https://miniapp.tuneport.xyz",
     "imageUrl": "https://miniapp.tuneport.xyz/preview.png",
-    "buttonTitle": "Join us!",
     "splashImageUrl": "https://pbs.twimg.com/profile_images/1942391632520695808/2XvLiCf2_400x400.png",
     "splashBackgroundColor": "#18181b",
-    "webhookUrl": "https://miniapp.tuneport.xyz/api/webhook"
+    "webhookUrl": "https://miniapp.tuneport.xyz/api/webhook",
+    "primaryCategory": "music",
+    "subtitle": "Where every second of music becomes value",
+    "description": "Platform music in web3"
+  },
+  "accountAssociation": {
+    "header": "eyJmaWQiOjExMjk4OTgsInR5cGUiOiJhdXRoIiwia2V5IjoiMHgwQjNkNEM2RTI0NjREZWRhMTE4QTlmZDA4RDNjOUJGZjVCZGQyQ2ZjIn0",
+    "payload": "eyJkb21haW4iOiJtaW5pYXBwLnR1bmVwb3J0Lnh5eiJ9",
+    "signature": "DWbRuCBg+k9kPTDNiu+0ErGdvwbeDJP1gHodmN0ORXMaz1ssORDkjsbFijoM43wUK330vBRTIrXzeAvszhAqFBs="
   }
 }
