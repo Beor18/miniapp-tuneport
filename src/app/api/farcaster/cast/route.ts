@@ -23,19 +23,22 @@ async function createFarcasterCast(castData: CastData, signerUuid: string) {
     throw new Error("NEYNAR_API_KEY not configured");
   }
 
-  const response = await fetch("https://api.neynar.com/v2/farcaster/cast", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${neynarApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      signer_uuid: signerUuid,
-      text: castData.text,
-      embeds: castData.embeds || [],
-      parent: castData.parent || null,
-    }),
-  });
+  const response = await fetch(
+    "https://snapchain-api.neynar.com/v2/farcaster/cast",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${neynarApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        signer_uuid: signerUuid,
+        text: castData.text,
+        embeds: castData.embeds || [],
+        parent: castData.parent || null,
+      }),
+    }
+  );
 
   if (!response.ok) {
     const errorData = await response.json();
@@ -156,7 +159,7 @@ export async function GET(request: NextRequest) {
 
     // Obtener información del cast usando Neynar API
     const response = await fetch(
-      `https://api.neynar.com/v2/farcaster/cast?identifier=${castHash}&type=hash`,
+      `https://snapchain-api.neynar.com/v2/farcaster/cast?identifier=${castHash}&type=hash`,
       {
         headers: {
           Authorization: `Bearer ${neynarApiKey}`,
