@@ -9,7 +9,6 @@
     "splashBackgroundColor": "#18181b",
     "webhookUrl": "https://miniapp.tuneport.xyz/api/webhook",
     "primaryCategory": "music",
-    "subtitle": "Where every second of music becomes value",
     "description": "Platform music in web3"
   },
   "accountAssociation": {
