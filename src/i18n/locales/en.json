@@ -419,5 +419,26 @@
     "selected": "selected",
     "yourQueueEmpty": "Your queue is empty",
     "searchTracks": "Search tracks..."
+  },
+  "farcaster": {
+    "share": "Share",
+    "sharing": "Sharing...",
+    "shareToFarcaster": "Share to Farcaster",
+    "farcasterNotAvailable": "Farcaster not available",
+    "errorSharing": "Error sharing",
+    "shareErrorDescription": "Could not share to Farcaster. Please try again.",
+    "sharedSuccessfully": "🎉 Shared to Farcaster!",
+    "shareSuccessDescription": "Your music is now in the feed",
+    "viewCast": "View Cast",
+    "castOriginal": "Original Cast",
+    "viewInWarpcast": "View in Warpcast",
+    "welcomeToTuneport": "Welcome to Tuneport!",
+    "discoverIncredibleMusic": "Discover incredible music and collect unique NFTs",
+    "musicRelatedDetected": "🎵 We detected related music:",
+    "shareTexts": {
+      "song": "🎵 I discovered this incredible song on @tuneport!\n\n\"{name}\" by {artist}\n{album}💿 Album: {albumName}\n{genre}🎤 Genre: {genreName}\n\n⚡ Listen and mint it as an NFT\n🎁 Every second of music becomes value",
+      "album": "💿 Complete album on @tuneport!\n\n\"{name}\" by {artist}\n{genre}🎤 Genre: {genreName}\n\n🎵 Music + NFTs + Web3\n⚡ The future of music is here",
+      "playlist": "📝 My playlist on @tuneport:\n\n\"{name}\"\n🎵 {artist}\n\n⚡ Discover incredible music\n🎁 Collect unique NFTs"
+    }
   }
 }

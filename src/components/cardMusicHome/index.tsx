@@ -30,6 +30,8 @@ import { useAppKitAccount } from "@Src/lib/privy";
 import { motion } from "framer-motion";
 import { MintModal } from "@Src/components/MintModal";
 import { TradingInterface } from "@Src/components/TradingInterface";
+import { ShareToFarcaster } from "@Src/components/ShareToFarcaster";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +46,9 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
   const [isMintModalOpen, setIsMintModalOpen] = useState(false);
   const [selectedSongForMint, setSelectedSongForMint] = useState<any>(null);
   const [isTradingModalOpen, setIsTradingModalOpen] = useState(false);
+
+  // Hook para traducciones
+  const t = useTranslations("farcaster");
 
   // Hooks para minting
   const { mint, isMinting } = useCandyMachineMint();
@@ -616,13 +621,18 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-white hover:bg-white/20 transition-all bg-black/40 backdrop-blur-sm rounded-full border border-white/20 h-12 w-12"
-                        >
-                          <ShareIcon className="h-5 w-5" />
-                        </Button>
+                        <ShareToFarcaster
+                          nft={{
+                            id: song._id,
+                            name: song.name,
+                            artist: collection?.artist_name || "",
+                            album: collection?.name,
+                            genre: song.genre || "",
+                            collection_slug: collection?.slug || "",
+                            image_cover: song.image,
+                          }}
+                          type="song"
+                        />
                       </motion.div>
 
                       {/* Botón Claim NFT */}
