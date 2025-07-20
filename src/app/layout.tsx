@@ -16,13 +16,13 @@ const inter = Inter({ subsets: ["latin"] });
 
 const embedMetadata = {
   version: "next",
-  imageUrl: "https://testnet.tuneport.xyz/preview.png",
+  imageUrl: "https://miniapp.tuneport.xyz/preview.png",
   button: {
-    title: "Ingresar",
+    title: "Join us!",
     action: {
       type: "launch_frame",
-      name: "Tuneport - Where every second of music becomes value.",
-      url: "https://testnet.tuneport.xyz",
+      name: "Tuneport",
+      url: "https://miniapp.tuneport.xyz",
       splashImageUrl:
         "https://pbs.twimg.com/profile_images/1942391632520695808/2XvLiCf2_400x400.png",
       splashBackgroundColor: "#18181b",
