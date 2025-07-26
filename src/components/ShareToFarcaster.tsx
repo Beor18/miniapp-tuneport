@@ -63,103 +63,44 @@ export function ShareToFarcaster({
       // URL del contenido para el embed
       const contentUrl = `https://miniapp.tuneport.xyz/album/${nft.collection_slug}`;
 
-      // Crear el cast usando Quick Auth del SDK oficial
-      const castData = {
+      // Usar el método oficial composeCast del SDK
+      const result = await sdk.actions.composeCast({
         text: getShareText(),
-        embeds: [
-          {
-            url: contentUrl,
-          },
-        ],
-      };
-
-      // Usar Quick Auth para hacer request autenticado
-      const response = await sdk.quickAuth.fetch("/api/farcaster/cast", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(castData),
+        embeds: [contentUrl] as [string],
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.details || t("errorSharing"));
+      // Verificar si el usuario completó el cast
+      if (result?.cast && result.cast.hash) {
+        toast.success(t("sharedSuccessfully"), {
+          description: t("shareSuccessDescription"),
+          action: {
+            label: t("viewCast"),
+            onClick: () => {
+              // Usar navigator.clipboard en lugar de window.open
+              if (typeof window !== "undefined" && navigator.clipboard) {
+                const castUrl = `https://warpcast.com/~/conversations/${
+                  result.cast!.hash
+                }`;
+                navigator.clipboard.writeText(castUrl).then(() => {
+                  toast.info("URL copiada al portapapeles");
+                });
+              }
+            },
+          },
+        });
+      } else {
+        // El usuario canceló el cast
+        toast.info(t("castCancelled") || "Cast cancelado");
       }
-
-      const result = await response.json();
-
-      toast.success(t("sharedSuccessfully"), {
-        description: t("shareSuccessDescription"),
-        action: {
-          label: t("viewCast"),
-          onClick: () => {
-            // Usar navigator.clipboard en lugar de window.open
-            if (typeof window !== "undefined" && navigator.clipboard) {
-              navigator.clipboard.writeText(result.castUrl).then(() => {
-                toast.info("URL copiada al portapapeles");
-              });
-            }
-          },
-        },
-      });
     } catch (error) {
       console.error("Error sharing to Farcaster:", error);
-
-      // Intentar fallback con método directo si Quick Auth falla
-      try {
-        await handleShareFallback();
-      } catch (fallbackError) {
-        toast.error(t("errorSharing"), {
-          description:
-            error instanceof Error ? error.message : t("shareErrorDescription"),
-        });
-      }
+      toast.error(t("errorSharing"), {
+        description:
+          error instanceof Error ? error.message : t("shareErrorDescription"),
+      });
     } finally {
       setIsSharing(false);
     }
-  };
-
-  // Método fallback usando API directa
-  const handleShareFallback = async () => {
-    const getShareText = () => {
-      const template = t(`shareTexts.${type}`);
-      return template
-        .replace("{name}", nft.name)
-        .replace("{artist}", nft.artist)
-        .replace(
-          "{album}",
-          nft.album ? `�� ${t("music.album")}: ${nft.album}\n` : ""
-        )
-        .replace("{albumName}", nft.album || "")
-        .replace(
-          "{genre}",
-          nft.genre ? `🎤 ${t("music.genre")}: ${nft.genre}\n` : ""
-        )
-        .replace("{genreName}", nft.genre || "");
-    };
-
-    const contentUrl = `https://miniapp.tuneport.xyz/album/${nft.collection_slug}`;
-
-    const castData = {
-      text: getShareText(),
-      embeds: [{ url: contentUrl }],
-    };
-
-    const response = await fetch("/api/farcaster/cast", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(castData),
-    });
-
-    if (!response.ok) {
-      throw new Error("Fallback method failed");
-    }
-
-    const result = await response.json();
-    toast.success("Cast creado exitosamente (método alternativo)");
   };
 
   return (
