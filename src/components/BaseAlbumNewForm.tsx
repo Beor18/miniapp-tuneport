@@ -50,6 +50,7 @@ import {
   DollarSign,
   Plus,
   Trash2,
+  X,
 } from "lucide-react";
 import { useWallets } from "@Src/lib/privy";
 import { ethers } from "ethers";
@@ -505,10 +506,18 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="w-[95vw] sm:w-[500px] md:w-[700px] lg:w-[800px] max-h-[90vh] flex flex-col p-0 bg-zinc-900 border border-zinc-700/30 shadow-xl shadow-zinc-900/10 rounded-xl">
-          <DialogHeader className="px-6 py-4 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-900/90">
-            <DialogTitle className="text-xl font-semibold text-zinc-100">
+          <DialogHeader className="px-6 py-4 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-900/90 relative">
+            <DialogTitle className="text-xl font-semibold text-zinc-100 pr-10">
               {getDialogTitle()}
             </DialogTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsDialogOpen(false)}
+              className="absolute right-4 top-4 h-8 w-8 p-0 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </DialogHeader>
 
           <div className="flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-zinc-900">
