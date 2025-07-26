@@ -187,7 +187,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
         address: "",
         mintPercentage: 0,
         royaltyPercentage: 0,
-        name: `Collaborator ${collaborators.length}`,
+        name: `${tAlbum("collaborator")} ${collaborators.length}`,
       },
     ];
 
@@ -344,29 +344,29 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
   const createCollectionFunc = useCallback(async () => {
     try {
       if (!evmAddress) {
-        toast.error("You need to connect an EVM wallet");
+        toast.error(tCommon("connectWalletRequired"));
         return;
       }
 
       if (!name || !symbol) {
-        toast.error("Name and symbol are required");
+        toast.error(tForms("nameSymbolRequired"));
         return;
       }
 
       if (getTotalMintPercentage() !== 100) {
-        toast.error("Mint distribution percentages must add up to 100%");
+        toast.error(tForms("mintPercentageError"));
         return;
       }
 
       if (getTotalRoyaltyPercentage() !== 100) {
-        toast.error("Royalty percentages must add up to 100%");
+        toast.error(tForms("royaltyPercentageError"));
         return;
       }
 
       setIsCreating(true);
 
       // Toast inicial
-      toast.loading("Preparing ERC1155 collection on Base...", {
+      toast.loading(tPlayer("preparingCollection"), {
         id: "base-creation",
       });
 
@@ -410,7 +410,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
       };
 
       setTransactionPending(true);
-      toast.loading("Waiting for wallet confirmation...", {
+      toast.loading(tPlayer("waitingWalletConfirmation"), {
         id: "base-creation",
       });
 
@@ -425,18 +425,19 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
         setTransactionPending(false);
         setIsCreated(true);
 
-        toast.success("ERC1155 collection created successfully on Base", {
+        toast.success(tPlayer("albumCreatedSuccessfully"), {
           id: "base-creation",
-          description: `Address: ${newCollectionAddress}`,
+          description: `${tCommon("address")}: ${newCollectionAddress}`,
         });
       } else {
-        throw new Error("Could not create the collection");
+        throw new Error(tCommon("couldNotCreateCollection"));
       }
     } catch (err) {
       console.error("Error al crear la colección:", err);
-      toast.error("Error creating collection", {
+      toast.error(tCommon("errorCreatingCollection"), {
         id: "base-creation",
-        description: err instanceof Error ? err.message : "Please try again",
+        description:
+          err instanceof Error ? err.message : tCommon("pleaseTryAgain"),
       });
 
       setIsCreating(false);
@@ -543,11 +544,11 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                   <div className="mt-4 space-y-2">
                     <div className="flex items-center justify-center space-x-2 text-xs text-zinc-500">
                       <CheckCircle className="h-4 w-4 text-emerald-500" />
-                      <span>Creating NFT Collection...</span>
+                      <span>{tPlayer("creatingNFTCollection")}</span>
                     </div>
                     <div className="flex items-center justify-center space-x-2 text-xs text-zinc-500">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Creating Album Token ($COIN)...</span>
+                      <span>{tPlayer("creatingAlbumToken")}</span>
                     </div>
                   </div>
                 </div>
@@ -627,26 +628,23 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="text-sm font-medium text-zinc-100 mb-1">
-                              🪙 Automatic Tokenization Powered by Zora
+                              🪙 {tAlbum("automaticTokenization")}
                             </h4>
                             <p className="text-xs text-zinc-400 leading-relaxed">
-                              Your album will automatically get its own
-                              tradeable token{" "}
+                              {tAlbum("automaticTokenizationDescription")}{" "}
                               <span className="text-blue-400 font-mono">
                                 ${symbol || "SYMBOL"}
                               </span>
-                              . Fans can trade, collect, and support your music
-                              directly. Early listeners earn tokens,
-                              collaborators get their share automatically.
+                              . {tAlbum("fansCanTrade")}
                             </p>
                             <div className="mt-2 flex items-center space-x-4 text-xs text-zinc-500">
                               <span className="flex items-center space-x-1">
                                 <CheckCircle className="h-3 w-3 text-emerald-500" />
-                                <span>No additional cost</span>
+                                <span>{tCommon("noAdditionalCost")}</span>
                               </span>
                               <span className="flex items-center space-x-1">
                                 <CheckCircle className="h-3 w-3 text-emerald-500" />
-                                <span>Instant liquidity on Zora</span>
+                                <span>{tAlbum("instantLiquidity")}</span>
                               </span>
                             </div>
                           </div>
@@ -717,7 +715,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                                   className="text-lg cursor-pointer text-zinc-100 flex items-center"
                                 >
                                   <Users2 className="mr-2 h-5 w-5 text-blue-400" />
-                                  DROP COLLABORATIVE
+                                  {tAlbum("dropCollaborative")}
                                 </Label>
                               </CardTitle>
                             </div>
@@ -725,8 +723,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                           <CardContent>
                             <CardDescription className="text-zinc-400">
                               <p className="font-medium">
-                                A joint project with multiple artists working
-                                together. Ideal for group releases.
+                                {tAlbum("dropCollaborativeDescription")}
                               </p>
                             </CardDescription>
                           </CardContent>
@@ -746,7 +743,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                                   className="text-lg cursor-pointer text-zinc-100 flex items-center"
                                 >
                                   <MusicIcon className="mr-2 h-5 w-5 text-blue-400" />
-                                  SINGLE
+                                  {tAlbum("single")}
                                 </Label>
                               </CardTitle>
                             </div>
@@ -754,8 +751,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                           <CardContent>
                             <CardDescription className="text-zinc-400">
                               <p className="font-medium">
-                                A single unique song. Perfect for exclusive and
-                                direct releases.
+                                {tAlbum("singleDescription")}
                               </p>
                             </CardDescription>
                           </CardContent>
@@ -767,17 +763,10 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                       <div className="space-y-4">
                         <div>
                           <Label className="text-sm font-medium text-zinc-200">
-                            {collectionType === "ALBUM" && (
-                              <Label htmlFor="name">
-                                {tForms("albumName")}
-                              </Label>
-                            )}
-                            {collectionType === "SINGLE" && (
-                              <Label htmlFor="name">Single Name</Label>
-                            )}
-                            {collectionType === "DROP" && (
-                              <Label htmlFor="name">Project Name</Label>
-                            )}
+                            {collectionType === "ALBUM" && tForms("albumName")}
+                            {collectionType === "SINGLE" &&
+                              tForms("singleName")}
+                            {collectionType === "DROP" && tForms("projectName")}
                           </Label>
                           <Input
                             id="name"
@@ -833,7 +822,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                             className="bg-zinc-800 border-zinc-700"
                           />
                           <p className="text-xs text-zinc-400 mt-1">
-                            Maximum number of digital copies that can be created
+                            {tForms("maxSupplyDescription")}
                           </p>
                         </div>
 
@@ -941,7 +930,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                                 value="Other"
                                 className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100"
                               >
-                                Other
+                                {tCommon("other")}
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -1000,12 +989,13 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                         </h4>
                         <p className="text-sm text-blue-300 mt-1">
                           {tForms("createPaymentSplitter")}
-                          automatically divide earnings
                         </p>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="paymentName">Payment system name</Label>
+                        <Label htmlFor="paymentName">
+                          {tForms("paymentSystemName")}
+                        </Label>
                         <Input
                           id="paymentName"
                           value={paymentSystemName}
@@ -1016,7 +1006,9 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="paymentDescription">Description</Label>
+                        <Label htmlFor="paymentDescription">
+                          {tCommon("description")}
+                        </Label>
                         <Textarea
                           id="paymentDescription"
                           value={paymentSystemDescription}
@@ -1038,27 +1030,25 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                     <div className="space-y-6">
                       <div className="bg-green-900/20 border border-green-600 p-4 rounded-lg">
                         <h4 className="font-semibold text-green-400">
-                          👥 Earnings Split
+                          👥 {tAlbum("earningsSplit")}
                         </h4>
                         <p className="text-sm text-green-300 mt-1">
-                          Set up how earnings from sales and resales are
-                          automatically shared
+                          {tAlbum("earningsSplitDescription")}
                         </p>
                       </div>
 
                       {/* Configuración de Royalties Totales */}
                       <div className="bg-purple-900/20 border border-purple-600 p-4 rounded-lg space-y-3">
                         <h5 className="font-semibold text-purple-400">
-                          📈 Resale Royalties
+                          📈 {tAlbum("resaleRoyalties")}
                         </h5>
                         <p className="text-sm text-purple-300">
-                          Percentage you earn when someone resells your music
-                          (secondary market)
+                          {tAlbum("resaleRoyaltiesDescription")}
                         </p>
                         <div className="flex items-center space-x-4">
                           <div className="flex-1">
                             <Label htmlFor="totalRoyaltyPercentage">
-                              Total Royalty (%)
+                              {tAlbum("totalRoyaltyPercentage")}
                             </Label>
                             <Input
                               id="totalRoyaltyPercentage"
@@ -1076,7 +1066,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                             />
                           </div>
                           <div className="text-sm text-zinc-400 mt-6">
-                            Recommended: 2.5% - 20%
+                            {tAlbum("recommendedRange")}
                           </div>
                         </div>
                       </div>
@@ -1084,7 +1074,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                       {/* Status de distribución */}
                       <div className="flex justify-between items-center">
                         <h3 className="text-lg font-semibold">
-                          Split by Collaborator
+                          {tAlbum("splitByCollaborator")}
                         </h3>
                         <div className="flex space-x-2">
                           <Badge
@@ -1094,7 +1084,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                                 : "destructive"
                             }
                           >
-                            Sales: {getTotalMintPercentage()}%
+                            {tAlbum("sales")}: {getTotalMintPercentage()}%
                           </Badge>
                           <Badge
                             variant={
@@ -1103,7 +1093,8 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                                 : "destructive"
                             }
                           >
-                            Royalties: {getTotalRoyaltyPercentage()}%
+                            {tAlbum("royalties")}: {getTotalRoyaltyPercentage()}
+                            %
                           </Badge>
                         </div>
                       </div>
@@ -1131,7 +1122,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
 
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                             <div className="md:col-span-2">
-                              <Label>Name</Label>
+                              <Label>{tCommon("name")}</Label>
                               <Input
                                 value={collab.name}
                                 onChange={(e) =>
@@ -1147,7 +1138,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                             </div>
 
                             <div>
-                              <Label>Sales (%)</Label>
+                              <Label>{tAlbum("salesPercentage")}</Label>
                               <Input
                                 type="number"
                                 value={collab.mintPercentage}
@@ -1166,7 +1157,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                             </div>
 
                             <div>
-                              <Label>Royalties (%)</Label>
+                              <Label>{tAlbum("royaltiesPercentage")}</Label>
                               <Input
                                 type="number"
                                 value={collab.royaltyPercentage}
@@ -1186,7 +1177,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                           </div>
 
                           <div>
-                            <Label>Wallet Address</Label>
+                            <Label>{tForms("walletAddress")}</Label>
                             <Input
                               value={collab.address}
                               onChange={(e) =>
@@ -1211,7 +1202,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                           type="button"
                         >
                           <Plus className="w-4 h-4 mr-2" />
-                          Add Collaborator
+                          {tAlbum("addCollaborator")}
                         </Button>
 
                         {/* Botón de redistribución automática */}
@@ -1220,10 +1211,10 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                             <div className="flex items-center justify-between">
                               <div>
                                 <p className="text-sm font-medium text-orange-400">
-                                  Auto-split percentages equally
+                                  {tAlbum("autoSplitTitle")}
                                 </p>
                                 <p className="text-xs text-orange-300">
-                                  Divides 100% equally among all collaborators
+                                  {tAlbum("autoSplitDescription")}
                                 </p>
                               </div>
                               <Button
@@ -1237,7 +1228,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                                 type="button"
                                 className="bg-orange-900/20 border-orange-600 text-orange-400 hover:bg-orange-900/40 hover:text-orange-300"
                               >
-                                ⚡ Auto-split
+                                ⚡ {tAlbum("autoSplit")}
                               </Button>
                             </div>
                           </div>
@@ -1246,11 +1237,13 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
 
                       {/* Preview de distribución */}
                       <div className="bg-zinc-700/50 p-4 rounded-lg space-y-3">
-                        <h4 className="font-semibold">📊 Earnings Preview:</h4>
+                        <h4 className="font-semibold">
+                          📊 {tAlbum("earningsPreview")}:
+                        </h4>
 
                         <div className="space-y-2">
                           <h5 className="text-sm font-medium text-blue-400">
-                            💰 Initial Sales:
+                            💰 {tAlbum("initialSales")}:
                           </h5>
                           {collaborators.map((collab, index) => (
                             <div
@@ -1268,11 +1261,11 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
 
                         <div className="space-y-2">
                           <h5 className="text-sm font-medium text-purple-400">
-                            🔄 Resale Royalties:
+                            🔄 {tAlbum("resaleRoyalties")}:
                           </h5>
                           <p className="text-xs text-zinc-400 mb-2">
-                            {totalRoyaltyPercentage}% of resale price is
-                            distributed as follows:
+                            {tAlbum("resaleDistributionInfo")}{" "}
+                            {totalRoyaltyPercentage}%:
                           </p>
                           {collaborators.map((collab, index) => (
                             <div
@@ -1286,14 +1279,14 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                                     collab.royaltyPercentage) /
                                   100
                                 ).toFixed(1)}
-                                % of resale price
+                                % {tAlbum("ofResalePrice")}
                               </span>
                             </div>
                           ))}
                         </div>
 
                         <div className="mt-2 pt-2 border-t border-zinc-600 text-xs text-zinc-400">
-                          Price per copy: Will be set when creating each song (
+                          {tAlbum("pricePerCopyNote")} (
                           {enableDAI ? "DAI" : "ETH"})
                         </div>
                       </div>
@@ -1308,16 +1301,17 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                     <div className="space-y-4">
                       <div className="bg-yellow-900/20 border border-yellow-600 p-4 rounded-lg">
                         <h4 className="font-semibold text-yellow-400">
-                          💱 Payment Currency
+                          💱 {tAlbum("paymentCurrency")}
                         </h4>
                         <p className="text-sm text-yellow-300 mt-1">
-                          Fans will be able to purchase with the currency you
-                          choose
+                          {tAlbum("paymentCurrencyDescription")}
                         </p>
                       </div>
 
                       <div>
-                        <Label htmlFor="paymentToken">Payment Currency</Label>
+                        <Label htmlFor="paymentToken">
+                          {tAlbum("paymentCurrency")}
+                        </Label>
                         <Select
                           value={paymentToken}
                           onValueChange={(value) => {
@@ -1335,13 +1329,13 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                               value="ETH"
                               className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100"
                             >
-                              ETH (Ethereum)
+                              {tAlbum("ethEthereum")}
                             </SelectItem>
                             <SelectItem
                               value={symbol || "ALBUM_COIN"}
                               className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100"
                             >
-                              🪙 ${symbol} (Album Token)
+                              🪙 ${symbol} ({tAlbum("albumToken")})
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -1349,23 +1343,20 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
 
                       <div className="bg-blue-900/20 border border-blue-600 p-4 rounded-lg">
                         <h5 className="font-semibold text-blue-400 mb-2">
-                          💡 Flexible Pricing
+                          💡 {tAlbum("flexiblePricing")}
                         </h5>
                         <p className="text-sm text-blue-300">
-                          Prices will be set individually for each song when
-                          creating them. This allows you to adjust prices based
-                          on quality, popularity or content type.
+                          {tAlbum("flexiblePricingDescription")}
                         </p>
                       </div>
 
                       {enableDAI && (
                         <div className="bg-green-900/20 border border-green-600 p-4 rounded-lg">
                           <h5 className="font-semibold text-green-400 mb-2">
-                            ✅ DAI Activated
+                            ✅ {tAlbum("daiActivated")}
                           </h5>
                           <p className="text-sm text-green-300">
-                            Fans will pay in DAI (stable coin pegged to the
-                            dollar) instead of volatile ETH.
+                            {tAlbum("daiActivatedDescription")}
                           </p>
                         </div>
                       )}
@@ -1373,32 +1364,27 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                       {paymentToken === (symbol || "ALBUM_COIN") && (
                         <div className="bg-purple-900/20 border border-purple-600 p-4 rounded-lg">
                           <h5 className="font-semibold text-purple-400 mb-2">
-                            🪙 Album Token Payment Activated
+                            🪙 {tAlbum("albumTokenPaymentActivated")}
                           </h5>
                           <p className="text-sm text-purple-300 mb-2">
-                            Fans will pay using your album&apos;s token{" "}
+                            {tAlbum("albumTokenPaymentDescription")}{" "}
                             <span className="font-mono text-purple-200">
                               ${symbol}
                             </span>{" "}
-                            instead of ETH. This creates a circular economy
-                            where your music generates demand for your token!
+                            {tAlbum("albumTokenCircularEconomy")}
                           </p>
                           <ul className="text-xs text-purple-300 space-y-1">
-                            <li>
-                              • Fans need to own your tokens to buy your music
-                            </li>
-                            <li>• Creates demand and utility for your coin</li>
-                            <li>
-                              • Early supporters benefit from price appreciation
-                            </li>
-                            <li>• You control your own micro-economy</li>
+                            <li>• {tAlbum("albumTokenBenefit1")}</li>
+                            <li>• {tAlbum("albumTokenBenefit2")}</li>
+                            <li>• {tAlbum("albumTokenBenefit3")}</li>
+                            <li>• {tAlbum("albumTokenBenefit4")}</li>
                           </ul>
                         </div>
                       )}
 
                       <div className="bg-zinc-700/50 p-4 rounded-lg">
                         <h4 className="font-semibold mb-2">
-                          💰 Automatic Split:
+                          💰 {tAlbum("automaticSplit")}:
                         </h4>
                         {collaborators.map((collab, index) => (
                           <div
@@ -1410,8 +1396,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
                           </div>
                         ))}
                         <div className="mt-2 pt-2 border-t border-zinc-600 text-xs text-zinc-400">
-                          Earnings will be automatically split according to
-                          these percentages at the price you set for each song
+                          {tAlbum("automaticSplitNote")}
                         </div>
                       </div>
                     </div>
