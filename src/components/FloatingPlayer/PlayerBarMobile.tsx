@@ -83,6 +83,7 @@ export function PlayerBarMobile({
   userId,
 }: PlayerBarMobileProps) {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [showVolumeControl, setShowVolumeControl] = useState<boolean>(false);
 
   // Hooks para minting
   const { mint, isMinting } = useCandyMachineMint();
@@ -503,21 +504,23 @@ export function PlayerBarMobile({
 
       {/* Player expandido (pantalla completa) */}
       {isExpanded && (
-        <div className="fixed inset-0 z-[60] bg-zinc-900 text-white sm:hidden flex flex-col">
+        <div className="fixed inset-0 z-[60] bg-gradient-to-b from-zinc-900 via-zinc-900 to-black text-white sm:hidden flex flex-col">
           {/* Header con botón de cerrar */}
-          <div className="flex items-center justify-between p-4 border-b border-zinc-800 flex-shrink-0">
+          <div className="flex items-center justify-between p-4 border-b border-zinc-800/50 flex-shrink-0 backdrop-blur-sm">
             <Button
               variant="ghost"
               size="icon"
               onClick={closeExpanded}
-              className="text-white hover:bg-zinc-800"
+              className="text-white hover:bg-zinc-800/50 rounded-full"
             >
               <ChevronDownIcon className="h-6 w-6" />
             </Button>
 
             <div className="text-center flex-1">
-              <p className="text-sm text-zinc-400">Listening to</p>
-              <p className="text-sm font-medium truncate px-2">
+              <p className="text-xs text-zinc-500 uppercase tracking-wide">
+                Listening to
+              </p>
+              <p className="text-sm font-medium truncate px-2 text-zinc-300">
                 {currentSong.collection_name || "My library"}
               </p>
             </div>
@@ -526,32 +529,33 @@ export function PlayerBarMobile({
               variant="ghost"
               size="icon"
               onClick={closeExpanded}
-              className="text-white hover:bg-zinc-800"
+              className="text-white hover:bg-zinc-800/50 rounded-full"
             >
               <XIcon className="h-6 w-6" />
             </Button>
           </div>
 
-          {/* Contenido del player expandido */}
-          <div className="flex-1 flex flex-col justify-between overflow-hidden">
-            <div className="flex-1 flex flex-col justify-center px-6 py-4">
-              {/* Imagen del álbum grande */}
-              <div className="flex justify-center mb-6">
+          {/* Contenido principal del player - Responsive layout */}
+          <div className="flex-1 flex flex-col justify-between p-6 min-h-0">
+            {/* Top section: Album art + Info */}
+            <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
+              {/* Imagen del álbum - Responsive */}
+              <div className="mb-6 w-full max-w-80">
                 <Link href={`/album/${currentSong.slug}`}>
                   <img
                     src={`${currentSong.image}`}
                     alt="Album cover"
-                    className="w-30 h-30 max-w-30 max-h-30 rounded-lg object-cover shadow-2xl"
+                    className="w-full aspect-square rounded-3xl object-cover shadow-2xl shadow-black/50"
                   />
                 </Link>
               </div>
 
               {/* Info de la canción */}
-              <div className="text-center mb-6">
-                <h1 className="text-xl font-bold text-white mb-2 px-4 leading-tight">
+              <div className="text-center mb-6 w-full">
+                <h1 className="text-2xl font-bold text-white mb-2 leading-tight line-clamp-2">
                   {currentSong.name}
                 </h1>
-                <p className="text-base text-zinc-400 px-4">
+                <p className="text-lg text-zinc-400">
                   {currentSong.artist_name ||
                     currentSong.artist ||
                     "Unknown artist"}
@@ -559,77 +563,10 @@ export function PlayerBarMobile({
               </div>
             </div>
 
-            {/* Controles en la parte inferior */}
-            <div className="px-6 pb-8 space-y-4 flex-shrink-0">
-              {/* Barra de progreso con tiempos */}
-              <div className="space-y-2">
-                <Slider
-                  value={[currentTime]}
-                  max={duration}
-                  step={1}
-                  onValueChange={handleSeek}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-zinc-400">
-                  <span>{formatTime(currentTime)}</span>
-                  <span>{formatTime(duration)}</span>
-                </div>
-              </div>
-
-              {/* Controles principales */}
-              <div className="flex items-center justify-center space-x-6 py-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handlePrevSong}
-                  className="text-white hover:bg-zinc-800 h-12 w-12"
-                >
-                  <SkipBackIcon className="h-7 w-7" />
-                </Button>
-
-                <Button
-                  onClick={handlePlayPause}
-                  className="bg-white hover:bg-zinc-200 text-black rounded-full h-14 w-14 flex items-center justify-center"
-                >
-                  {isPlaying ? (
-                    <PauseIcon className="h-7 w-7" />
-                  ) : (
-                    <PlayIcon className="h-7 w-7 ml-1" />
-                  )}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleNextSong}
-                  className="text-white hover:bg-zinc-800 h-12 w-12"
-                >
-                  <SkipForwardIcon className="h-7 w-7" />
-                </Button>
-              </div>
-
-              {/* Control de volumen */}
-              <div className="flex items-center space-x-3 py-2">
-                <Volume2Icon className="h-5 w-5 text-zinc-400 flex-shrink-0" />
-                <Slider
-                  value={[volume]}
-                  max={1}
-                  step={0.01}
-                  onValueChange={handleVolumeChange}
-                  className="flex-1"
-                />
-              </div>
-
-              {/* Controles adicionales */}
-              <div className="flex justify-center items-center gap-4 pt-2">
-                {/* Like Button */}
-                <LikeButton
-                  nftId={currentSong?._id || ""}
-                  variant="minimal"
-                  size="sm"
-                  showCount={true}
-                />
-
+            {/* Bottom section: Controls */}
+            <div className="space-y-6">
+              {/* Action buttons */}
+              <div className="grid grid-cols-3 gap-3">
                 {/* Botón Claim NFT */}
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -639,11 +576,11 @@ export function PlayerBarMobile({
                     variant="outline"
                     onClick={handleClaimClick}
                     disabled={!hasWalletConnected || isMintingAny}
-                    className={`${
+                    className={`w-full h-14 ${
                       !hasWalletConnected || isMintingAny
-                        ? "bg-transparent text-zinc-500 border-zinc-700"
-                        : "bg-transparent text-white border-zinc-600 hover:bg-zinc-800"
-                    } rounded-full px-4 py-2 transition-all duration-300 flex items-center gap-2`}
+                        ? "bg-zinc-800/30 text-zinc-600 border-zinc-700/50"
+                        : "bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30 hover:border-zinc-500/50"
+                    } rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm`}
                     title={!hasWalletConnected ? "Connect wallet" : "Claim NFT"}
                   >
                     {isMintingAny ? (
@@ -656,7 +593,7 @@ export function PlayerBarMobile({
                         }}
                       >
                         <svg
-                          className="h-4 w-4"
+                          className="h-6 w-6"
                           xmlns="http://www.w3.org/2000/svg"
                           fill="none"
                           viewBox="0 0 24 24"
@@ -677,9 +614,8 @@ export function PlayerBarMobile({
                         </svg>
                       </motion.div>
                     ) : (
-                      <GiftIcon className="h-4 w-4" />
+                      <GiftIcon className="h-6 w-6" />
                     )}
-                    <span className="text-sm">Claim</span>
                   </Button>
                 </motion.div>
 
@@ -691,29 +627,124 @@ export function PlayerBarMobile({
                   <Button
                     onClick={() => setIsTradingModalOpen(true)}
                     variant="outline"
-                    className="bg-transparent text-white border-zinc-600 hover:bg-zinc-800 hover:border-zinc-500 rounded-full px-4 py-2 transition-all duration-300 flex items-center gap-2"
+                    className="w-full h-14 bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30 hover:border-zinc-500/50 rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm"
                     title="Trade Tokens"
                   >
-                    <Coins className="h-4 w-4" />
-                    <span className="text-sm">Trade</span>
+                    <Coins className="h-6 w-6" />
                   </Button>
                 </motion.div>
 
                 {/* Botón de playlist */}
-                <Button
-                  onClick={togglePlaylist}
-                  variant="outline"
-                  className={`${
-                    showPlaylist
-                      ? "bg-zinc-700 text-white border-zinc-600"
-                      : "bg-transparent text-white border-zinc-600"
-                  } rounded-full px-4 py-2 transition-all duration-300 flex items-center gap-2`}
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <ListMusicIcon className="h-4 w-4" />
-                  <span className="text-sm">
-                    In Queue
-                    {userPlaylist.length > 0 && ` (${userPlaylist.length})`}
-                  </span>
+                  <Button
+                    onClick={togglePlaylist}
+                    variant="outline"
+                    className={`w-full h-14 relative ${
+                      showPlaylist
+                        ? "bg-zinc-700/40 text-white border-zinc-600/70"
+                        : "bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30"
+                    } rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm`}
+                    title={`Queue ${
+                      userPlaylist.length > 0 ? `(${userPlaylist.length})` : ""
+                    }`}
+                  >
+                    <ListMusicIcon className="h-6 w-6" />
+                    {userPlaylist.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold text-[10px] shadow-lg">
+                        {userPlaylist.length > 9 ? "9+" : userPlaylist.length}
+                      </span>
+                    )}
+                  </Button>
+                </motion.div>
+              </div>
+
+              {/* Like and Volume controls */}
+              <div className="flex items-center justify-between px-2">
+                <LikeButton
+                  nftId={currentSong?._id || ""}
+                  variant="minimal"
+                  size="lg"
+                  showCount={true}
+                  className="text-white"
+                />
+
+                <div className="flex items-center space-x-3">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowVolumeControl(!showVolumeControl)}
+                    className="text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-full"
+                  >
+                    <Volume2Icon className="h-5 w-5" />
+                  </Button>
+
+                  {showVolumeControl && (
+                    <motion.div
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: "120px" }}
+                      exit={{ opacity: 0, width: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      <Slider
+                        value={[volume]}
+                        max={1}
+                        step={0.01}
+                        onValueChange={handleVolumeChange}
+                        className="w-full"
+                      />
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div className="space-y-2">
+                <Slider
+                  value={[currentTime]}
+                  max={duration}
+                  step={1}
+                  onValueChange={handleSeek}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-sm text-zinc-500 px-1">
+                  <span>{formatTime(currentTime)}</span>
+                  <span>{formatTime(duration)}</span>
+                </div>
+              </div>
+
+              {/* Main playback controls */}
+              <div className="flex items-center justify-center space-x-6">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handlePrevSong}
+                  className="text-white hover:bg-zinc-800/50 h-12 w-12 rounded-full"
+                >
+                  <SkipBackIcon className="h-7 w-7" />
+                </Button>
+
+                <Button
+                  onClick={handlePlayPause}
+                  className="bg-white hover:bg-zinc-200 text-black rounded-full h-16 w-16 flex items-center justify-center shadow-xl transition-transform hover:scale-105"
+                >
+                  {isPlaying ? (
+                    <PauseIcon className="h-8 w-8" />
+                  ) : (
+                    <PlayIcon className="h-8 w-8 ml-1" />
+                  )}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleNextSong}
+                  className="text-white hover:bg-zinc-800/50 h-12 w-12 rounded-full"
+                >
+                  <SkipForwardIcon className="h-7 w-7" />
                 </Button>
               </div>
             </div>
