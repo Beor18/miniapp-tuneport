@@ -545,7 +545,7 @@ export const Playlist: React.FC<PlaylistProps> = ({
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed top-0 right-0 w-80 h-full bg-zinc-900 shadow-2xl z-50 flex flex-col"
+          className="fixed top-0 right-0 w-80 h-full bg-zinc-900 shadow-2xl z-[100] flex flex-col"
         >
           <div className="flex justify-between items-center p-4 border-b border-zinc-700">
             <h4 className="text-lg font-semibold text-white">

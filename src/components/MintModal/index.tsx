@@ -94,7 +94,7 @@ export function MintModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md bg-gradient-to-br from-gray-900 via-black to-gray-800 border-neutral-700 shadow-2xl">
+      <DialogContent className="max-w-md bg-gradient-to-br from-gray-900 via-black to-gray-800 border-neutral-700 shadow-2xl z-[100] data-[state=open]:z-[100]">
         <DialogHeader className="border-b border-neutral-700 pb-4 relative">
           <Button
             variant="ghost"

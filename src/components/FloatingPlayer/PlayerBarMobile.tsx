@@ -771,7 +771,7 @@ export function PlayerBarMobile({
 
       {/* Trading Modal */}
       <Dialog open={isTradingModalOpen} onOpenChange={setIsTradingModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-neutral-800 shadow-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-neutral-800 shadow-2xl z-[100] data-[state=open]:z-[100]">
           <DialogHeader className="border-b border-neutral-800 pb-4 relative">
             <Button
               variant="ghost"

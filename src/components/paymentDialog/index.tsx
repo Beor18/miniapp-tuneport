@@ -391,7 +391,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ onConfirmClaim }) => {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="bg-zinc-900 border-zinc-800 px-0 py-0 max-w-lg overflow-hidden text-zinc-100">
+      <DialogContent className="bg-zinc-900 border-zinc-800 px-0 py-0 max-w-lg overflow-hidden text-zinc-100 z-[100] data-[state=open]:z-[100]">
         {/* Sección superior con imagen y controles de audio */}
         <div className="relative">
           {/* Imagen de portada */}
