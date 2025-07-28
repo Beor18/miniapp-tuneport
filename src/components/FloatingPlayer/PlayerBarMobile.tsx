@@ -38,7 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@Src/ui/components/ui/dialog";
-import { Coins } from "lucide-react";
+import { Coins, X } from "lucide-react";
 
 interface PlayerBarMobileProps {
   currentSong: any;
@@ -741,8 +741,16 @@ export function PlayerBarMobile({
       {/* Trading Modal */}
       <Dialog open={isTradingModalOpen} onOpenChange={setIsTradingModalOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-neutral-800 shadow-2xl">
-          <DialogHeader className="border-b border-neutral-800 pb-4">
-            <DialogTitle className="flex items-center gap-3 text-white text-xl font-semibold">
+          <DialogHeader className="border-b border-neutral-800 pb-4 relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsTradingModalOpen(false)}
+              className="absolute right-0 top-0 h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-800"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <DialogTitle className="flex items-center gap-3 text-white text-xl font-semibold pr-8">
               <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
                 <Coins className="h-4 w-4 text-blue-400" />
               </div>

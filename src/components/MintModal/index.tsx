@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@Src/ui/components/ui/dialog";
-import { GiftIcon, MinusIcon, PlusIcon } from "lucide-react";
+import { GiftIcon, MinusIcon, PlusIcon, X } from "lucide-react";
 
 interface NFTData {
   _id: string;
@@ -95,8 +95,17 @@ export function MintModal({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md bg-gradient-to-br from-gray-900 via-black to-gray-800 border-neutral-700 shadow-2xl">
-        <DialogHeader className="border-b border-neutral-700 pb-4">
-          <DialogTitle className="flex items-center gap-3 text-white text-xl font-semibold">
+        <DialogHeader className="border-b border-neutral-700 pb-4 relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleClose}
+            disabled={isLoading}
+            className="absolute right-0 top-0 h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-800"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          <DialogTitle className="flex items-center gap-3 text-white text-xl font-semibold pr-8">
             <div className="w-8 h-8 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-lg flex items-center justify-center border border-purple-500/30">
               <GiftIcon className="h-4 w-4 text-purple-400" />
             </div>

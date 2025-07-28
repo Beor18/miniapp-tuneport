@@ -24,6 +24,7 @@ import {
   Music,
   ExternalLink,
   Loader2,
+  X,
 } from "lucide-react";
 import { usePayment } from "@Src/contexts/PaymentContext";
 import { Spinner } from "@Src/components/spinners/spinner";
@@ -207,8 +208,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ onConfirmClaim }) => {
     player.initialize(audioElement, musicUrl, false);
     player.updateSettings({
       streaming: {
-        lowLatencyEnabled: false,
-        // Otras configuraciones según tus necesidades
+        // Configuraciones de streaming
       },
     });
 
@@ -460,8 +460,17 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ onConfirmClaim }) => {
 
         {/* Contenido principal */}
         <div className="p-4">
-          <DialogHeader>
-            <DialogTitle className="text-white text-xl">
+          <DialogHeader className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClose}
+              disabled={isProcessing || isMinting}
+              className="absolute right-0 top-0 h-8 w-8 text-zinc-400 hover:text-white hover:bg-zinc-800"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <DialogTitle className="text-white text-xl pr-8">
               {completeTrackData?.name || "Track"}
             </DialogTitle>
             <DialogDescription className="text-zinc-400">
