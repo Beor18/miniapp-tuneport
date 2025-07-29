@@ -273,11 +273,20 @@ export default function CardAlbumMusic({
     }, 1500);
 
     return () => {
-      // Mostrar el reproductor flotante al salir
-      if (currentSong) {
-        setShowFloatingPlayer(true);
-      }
       clearTimeout(loadingTimer);
+
+      // Mostrar el reproductor flotante al salir con un pequeño delay
+      // para asegurar que se ejecute después de que CardMusicHome se monte
+      setTimeout(() => {
+        // Verificar si hay música reproduciéndose
+        const audio = document.querySelector("audio");
+        const hasActiveSong = audio && (audio.currentTime > 0 || !audio.paused);
+
+        if (currentSong || hasActiveSong) {
+          setShowFloatingPlayer(true);
+        }
+      }, 100);
+
       // Resetear la referencia al desmontar para futuros montajes
       isInitializedRef.current = false;
     };
