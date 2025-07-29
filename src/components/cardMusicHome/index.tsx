@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import PlayerHome from "../playerHome";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import useAudioControls from "../../lib/hooks/useAudioControls";
 import { LikeButton } from "../ui/LikeButton";
 import { useCandyMachineMint } from "@Src/lib/hooks/solana/useCandyMachineMint";
@@ -42,6 +43,7 @@ import {
 export default function CardMusicHome({ nftData, collectionData }: any) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrolling, setScrolling] = useState(false);
+  const pathname = usePathname();
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isMintModalOpen, setIsMintModalOpen] = useState(false);
   const [selectedSongForMint, setSelectedSongForMint] = useState<any>(null);
@@ -161,11 +163,29 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
     let unmountTimeoutId: NodeJS.Timeout | null = null;
 
     // Solo ocultar en el primer renderizado para evitar interferencias con otros efectos
+    // PERO: no ocultar si hay una canción activa (viene de álbum) y estamos en home/root
     if (isFirstRender.current) {
-      console.log(
-        `[CardMusicHome:${effectId}] Ocultando FloatingPlayer inicialmente`
-      );
-      setShowFloatingPlayer(false);
+      const isRootPath = pathname === "/" || pathname.match(/^\/[a-z]{2}$/); // "/" o "/es", "/en", etc.
+
+      // Verificar si hay música reproduciéndose
+      const audio = document.querySelector("audio");
+      const hasActiveAudio = audio && (audio.currentTime > 0 || !audio.paused);
+
+      // Solo ocultar FloatingPlayer si NO hay canción activa Y NO hay audio reproduciéndose
+      if ((!currentSong && !hasActiveAudio) || !isRootPath) {
+        console.log(
+          `[CardMusicHome:${effectId}] Ocultando FloatingPlayer inicialmente`
+        );
+        setShowFloatingPlayer(false);
+      } else {
+        console.log(
+          `[CardMusicHome:${effectId}] Manteniendo FloatingPlayer visible (audio activo en home)`
+        );
+        // Usar un pequeño delay para asegurar coordinación con CardAlbumMusic cleanup
+        setTimeout(() => {
+          setShowFloatingPlayer(true);
+        }, 150);
+      }
       isFirstRender.current = false;
     }
 
@@ -184,9 +204,8 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
 
         // Mostrar el FloatingPlayer después de un delay para permitir completar la navegación
         unmountTimeoutId = setTimeout(() => {
-          const currentPath = window.location.pathname;
           // Solo mostrar si no estamos en un álbum ni en foryou
-          if (!currentPath.startsWith("/album/") && currentPath !== "/foryou") {
+          if (!pathname.startsWith("/album/") && pathname !== "/foryou") {
             console.log(
               `[CardMusicHome:${effectId}] Mostrando FloatingPlayer al desmontar`
             );
