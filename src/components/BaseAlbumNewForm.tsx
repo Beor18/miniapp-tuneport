@@ -63,6 +63,10 @@ import {
 
 interface BaseAlbumNewFormProps {
   nickname?: string;
+  // Props para modo controlado externamente
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showButton?: boolean;
 }
 
 interface Collaborator {
@@ -72,7 +76,12 @@ interface Collaborator {
   name: string;
 }
 
-export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
+export default function BaseAlbumNewForm({
+  nickname,
+  isOpen: externalIsOpen,
+  onOpenChange: externalOnOpenChange,
+  showButton = true,
+}: BaseAlbumNewFormProps) {
   const router = useRouter();
   const { wallets } = useWallets();
 
@@ -82,8 +91,20 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
   const tForms = useTranslations("forms");
   const tPlayer = useTranslations("player");
 
-  // Estados básicos
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  // Estados básicos - usar estado externo si está disponible
+  const [internalIsDialogOpen, setInternalIsDialogOpen] = useState(false);
+  const isDialogOpen =
+    externalIsOpen !== undefined ? externalIsOpen : internalIsDialogOpen;
+  const setIsDialogOpen = useCallback(
+    (open: boolean) => {
+      if (externalOnOpenChange) {
+        externalOnOpenChange(open);
+      } else {
+        setInternalIsDialogOpen(open);
+      }
+    },
+    [externalOnOpenChange]
+  );
   const [isCreating, setIsCreating] = useState(false);
   const [isCreated, setIsCreated] = useState(false);
   const [transactionPending, setTransactionPending] = useState(false);
@@ -326,7 +347,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
     if (!isDialogOpen) {
       resetForm();
     }
-  }, [isDialogOpen, resetForm]);
+  }, [isDialogOpen, resetForm, setIsDialogOpen]);
 
   // Efecto para cerrar después de crear
   useEffect(() => {
@@ -459,9 +480,13 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
     paymentSystemName,
     paymentSystemDescription,
     collaborators,
-    enableDAI,
     getTotalMintPercentage,
     getTotalRoyaltyPercentage,
+    nickname,
+    paymentToken,
+    tCommon,
+    tForms,
+    tPlayer,
   ]);
 
   // Función para obtener el título dinámico
@@ -496,15 +521,17 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
 
   return (
     <div>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setIsDialogOpen(true)}
-        className="bg-zinc-900 border-zinc-800 text-zinc-100 hover:text-zinc-100 hover:bg-zinc-900 hover:border-zinc-900 transition-colors flex items-center gap-2"
-      >
-        <Music2Icon className="h-4 w-4" />
-        {tMusic("createMusic")}
-      </Button>
+      {showButton && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsDialogOpen(true)}
+          className="bg-zinc-900 border-zinc-800 text-zinc-100 hover:text-zinc-100 hover:bg-zinc-900 hover:border-zinc-900 transition-colors flex items-center gap-2"
+        >
+          <Music2Icon className="h-4 w-4" />
+          {tMusic("createMusic")}
+        </Button>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="w-[95vw] sm:w-[500px] md:w-[700px] lg:w-[800px] max-h-[90vh] flex flex-col p-0 bg-zinc-900 border border-zinc-700/30 shadow-xl shadow-zinc-900/10 rounded-xl">

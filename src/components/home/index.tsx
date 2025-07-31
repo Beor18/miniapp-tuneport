@@ -11,6 +11,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@Src/ui/components/ui/collapsible";
+
 import {
   Bell,
   History,
@@ -27,7 +28,9 @@ import {
   Music2Icon,
   ChevronLeft,
   ChevronRight,
+  Plus,
 } from "lucide-react";
+import BaseAlbumNewForm from "@Src/components/BaseAlbumNewForm";
 import { useAppKitAccount } from "@Src/lib/privy";
 import WalletConnector from "@Src/components/walletConector";
 import LanguageSelector from "@Src/components/LanguageSelector";
@@ -85,20 +88,29 @@ const getNavItems = (
   publicKey: any,
   userNickname: string | null,
   tNav: any,
-  locale: string
+  locale: string,
+  tCommon: any
 ) => {
-  // Si hay wallet conectado, mostrar For You y Profile
+  // Si hay wallet conectado, mostrar For You, Create y Profile
   if (publicKey?.toString()) {
     return [
       {
         href: `/${locale}/foryou`,
         icon: Music2Icon,
         label: tNav("forYou"),
+        type: "link",
+      },
+      {
+        href: "#",
+        icon: Plus,
+        label: tCommon("create"),
+        type: "create",
       },
       {
         href: userNickname ? `/${locale}/u/${userNickname}` : `/${locale}/u`,
         icon: User,
         label: tNav("profile"),
+        type: "link",
       },
     ];
   }
@@ -112,6 +124,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   const [userNickname, setUserNickname] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [hostname, setHostname] = useState<string>("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const { address, isConnected, caipAddress, status, embeddedWalletInfo } =
@@ -178,8 +191,14 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
 
   // Memoizar navItems para evitar re-cálculos innecesarios
   const navItems = useMemo(() => {
-    return getNavItems(address?.toString(), userNickname, tNav, locale);
-  }, [address, userNickname, tNav, locale]);
+    return getNavItems(
+      address?.toString(),
+      userNickname,
+      tNav,
+      locale,
+      tCommon
+    );
+  }, [address, userNickname, tNav, locale, tCommon]);
 
   // Memoizar flags de layout
   const layoutFlags = useMemo(
@@ -270,6 +289,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
                     key={item.href}
                     {...item}
                     isCollapsed={isCollapsed}
+                    onCreateClick={() => setIsCreateModalOpen(true)}
                   />
                 ))}
               </div>
@@ -302,7 +322,11 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
         <nav className="fixed bottom-0 left-0 right-0 z-30 bg-zinc-900/95 backdrop-blur border-t border-zinc-800 md:hidden">
           <div className="flex items-center justify-around px-1 py-3 h-16 max-w-screen-sm mx-auto">
             {navItems.slice(0, 5).map((item) => (
-              <MobileNavLink key={item.href} {...item} />
+              <MobileNavLink
+                key={item.href}
+                {...item}
+                onCreateClick={() => setIsCreateModalOpen(true)}
+              />
             ))}
           </div>
         </nav>
@@ -314,6 +338,14 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
           <FloatingPlayer />
         </Suspense>
       )}
+
+      {/* Modal para crear álbum */}
+      <BaseAlbumNewForm
+        nickname={userNickname || ""}
+        isOpen={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        showButton={false}
+      />
     </div>
   );
 }
@@ -322,15 +354,40 @@ function NavLink({
   href,
   icon: Icon,
   label,
+  type = "link",
   isCollapsed = false,
+  onCreateClick,
 }: {
   href: string;
   icon: any;
   label: string;
+  type?: string;
   isCollapsed?: boolean;
+  onCreateClick?: () => void;
 }) {
   const pathname = usePathname();
-  const isActive = pathname === href;
+  const isActive = pathname === href && type === "link";
+
+  if (type === "create") {
+    return (
+      <button
+        onClick={onCreateClick}
+        className={`
+          flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors w-full
+          ${isCollapsed ? "justify-center" : "gap-3"}
+          text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100
+        `}
+        title={isCollapsed ? label : undefined}
+      >
+        <Icon
+          className={`h-5 w-5 text-zinc-400 ${
+            isCollapsed ? "flex-shrink-0" : ""
+          }`}
+        />
+        {!isCollapsed && <span>{label}</span>}
+      </button>
+    );
+  }
 
   return (
     <Link
@@ -361,13 +418,37 @@ function MobileNavLink({
   href,
   icon: Icon,
   label,
+  type = "link",
+  onCreateClick,
 }: {
   href: string;
   icon: any;
   label: string;
+  type?: string;
+  onCreateClick?: () => void;
 }) {
   const pathname = usePathname();
-  const isActive = pathname === href;
+  const isActive = pathname === href && type === "link";
+
+  if (type === "create") {
+    return (
+      <button
+        onClick={onCreateClick}
+        className={`
+          flex flex-col items-center justify-center px-2 py-1 min-w-0 flex-1 transition-all duration-200
+          text-zinc-400 hover:text-zinc-200
+          active:scale-95 touch-manipulation
+        `}
+      >
+        <div className="p-2 rounded-lg transition-all duration-200 hover:bg-zinc-800/50">
+          <Icon className="h-5 w-5 text-zinc-300" />
+        </div>
+        <span className="text-[10px] font-medium truncate max-w-full mt-1 leading-none text-zinc-400">
+          {label}
+        </span>
+      </button>
+    );
+  }
 
   return (
     <Link
