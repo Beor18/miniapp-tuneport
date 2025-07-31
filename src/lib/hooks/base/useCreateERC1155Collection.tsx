@@ -392,7 +392,7 @@ export const useCreateERC1155Collection = (
               })) || [],
             music_genre: params.musicGenre || "",
             collection_type: params.collectionType || "ALBUM",
-            artist_name: params.artistName || "",
+            artist_name: params.nickname || "",
             record_label: params.recordLabel || "",
             release_date: params.releaseDate || new Date().toISOString(),
             start_mint_date: new Date(

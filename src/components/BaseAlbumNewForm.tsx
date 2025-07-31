@@ -415,6 +415,7 @@ export default function BaseAlbumNewForm({ nickname }: BaseAlbumNewFormProps) {
       });
 
       // Llamar a la función de creación usando useBlockchainOperations para Base
+      //console.log("params >>>>> ", nickname);
       const newCollectionAddress = await createCollection({
         ...params,
         nickname: nickname || undefined, // Pasar el nickname para revalidar

@@ -490,6 +490,8 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
           const collection = collectionData.find(
             (col: any) => col._id === song.collectionId
           );
+
+          // console.log("collection >>>>> ", collection);
           const isInUserPlaylist = isInPlaylist(song._id);
 
           return (
@@ -518,11 +520,11 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
                           <Music className="w-4 h-4 text-white" />
                         </div>
                         <div className="flex flex-col">
-                          <Link href={`/album/${collection?.slug}`}>
-                            <span className="text-white font-bold text-sm tracking-wide truncate max-w-[200px] hover:underline">
-                              {collection?.name}
-                            </span>
-                          </Link>
+                          {/* <Link href={`/album/${collection?.slug}`}> */}
+                          <span className="text-white font-bold text-sm tracking-wide truncate max-w-[200px]">
+                            {collection?.name}
+                          </span>
+                          {/* </Link> */}
                           <Link href={`/u/${collection?.artist_name}`}>
                             <span className="text-gray-300 font-light text-xs truncate max-w-[200px] hover:underline">
                               {collection?.artist_name}
