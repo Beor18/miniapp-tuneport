@@ -215,7 +215,7 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
         }, 400); // Tiempo suficiente para que termine la navegación
       }
     };
-  }, [setShowFloatingPlayer, currentSong, pathname]);
+  }, [setShowFloatingPlayer, currentSong]);
 
   // Efecto para sincronizar el scroll con la canción actual sin bucles
   useEffect(() => {
