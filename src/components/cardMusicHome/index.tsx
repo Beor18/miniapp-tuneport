@@ -39,7 +39,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@Src/ui/components/ui/dialog";
-import SocialProofBadges from "@Src/components/SocialProofBadges";
 
 export default function CardMusicHome({ nftData, collectionData }: any) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -533,16 +532,6 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
                           </Link>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Social Proof Badges */}
-                    <div className="mt-2">
-                      <SocialProofBadges
-                        songTitle={song.name}
-                        artistName={collection?.artist_name}
-                        compact={true}
-                        className="justify-start"
-                      />
                     </div>
                   </div>
 

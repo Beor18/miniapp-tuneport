@@ -83,6 +83,8 @@ export default async function Page() {
       start_mint_date: album.start_mint_date,
       creatorNickname: creator ? creator.nickname : null,
       coin_address: album.coin_address,
+      // Agregar dirección para quality filter
+      artist_wallet: album.address_creator_collection,
     }));
   });
 

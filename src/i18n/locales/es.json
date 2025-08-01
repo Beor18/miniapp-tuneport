@@ -47,6 +47,7 @@
     "unexpectedError": "Ocurrió un error inesperado",
     "noAdditionalCost": "Sin costo adicional",
     "other": "Otro",
+    "status": "Estado",
     "connectWalletRequired": "Necesitas conectar una billetera EVM",
     "couldNotCreateCollection": "No se pudo crear la colección",
     "errorCreatingCollection": "Error al crear la colección",
@@ -504,6 +505,27 @@
       "song": "🎵 ¡Descubrí esta increíble canción en @tuneport!\n\n\"{name}\" por {artist}\n{album}💿 Álbum: {albumName}\n{genre}🎤 Género: {genreName}\n\n⚡ Escúchala y mintéala como NFT\n🎁 Cada segundo de música se convierte en valor",
       "album": "💿 ¡Álbum completo en @tuneport!\n\n\"{name}\" por {artist}\n{genre}🎤 Género: {genreName}\n\n🎵 Música + NFTs + Web3\n⚡ El futuro de la música está aquí",
       "playlist": "📝 Mi playlist en @tuneport:\n\n\"{name}\"\n🎵 {artist}\n\n⚡ Descubre música increíble\n🎁 Colecciona NFTs únicos"
+    },
+    "userQualityLeaderboard": "Leaderboard",
+    "realFarcasterArtists": "Artistas",
+    "contractStatus": "Estado del Contrato",
+    "qualityThresholds": "Umbrales de Calidad",
+    "top5Percent": "Top 5%",
+    "top20Percent": "Top 20%",
+    "generateLeaderboard": "🏆 Generar Tabla Real",
+    "generating": "Generando...",
+    "userQualitySandbox": "Sandbox useUserQuality",
+    "powerBadge": "Badge de Poder",
+    "verified": "Verificado",
+    "followers": "seguidores",
+    "neynarScore": "Neynar",
+    "qualityScore": "Puntuación de Calidad",
+    "tiers": {
+      "premium": "Premium",
+      "high": "Alto",
+      "medium": "Medio",
+      "low": "Bajo",
+      "bot": "Bot"
     }
   }
 }
