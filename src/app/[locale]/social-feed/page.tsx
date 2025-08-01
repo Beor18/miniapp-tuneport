@@ -218,12 +218,12 @@ export default function SocialFeedPage() {
 
           {/* Título principal viral */}
           <div className="relative">
-            <h1 className="text-5xl md:text-6xl font-black mb-4 bg-gradient-to-r from-yellow-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent leading-tight">
+            <h1 className="text-3xl md:text-6xl font-black mb-4 bg-gradient-to-r from-yellow-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent leading-tight">
               🏆 LEADERBOARD
             </h1>
             {/* Subtítulo con call-to-action viral */}
-            <p className="text-lg text-zinc-300 mb-6 max-w-2xl mx-auto">
-              Descubre los artistas más destacados de Tuneport ⚡
+            <p className="text-md text-zinc-300 mb-6 max-w-2xl mx-auto">
+              Descubre los artistas más destacados ⚡
             </p>
           </div>
         </div>
