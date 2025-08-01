@@ -60,6 +60,9 @@ export default function WalletConnector() {
     evmWalletAddress,
     solanaWalletAddress,
     wallets,
+    // 🆕 FARCASTER: Datos de Farcaster
+    farcasterConnected,
+    farcasterData,
   } = useAppKitAccount();
 
   // Obtener específicamente las wallets de Solana para mejor detección
@@ -210,6 +213,8 @@ export default function WalletConnector() {
     walletAddresses.evm,
     walletAddresses.solana,
     verifyUser,
+    setIsRegistered,
+    setUserData,
   ]);
 
   // Función de logout simplificada SIN interfaz con el player
@@ -264,6 +269,18 @@ export default function WalletConnector() {
         walletAddressEvm={walletAddresses.evm || ""}
         walletAddressSolana={walletAddresses.solana || ""}
         email={walletAddresses.email}
+        // 🆕 FARCASTER: Pasar datos de Farcaster al formulario
+        farcasterData={
+          farcasterConnected && farcasterData && farcasterData.fid
+            ? {
+                fid: farcasterData.fid,
+                username: farcasterData.username || "",
+                displayName: farcasterData.displayName || "",
+                pfp: farcasterData.pfp || "",
+                bio: farcasterData.bio || "",
+              }
+            : null
+        }
       />
     );
   }

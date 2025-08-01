@@ -79,17 +79,26 @@ type RegistrationFormProps = {
   walletAddressSolana: any;
   type?: any;
   email: string | null;
+  // 🆕 FARCASTER: Datos de Farcaster
+  farcasterData?: {
+    fid: number;
+    username: string;
+    displayName: string;
+    pfp: string;
+    bio: string;
+  } | null;
 };
 
 export default function RegistrationForm({
   walletAddressEvm,
   walletAddressSolana,
   email,
+  farcasterData,
 }: RegistrationFormProps) {
   const { setIsRegistered, setUserData } = useContext(UserRegistrationContext);
   const [formData, setFormData] = useState({
-    name: "",
-    nickname: "",
+    name: farcasterData?.displayName || "",
+    nickname: farcasterData?.username || "",
     email: email || "",
     userType: "",
   });
@@ -175,6 +184,15 @@ export default function RegistrationForm({
         address: walletAddressEvm || "",
         address_solana: walletAddressSolana || "",
         type: formData.userType,
+        // 🆕 FARCASTER: Incluir datos de Farcaster si están disponibles
+        ...(farcasterData && {
+          farcaster_fid: farcasterData.fid,
+          farcaster_username: farcasterData.username,
+          farcaster_display_name: farcasterData.displayName,
+          farcaster_pfp: farcasterData.pfp,
+          farcaster_bio: farcasterData.bio,
+          farcaster_verified: true, // Si tiene datos de Farcaster, asumimos que está verificado
+        }),
       });
 
       if (newUser) {
@@ -228,6 +246,15 @@ export default function RegistrationForm({
         address: walletAddressEvm || "",
         address_solana: walletAddressSolana || "",
         type: randomFormData.userType,
+        // 🆕 FARCASTER: Incluir datos de Farcaster si están disponibles (incluso en skip)
+        ...(farcasterData && {
+          farcaster_fid: farcasterData.fid,
+          farcaster_username: farcasterData.username,
+          farcaster_display_name: farcasterData.displayName,
+          farcaster_pfp: farcasterData.pfp,
+          farcaster_bio: farcasterData.bio,
+          farcaster_verified: true,
+        }),
       });
 
       if (newUser) {

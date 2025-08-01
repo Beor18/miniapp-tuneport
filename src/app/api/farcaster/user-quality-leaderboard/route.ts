@@ -14,11 +14,40 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // FIDs de usuarios conocidos de Farcaster para testing
-    const sampleFids = [3, 5, 2, 602, 1, 280, 99, 190, 6806, 13242]; // dwr, vitalik, etc.
+    // 🆕 OBTENER FIDs REALES DE USUARIOS REGISTRADOS EN NUESTRA BD
+    let realUserFids: number[] = [];
+
+    try {
+      const fidsResponse = await fetch(
+        `${process.env.API_ELEI}/api/users/getUserFids?limit=${limit}`
+      );
+
+      if (fidsResponse.ok) {
+        const fidsData = await fidsResponse.json();
+        realUserFids = fidsData.fids || [];
+        console.log(
+          `✅ Obtenidos ${realUserFids.length} FIDs reales de la BD:`,
+          realUserFids.slice(0, 5)
+        );
+      } else {
+        console.warn("⚠️ Error obteniendo FIDs de BD, usando FIDs de fallback");
+      }
+    } catch (error) {
+      console.error("❌ Error fetching user FIDs from BD:", error);
+    }
+
+    // Fallback: Si no hay FIDs reales, usar algunos conocidos para testing
+    const fallbackFids = [3, 5, 2, 602, 1, 280, 99, 190, 6806, 13242];
+    const fidsToUse =
+      realUserFids.length > 0 ? realUserFids : fallbackFids.slice(0, limit);
+
+    console.log(
+      `🎯 Usando ${fidsToUse.length} FIDs para leaderboard:`,
+      realUserFids.length > 0 ? "REALES de BD" : "FALLBACK para testing"
+    );
 
     // Construir URL con FIDs codificados correctamente
-    const fidsParam = sampleFids.slice(0, limit).join("%2C%20"); // URL encoded comma-space
+    const fidsParam = fidsToUse.join("%2C%20"); // URL encoded comma-space
     const url = `https://api.neynar.com/v2/farcaster/user/bulk/?fids=${fidsParam}`;
 
     // Obtener datos de usuarios de Farcaster usando Neynar API

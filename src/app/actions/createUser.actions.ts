@@ -9,6 +9,13 @@ interface CreateUserInput {
   address: string;
   address_solana?: string;
   type?: any;
+  // 🆕 CAMPOS FARCASTER
+  farcaster_fid?: number;
+  farcaster_username?: string;
+  farcaster_display_name?: string;
+  farcaster_pfp?: string;
+  farcaster_bio?: string;
+  farcaster_verified?: boolean;
 }
 
 export async function createUser(data: CreateUserInput) {
