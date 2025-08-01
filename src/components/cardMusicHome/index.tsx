@@ -39,6 +39,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@Src/ui/components/ui/dialog";
+import SocialProofBadges from "@Src/components/SocialProofBadges";
 
 export default function CardMusicHome({ nftData, collectionData }: any) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -214,7 +215,7 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
         }, 400); // Tiempo suficiente para que termine la navegación
       }
     };
-  }, [setShowFloatingPlayer, currentSong]);
+  }, [setShowFloatingPlayer, currentSong, pathname]);
 
   // Efecto para sincronizar el scroll con la canción actual sin bucles
   useEffect(() => {
@@ -229,7 +230,7 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
         });
       }
     }
-  }, [currentSong?._id, scrolling, enrichedNftData]);
+  }, [currentSong, scrolling, enrichedNftData]);
 
   // Efecto para detectar scroll y actualizar la canción actual
   useEffect(() => {
@@ -475,10 +476,10 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
   };
 
   return (
-    <div className="h-full w-full sm:h-[870px] sm:w-full md:w-[540px] md:h-[960px] lg:w-[540px] lg:h-[960px] overflow-hidden font-sans mx-auto">
+    <div className="h-full w-full sm:h-[870px] sm:w-full md:w-[540px] md:h-[960px] lg:w-[540px] lg:h-[960px] overflow-hidden font-sans mx-auto flex flex-col">
       <div
         ref={containerRef}
-        className="h-full snap-y snap-mandatory overflow-y-scroll scrollbar-hide"
+        className="flex-1 snap-y snap-mandatory overflow-y-scroll scrollbar-hide"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         <style jsx global>{`
@@ -532,6 +533,16 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
                           </Link>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Social Proof Badges */}
+                    <div className="mt-2">
+                      <SocialProofBadges
+                        songTitle={song.name}
+                        artistName={collection?.artist_name}
+                        compact={true}
+                        className="justify-start"
+                      />
                     </div>
                   </div>
 

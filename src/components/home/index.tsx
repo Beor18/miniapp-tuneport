@@ -29,6 +29,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
+  ShareIcon,
 } from "lucide-react";
 import BaseAlbumNewForm from "@Src/components/BaseAlbumNewForm";
 import { useAppKitAccount } from "@Src/lib/privy";
@@ -91,13 +92,19 @@ const getNavItems = (
   locale: string,
   tCommon: any
 ) => {
-  // Si hay wallet conectado, mostrar For You, Create y Profile
+  // Si hay wallet conectado, mostrar For You, Social Feed, Create y Profile
   if (publicKey?.toString()) {
     return [
       {
         href: `/${locale}/foryou`,
         icon: Music2Icon,
         label: tNav("forYou"),
+        type: "link",
+      },
+      {
+        href: `/${locale}/social-feed`,
+        icon: ShareIcon,
+        label: "Trending FC",
         type: "link",
       },
       {
@@ -207,8 +214,9 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
       showPlayerMobile: pathname.includes("/u") || pathname.startsWith("/"),
       // Nuevo flag para detectar cuando el player está activo
       hasActivePlayer: isConnected && !pathname.includes("/foryou"),
-      // Mostrar navegación solo en páginas de perfil (considerando locale)
-      showNavigation: pathname.includes("/u"),
+      // Mostrar navegación en páginas de perfil y rutas principales
+      showNavigation:
+        pathname.includes("/u") || pathname.includes("/social-feed"),
     }),
     [pathname, isConnected]
   );
