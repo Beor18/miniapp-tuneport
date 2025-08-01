@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useUserQuality } from "@Src/lib/hooks/useUserQuality";
 import { useTranslations } from "next-intl";
+import { Users } from "lucide-react";
 
 export default function SocialFeedPage() {
   const { getBatchUserQualityScores, contractReady } = useUserQuality();
@@ -325,9 +326,12 @@ export default function SocialFeedPage() {
                             {/* Score principal */}
                             <div className="text-white font-bold text-base md:text-lg">
                               {user.followerCount && user.followerCount > 0 && (
-                                <span className="flex items-center gap-1">
-                                  👥 {user.followerCount.toLocaleString()}
-                                </span>
+                                <div className="flex items-center gap-1">
+                                  <Users className="w-4 h-4 text-zinc-400" />
+                                  <span className="text-zinc-400">
+                                    {user.followerCount.toLocaleString()}
+                                  </span>
+                                </div>
                               )}
                               <span className="font-mono text-xs text-zinc-400">
                                 {user.address.slice(0, 6)}...
