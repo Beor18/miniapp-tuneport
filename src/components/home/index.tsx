@@ -37,6 +37,7 @@ import { useAppKitAccount } from "@Src/lib/privy";
 import WalletConnector from "@Src/components/walletConector";
 import LanguageSelector from "@Src/components/LanguageSelector";
 import { useTranslations, useLocale } from "next-intl";
+import { usePlayer } from "@Src/contexts/PlayerContext";
 
 // Importación dinámica optimizada con loading: () => null
 const FloatingPlayer = importDynamic(() => import("../FloatingPlayer"), {
@@ -138,6 +139,9 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   const { address, isConnected, caipAddress, status, embeddedWalletInfo } =
     useAppKitAccount();
 
+  // Hook del reproductor para verificar el estado real
+  const { currentSong, showFloatingPlayer } = usePlayer();
+
   // Memoizar las traducciones para evitar re-renders
   const tCommon = useTranslations("common");
   const tNav = useTranslations("navigation");
@@ -213,13 +217,14 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
     () => ({
       showFooter: pathname.includes("/u") || pathname.includes("/explore"),
       showPlayerMobile: pathname.includes("/u") || pathname.startsWith("/"),
-      // Nuevo flag para detectar cuando el player está activo
-      hasActivePlayer: isConnected && !pathname.includes("/foryou"),
+      // Flag para detectar cuando el player está realmente activo
+      hasActivePlayer:
+        currentSong && showFloatingPlayer && !pathname.includes("/foryou"),
       // Mostrar navegación en páginas de perfil y rutas principales
       showNavigation:
         pathname.includes("/u") || pathname.includes("/social-feed"),
     }),
-    [pathname, isConnected]
+    [pathname, currentSong, showFloatingPlayer]
   );
 
   // const handleLogout = async () => {
@@ -312,10 +317,12 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
           ${layoutFlags.showPlayerMobile ? "p-0" : "p-4 sm:p-6"}
           ${
             layoutFlags.hasActivePlayer
-              ? "pb-36 md:pb-28" // Player activo: ~144px móvil (player compacto + nav + margen), ~112px desktop (player completo + margen)
-              : layoutFlags.showNavigation && layoutFlags.showFooter
-              ? "pb-20 md:pb-8" // Solo navegación móvil: 80px móvil, 32px desktop
-              : "pb-0 md:pb-0" // Sin player ni navegación: 16px móvil, 24px desktop
+              ? "pb-36 md:pb-4" // Player activo: ~144px móvil (player + nav + margen), ~16px desktop (solo margen)
+              : layoutFlags.showNavigation
+              ? "pb-16 md:pb-4" // Solo navegación móvil: 64px móvil (altura del nav), ~16px desktop
+              : pathname.includes("/foryou")
+              ? "pb-0" // For You: sin padding porque no hay nav ni player
+              : "pb-4" // Otras páginas sin player ni navegación: margen básico
           }
           overflow-y-auto
           scrollbar-thin scrollbar-track-zinc-900 scrollbar-thumb-zinc-800 
