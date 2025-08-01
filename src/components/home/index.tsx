@@ -30,6 +30,7 @@ import {
   ChevronRight,
   Plus,
   ShareIcon,
+  MedalIcon,
 } from "lucide-react";
 import BaseAlbumNewForm from "@Src/components/BaseAlbumNewForm";
 import { useAppKitAccount } from "@Src/lib/privy";
@@ -103,8 +104,8 @@ const getNavItems = (
       },
       {
         href: `/${locale}/social-feed`,
-        icon: ShareIcon,
-        label: "Trending FC",
+        icon: MedalIcon,
+        label: "Leaderboard",
         type: "link",
       },
       {
