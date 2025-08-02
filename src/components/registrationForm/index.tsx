@@ -482,7 +482,7 @@ export default function RegistrationForm({
             {/* Botones de acción */}
             <div className="space-y-3 sm:space-y-4">
               {/* Información sobre Skip */}
-              <div className="bg-blue-900/30 border border-blue-700/50 rounded-md p-2 sm:p-3 mb-2">
+              {/* <div className="bg-blue-900/30 border border-blue-700/50 rounded-md p-2 sm:p-3 mb-2">
                 <p className="text-blue-300 text-xs sm:text-sm flex items-start">
                   <FastForward className="w-3 h-3 sm:w-4 sm:h-4 mr-2 mt-0.5 flex-shrink-0 text-blue-400" />
                   <span>
@@ -491,7 +491,7 @@ export default function RegistrationForm({
                     away.
                   </span>
                 </p>
-              </div>
+              </div> */}
 
               <div className="flex flex-col space-y-2 sm:space-y-3">
                 {/* Botón principal */}
@@ -518,15 +518,15 @@ export default function RegistrationForm({
                 </Button>
 
                 {/* Divisor con "OR" */}
-                <div className="relative flex items-center justify-center">
+                {/* <div className="relative flex items-center justify-center">
                   <div className="absolute w-full border-t border-zinc-700"></div>
                   <span className="relative px-3 sm:px-4 bg-zinc-900 text-zinc-400 text-xs sm:text-sm font-medium">
                     OR
                   </span>
-                </div>
+                </div> */}
 
                 {/* Botón de Skip */}
-                <Button
+                {/* <Button
                   type="button"
                   onClick={handleSkip}
                   className="bg-zinc-800 hover:bg-blue-800 text-zinc-200 border border-zinc-700 hover:border-blue-600 h-10 sm:h-12 text-sm sm:text-base transition-all duration-300"
@@ -543,7 +543,7 @@ export default function RegistrationForm({
                       <span className="font-medium">Skip & Join</span>
                     </div>
                   )}
-                </Button>
+                </Button> */}
               </div>
             </div>
 
