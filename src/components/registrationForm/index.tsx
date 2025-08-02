@@ -378,7 +378,7 @@ export default function RegistrationForm({
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogOverlay className="bg-black/80 backdrop-blur-sm z-50">
-          <DialogContent className="w-[95vw] max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-4 bg-zinc-900 border border-zinc-800 text-zinc-100 shadow-xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-full max-w-[90vw] sm:max-w-md md:max-w-lg lg:max-w-xl max-h-[90vh] bg-zinc-900 border border-zinc-800 text-zinc-100 shadow-xl mx-4 sm:mx-auto overflow-y-auto flex flex-col">
             <DialogHeader className="mb-6 relative">
               <Button
                 onClick={() => setShowModal(false)}
