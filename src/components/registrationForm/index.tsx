@@ -21,6 +21,7 @@ import {
   UserCog,
   FastForward,
   ArrowRight,
+  X,
 } from "lucide-react";
 import { createUser } from "@Src/app/actions/createUser.actions";
 import { checkNicknameAvailability } from "@Src/app/actions/checkNickname.actions";
@@ -125,6 +126,52 @@ export default function RegistrationForm({
       }));
     }
   }, [email]);
+
+  // 🆕 Verificar automáticamente la disponibilidad del nickname de Farcaster
+  useEffect(() => {
+    const checkFarcasterNickname = async () => {
+      if (
+        farcasterData?.username &&
+        formData.nickname === farcasterData.username
+      ) {
+        const nicknameRegex = /^[A-Za-z][A-Za-z0-9]*$/;
+
+        // Solo verificar si el nickname cumple con el formato
+        if (nicknameRegex.test(farcasterData.username)) {
+          setCheckingNickname(true);
+          setNicknameAvailable(null);
+
+          try {
+            const available = await checkNicknameAvailability(
+              farcasterData.username
+            );
+            setNicknameAvailable(available);
+          } catch (error) {
+            console.error(
+              "Error checking Farcaster nickname availability:",
+              error
+            );
+            setNicknameAvailable(false);
+          } finally {
+            setCheckingNickname(false);
+          }
+        } else {
+          // Si no cumple el formato, marcar como no disponible
+          setNicknameAvailable(false);
+          setCheckingNickname(false);
+        }
+      }
+    };
+
+    // Solo ejecutar si tenemos datos de Farcaster y el nickname aún no ha sido verificado
+    if (
+      farcasterData?.username &&
+      nicknameAvailable === null &&
+      !checkingNickname
+    ) {
+      checkFarcasterNickname();
+    }
+  }, [farcasterData, formData.nickname, nicknameAvailable, checkingNickname]);
 
   // Validación del formato de nickname
   // Debe empezar con una letra y no contener espacios, sólo letras y números.
@@ -331,29 +378,36 @@ export default function RegistrationForm({
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogOverlay className="bg-black/80 backdrop-blur-sm z-50">
-          <DialogContent className="w-[425px] bg-zinc-900 border border-zinc-800 text-zinc-100 shadow-xl">
-            <DialogHeader className="mb-6">
-              <DialogTitle className="text-xl font-bold text-zinc-100">
+          <DialogContent className="w-[95vw] max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-4 bg-zinc-900 border border-zinc-800 text-zinc-100 shadow-xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="mb-6 relative">
+              <Button
+                onClick={() => setShowModal(false)}
+                className="absolute -top-2 -right-2 h-8 w-8 p-0 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 rounded-full transition-colors duration-200"
+                aria-label="Cerrar modal"
+              >
+                <X className="h-4 w-4 text-zinc-400" />
+              </Button>
+              <DialogTitle className="text-lg sm:text-xl font-bold text-zinc-100 pr-8">
                 Complete Your Profile
               </DialogTitle>
-              <DialogDescription className="text-zinc-400 mt-1.5">
+              <DialogDescription className="text-zinc-400 mt-1.5 text-sm sm:text-base">
                 Set up your account to start using the music platform.
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               {error && (
-                <div className="bg-red-500/10 border border-red-500/50 rounded-md px-4 py-3 mb-4">
-                  <p className="text-red-500 text-sm">{error}</p>
+                <div className="bg-red-500/10 border border-red-500/50 rounded-md px-3 sm:px-4 py-2 sm:py-3 mb-4">
+                  <p className="text-red-500 text-xs sm:text-sm">{error}</p>
                 </div>
               )}
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <Label
                   htmlFor="name"
-                  className="text-zinc-300 flex items-center"
+                  className="text-zinc-300 flex items-center text-sm sm:text-base"
                 >
-                  <User className="w-4 h-4 mr-2 text-zinc-500" />
+                  <User className="w-3 h-3 sm:w-4 sm:h-4 mr-2 text-zinc-500" />
                   Full Name
                 </Label>
                 <Input
@@ -362,7 +416,7 @@ export default function RegistrationForm({
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="bg-zinc-800 border-zinc-700 focus:border-zinc-600 text-zinc-100 placeholder:text-zinc-500 h-11"
+                  className="bg-zinc-800 border-zinc-700 focus:border-zinc-600 text-zinc-100 placeholder:text-zinc-500 h-10 sm:h-11 text-sm sm:text-base"
                   placeholder="Enter your full name"
                 />
               </div>
@@ -370,9 +424,9 @@ export default function RegistrationForm({
               <div className="space-y-2">
                 <Label
                   htmlFor="nickname"
-                  className="text-zinc-300 flex items-center"
+                  className="text-zinc-300 flex items-center text-sm sm:text-base"
                 >
-                  <AtSign className="w-4 h-4 mr-2 text-zinc-500" />
+                  <AtSign className="w-3 h-3 sm:w-4 sm:h-4 mr-2 text-zinc-500" />
                   Nickname
                 </Label>
                 <Input
@@ -381,7 +435,7 @@ export default function RegistrationForm({
                   value={formData.nickname}
                   onChange={handleChange}
                   required
-                  className="bg-zinc-800 border-zinc-700 focus:border-zinc-600 text-zinc-100 placeholder:text-zinc-500 h-11"
+                  className="bg-zinc-800 border-zinc-700 focus:border-zinc-600 text-zinc-100 placeholder:text-zinc-500 h-10 sm:h-11 text-sm sm:text-base"
                   placeholder="Choose a unique nickname"
                 />
                 <div className="h-5">{nicknameMessage()}</div>
@@ -398,23 +452,29 @@ export default function RegistrationForm({
                 className="hidden"
               />
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <Label
                   htmlFor="userType"
-                  className="text-zinc-300 flex items-center"
+                  className="text-zinc-300 flex items-center text-sm sm:text-base"
                 >
-                  <UserCog className="w-4 h-4 mr-2 text-zinc-500" />
+                  <UserCog className="w-3 h-3 sm:w-4 sm:h-4 mr-2 text-zinc-500" />
                   Your Role
                 </Label>
                 <Select onValueChange={handleUserTypeChange} required>
-                  <SelectTrigger className="w-full bg-zinc-800 border-zinc-700 focus:border-zinc-600 text-zinc-100 h-11">
+                  <SelectTrigger className="w-full bg-zinc-800 border-zinc-700 focus:border-zinc-600 text-zinc-100 h-10 sm:h-11 text-sm sm:text-base">
                     <SelectValue placeholder="Select your role" />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-800 border-zinc-700 text-zinc-100">
-                    <SelectItem value="fan" className="focus:bg-zinc-700">
+                    <SelectItem
+                      value="fan"
+                      className="focus:bg-zinc-700 text-sm sm:text-base"
+                    >
                       Fan
                     </SelectItem>
-                    <SelectItem value="artist" className="focus:bg-zinc-700">
+                    <SelectItem
+                      value="artist"
+                      className="focus:bg-zinc-700 text-sm sm:text-base"
+                    >
                       Artist
                     </SelectItem>
                   </SelectContent>
@@ -422,11 +482,11 @@ export default function RegistrationForm({
               </div>
 
               {/* Botones de acción */}
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Información sobre Skip */}
-                <div className="bg-blue-900/30 border border-blue-700/50 rounded-md p-3 mb-2">
-                  <p className="text-blue-300 text-sm flex items-start">
-                    <FastForward className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0 text-blue-400" />
+                <div className="bg-blue-900/30 border border-blue-700/50 rounded-md p-2 sm:p-3 mb-2">
+                  <p className="text-blue-300 text-xs sm:text-sm flex items-start">
+                    <FastForward className="w-3 h-3 sm:w-4 sm:h-4 mr-2 mt-0.5 flex-shrink-0 text-blue-400" />
                     <span>
                       <strong>Skip registration?</strong> We&apos;ll create a
                       random profile for you so you can start exploring right
@@ -435,11 +495,11 @@ export default function RegistrationForm({
                   </p>
                 </div>
 
-                <div className="flex flex-col space-y-3">
+                <div className="flex flex-col space-y-2 sm:space-y-3">
                   {/* Botón principal */}
                   <Button
                     type="submit"
-                    className={`transition-all duration-300 h-12 ${
+                    className={`transition-all duration-300 h-10 sm:h-12 text-sm sm:text-base ${
                       canSubmit
                         ? "bg-green-600 hover:bg-green-700 text-white"
                         : "bg-zinc-700 text-zinc-400 cursor-not-allowed"
@@ -448,13 +508,13 @@ export default function RegistrationForm({
                   >
                     {isSubmitting ? (
                       <div className="flex items-center justify-center">
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                         <span>Registering...</span>
                       </div>
                     ) : (
                       <div className="flex items-center justify-center">
                         <span className="font-medium">Create Account</span>
-                        <ArrowRight className="ml-1 h-4 w-4" />
+                        <ArrowRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
                       </div>
                     )}
                   </Button>
@@ -462,7 +522,7 @@ export default function RegistrationForm({
                   {/* Divisor con "OR" */}
                   <div className="relative flex items-center justify-center">
                     <div className="absolute w-full border-t border-zinc-700"></div>
-                    <span className="relative px-4 bg-zinc-900 text-zinc-400 text-sm font-medium">
+                    <span className="relative px-3 sm:px-4 bg-zinc-900 text-zinc-400 text-xs sm:text-sm font-medium">
                       OR
                     </span>
                   </div>
@@ -471,17 +531,17 @@ export default function RegistrationForm({
                   <Button
                     type="button"
                     onClick={handleSkip}
-                    className="bg-zinc-800 hover:bg-blue-800 text-zinc-200 border border-zinc-700 hover:border-blue-600 h-12 transition-all duration-300"
+                    className="bg-zinc-800 hover:bg-blue-800 text-zinc-200 border border-zinc-700 hover:border-blue-600 h-10 sm:h-12 text-sm sm:text-base transition-all duration-300"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
                       <div className="flex items-center justify-center">
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                         <span>Processing...</span>
                       </div>
                     ) : (
                       <div className="flex items-center justify-center">
-                        <FastForward className="mr-2 h-4 w-4 text-blue-400" />
+                        <FastForward className="mr-2 h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
                         <span className="font-medium">Skip & Join</span>
                       </div>
                     )}
@@ -489,7 +549,7 @@ export default function RegistrationForm({
                 </div>
               </div>
 
-              <p className="text-xs text-zinc-500 text-center mt-4">
+              <p className="text-xs sm:text-sm text-zinc-500 text-center mt-3 sm:mt-4 px-2">
                 By registering, you agree to our Terms of Service and Privacy
                 Policy
               </p>
