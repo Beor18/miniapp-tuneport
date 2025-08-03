@@ -576,7 +576,7 @@ export function PlayerBarMobile({
                     variant="outline"
                     onClick={handleClaimClick}
                     disabled={!hasWalletConnected || isMintingAny}
-                    className={`w-full h-14 ${
+                    className={`w-full h-12 ${
                       !hasWalletConnected || isMintingAny
                         ? "bg-zinc-800/30 text-zinc-600 border-zinc-700/50"
                         : "bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30 hover:border-zinc-500/50"
@@ -627,7 +627,7 @@ export function PlayerBarMobile({
                   <Button
                     onClick={() => setIsTradingModalOpen(true)}
                     variant="outline"
-                    className="w-full h-14 bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30 hover:border-zinc-500/50 rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm"
+                    className="w-full h-12 bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30 hover:border-zinc-500/50 rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm"
                     title="Trade Tokens"
                   >
                     <Coins className="h-6 w-6" />
@@ -642,7 +642,7 @@ export function PlayerBarMobile({
                   <Button
                     onClick={togglePlaylist}
                     variant="outline"
-                    className={`w-full h-14 relative ${
+                    className={`w-full h-12 relative ${
                       showPlaylist
                         ? "bg-zinc-700/40 text-white border-zinc-600/70"
                         : "bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30"
