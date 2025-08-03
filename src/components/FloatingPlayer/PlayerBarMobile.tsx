@@ -540,7 +540,7 @@ export function PlayerBarMobile({
             {/* Top section: Album art + Info */}
             <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
               {/* Imagen del álbum - Responsive */}
-              <div className="mb-6 w-full max-w-80">
+              <div className="mb-6 w-full max-w-60">
                 <Link href={`/album/${currentSong.slug}`}>
                   <img
                     src={`${currentSong.image}`}
@@ -552,10 +552,10 @@ export function PlayerBarMobile({
 
               {/* Info de la canción */}
               <div className="text-center mb-6 w-full">
-                <h1 className="text-2xl font-bold text-white mb-2 leading-tight line-clamp-2">
+                <h1 className="text-xl font-bold text-white mb-2 leading-tight line-clamp-2">
                   {currentSong.name}
                 </h1>
-                <p className="text-lg text-zinc-400">
+                <p className="text-base text-zinc-400">
                   {currentSong.artist_name ||
                     currentSong.artist ||
                     "Unknown artist"}
