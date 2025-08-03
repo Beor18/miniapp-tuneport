@@ -564,7 +564,7 @@ export function PlayerBarMobile({
             </div>
 
             {/* Bottom section: Controls */}
-            <div className="space-y-6">
+            <div className="space-y-2">
               {/* Action buttons */}
               <div className="grid grid-cols-3 gap-3">
                 {/* Botón Claim NFT */}
