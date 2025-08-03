@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
 
     // 🆕 OBTENER FIDs REALES DE USUARIOS REGISTRADOS EN NUESTRA BD
     let realUserFids: number[] = [];
+    let diagnostics: any = {};
 
     try {
       const fidsResponse = await fetch(
@@ -25,26 +26,51 @@ export async function GET(request: NextRequest) {
       if (fidsResponse.ok) {
         const fidsData = await fidsResponse.json();
         realUserFids = fidsData.fids || [];
+        diagnostics = fidsData.diagnostics || {};
+
         console.log(
           `✅ Obtenidos ${realUserFids.length} FIDs reales de la BD:`,
           realUserFids.slice(0, 5)
         );
+
+        if (diagnostics.totalUsers || diagnostics.usersWithAnyFarcasterData) {
+          console.log(
+            `📊 Diagnóstico BD: ${diagnostics.totalUsers} usuarios totales, ${diagnostics.usersWithAnyFarcasterData} con datos Farcaster`
+          );
+        }
       } else {
-        console.warn("⚠️ Error obteniendo FIDs de BD, usando FIDs de fallback");
+        const errorData = await fidsResponse.json().catch(() => ({}));
+        console.warn(
+          "⚠️ Error obteniendo FIDs de BD:",
+          fidsResponse.status,
+          errorData
+        );
       }
     } catch (error) {
       console.error("❌ Error fetching user FIDs from BD:", error);
     }
 
-    // Fallback: Si no hay FIDs reales, usar algunos conocidos para testing
+    // Estrategia híbrida: usar FIDs reales + algunos de fallback si no hay suficientes
     const fallbackFids = [3, 5, 2, 602, 1, 280, 99, 190, 6806, 13242];
-    const fidsToUse =
-      realUserFids.length > 0 ? realUserFids : fallbackFids.slice(0, limit);
+    let fidsToUse = [...realUserFids];
 
-    console.log(
-      `🎯 Usando ${fidsToUse.length} FIDs para leaderboard:`,
-      realUserFids.length > 0 ? "REALES de BD" : "FALLBACK para testing"
-    );
+    // Si no tenemos suficientes FIDs reales, completar con fallback
+    if (fidsToUse.length < limit) {
+      const needed = limit - fidsToUse.length;
+      const additionalFids = fallbackFids
+        .filter((fid) => !fidsToUse.includes(fid)) // Evitar duplicados
+        .slice(0, needed);
+
+      fidsToUse = [...fidsToUse, ...additionalFids];
+
+      console.log(
+        `🔄 Estrategia híbrida: ${realUserFids.length} FIDs reales + ${additionalFids.length} fallback = ${fidsToUse.length} total`
+      );
+    } else {
+      console.log(
+        `🎯 Usando ${fidsToUse.length} FIDs completamente reales de BD`
+      );
+    }
 
     // Construir URL con FIDs codificados correctamente
     const fidsParam = fidsToUse.join("%2C%20"); // URL encoded comma-space
