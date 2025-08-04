@@ -37,6 +37,7 @@ export default function SocialFeedPage() {
 
     try {
       // Obtener usuarios de Farcaster de nuestra API
+      // onlyReal=true para mostrar solo usuarios reales (opcional)
       const response = await fetch(
         "/api/farcaster/user-quality-leaderboard?limit=15"
       );
@@ -350,21 +351,25 @@ export default function SocialFeedPage() {
 
           {/* Estado de error mejorado */}
           {!isLoading && error && (
-            <div className="relative bg-gradient-to-r from-red-500/10 via-rose-500/10 to-pink-500/10 border border-red-500/30 rounded-xl p-8 text-center backdrop-blur-sm">
-              <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent rounded-xl"></div>
+            <div className="relative bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-cyan-500/10 border border-blue-500/30 rounded-xl p-8 text-center backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent rounded-xl"></div>
               <div className="relative">
-                <span className="text-red-400 text-6xl mb-4 block animate-bounce">
-                  ⚠️
+                <span className="text-blue-400 text-6xl mb-4 block animate-pulse">
+                  🎭
                 </span>
-                <h3 className="text-red-400 font-bold text-xl mb-3">
-                  Ups! Algo salió mal
+                <h3 className="text-blue-400 font-bold text-xl mb-3">
+                  ¡Sé el primero en el leaderboard!
                 </h3>
-                <p className="text-zinc-300 mb-4">{error}</p>
+                <p className="text-zinc-300 mb-4">
+                  Aún no hay usuarios de Farcaster registrados.
+                  <br />
+                  Conecta tu cuenta de Farcaster para aparecer aquí.
+                </p>
                 <button
                   onClick={createFarcasterQualityLeaderboard}
-                  className="px-6 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white font-semibold rounded-lg hover:from-red-600 hover:to-rose-600 transition-all duration-300"
+                  className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300"
                 >
-                  🔄 Reintentar
+                  🔄 Recargar
                 </button>
               </div>
             </div>

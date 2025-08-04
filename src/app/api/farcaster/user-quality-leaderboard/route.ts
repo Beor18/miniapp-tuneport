@@ -50,25 +50,22 @@ export async function GET(request: NextRequest) {
       console.error("❌ Error fetching user FIDs from BD:", error);
     }
 
-    // Estrategia híbrida: usar FIDs reales + algunos de fallback si no hay suficientes
-    const fallbackFids = [3, 5, 2, 602, 1, 280, 99, 190, 6806, 13242];
-    let fidsToUse = [...realUserFids];
+    // Solo usar usuarios reales de la base de datos
+    const fidsToUse = realUserFids;
 
-    // Si no tenemos suficientes FIDs reales, completar con fallback
-    if (fidsToUse.length < limit) {
-      const needed = limit - fidsToUse.length;
-      const additionalFids = fallbackFids
-        .filter((fid) => !fidsToUse.includes(fid)) // Evitar duplicados
-        .slice(0, needed);
+    console.log(
+      `🎯 Usando SOLO usuarios reales: ${fidsToUse.length} FIDs de la BD`
+    );
 
-      fidsToUse = [...fidsToUse, ...additionalFids];
-
-      console.log(
-        `🔄 Estrategia híbrida: ${realUserFids.length} FIDs reales + ${additionalFids.length} fallback = ${fidsToUse.length} total`
-      );
-    } else {
-      console.log(
-        `🎯 Usando ${fidsToUse.length} FIDs completamente reales de BD`
+    // Si no hay usuarios reales, retornar error específico
+    if (fidsToUse.length === 0) {
+      return NextResponse.json(
+        {
+          error: "No hay usuarios de Farcaster registrados",
+          message:
+            "Registra tu cuenta de Farcaster para aparecer en el leaderboard",
+        },
+        { status: 404 }
       );
     }
 
