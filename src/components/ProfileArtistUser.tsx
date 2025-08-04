@@ -560,9 +560,9 @@ export default function ProfileArtistUser({
             MY MUSIC
           </h3>
           <div className="flex items-center gap-4">
-            {isOwnProfile && (
+            {/* {isOwnProfile && (
               <BaseAlbumNewForm nickname={profile.nickname || ""} />
-            )}
+            )} */}
             {/* Botones de navegación del carrusel */}
             {!isLoading && albums.length > 0 && (
               <div className="flex gap-2">

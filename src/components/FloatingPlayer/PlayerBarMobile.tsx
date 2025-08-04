@@ -29,7 +29,7 @@ import { useCandyMachineMint } from "@Src/lib/hooks/solana/useCandyMachineMint";
 import { useBlockchainOperations } from "@Src/lib/hooks/common/useBlockchainOperations";
 import { toast } from "sonner";
 import { useAppKitAccount } from "@Src/lib/privy";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { TradingInterface } from "@Src/components/TradingInterface";
 import { MintModal } from "@Src/components/MintModal";
 import {
@@ -503,254 +503,271 @@ export function PlayerBarMobile({
       </div>
 
       {/* Player expandido (pantalla completa) */}
-      {isExpanded && (
-        <div className="fixed inset-0 z-[60] bg-gradient-to-b from-zinc-900 via-zinc-900 to-black text-white sm:hidden flex flex-col">
-          {/* Header con botón de cerrar */}
-          <div className="flex items-center justify-between p-4 border-b border-zinc-800/50 flex-shrink-0 backdrop-blur-sm">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={closeExpanded}
-              className="text-white hover:bg-zinc-800/50 rounded-full"
-            >
-              <ChevronDownIcon className="h-6 w-6" />
-            </Button>
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            transition={{
+              type: "spring",
+              damping: 25,
+              stiffness: 300,
+              duration: 0.4,
+            }}
+            className="fixed inset-0 z-[60] bg-gradient-to-b from-zinc-900 via-zinc-900 to-black text-white sm:hidden flex flex-col"
+          >
+            {/* Header con botón de cerrar */}
+            <div className="flex items-center justify-between p-4 border-b border-zinc-800/50 flex-shrink-0 backdrop-blur-sm">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeExpanded}
+                className="text-white hover:bg-zinc-800/50 rounded-full"
+              >
+                <ChevronDownIcon className="h-6 w-6" />
+              </Button>
 
-            <div className="text-center flex-1">
-              <p className="text-xs text-zinc-500 uppercase tracking-wide">
-                Listening to
-              </p>
-              <p className="text-sm font-medium truncate px-2 text-zinc-300">
-                {currentSong.collection_name || "My library"}
-              </p>
+              <div className="text-center flex-1">
+                <p className="text-xs text-zinc-500 uppercase tracking-wide">
+                  Listening to
+                </p>
+                <p className="text-sm font-medium truncate px-2 text-zinc-300">
+                  {currentSong?.name || "My library"}
+                </p>
+              </div>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeExpanded}
+                className="text-white hover:bg-zinc-800/50 rounded-full"
+              >
+                <XIcon className="h-6 w-6" />
+              </Button>
             </div>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={closeExpanded}
-              className="text-white hover:bg-zinc-800/50 rounded-full"
-            >
-              <XIcon className="h-6 w-6" />
-            </Button>
-          </div>
-
-          {/* Contenido principal del player - Responsive layout */}
-          <div className="flex-1 flex flex-col justify-between p-6 min-h-0">
-            {/* Top section: Album art + Info */}
-            <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
-              {/* Imagen del álbum - Responsive */}
-              <div className="mb-6 w-full max-w-60">
-                <Link href={`/album/${currentSong.slug}`}>
+            {/* Contenido principal del player - Responsive layout */}
+            <div className="flex-1 flex flex-col justify-between p-6 min-h-0">
+              {/* Top section: Album art + Info */}
+              <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
+                {/* Imagen del álbum - Responsive */}
+                <div className="mb-6 w-full max-w-60">
+                  {/* <Link href={`/album/${currentSong.slug}`}> */}
                   <img
                     src={`${currentSong.image}`}
                     alt="Album cover"
                     className="w-full aspect-square rounded-3xl object-cover shadow-2xl shadow-black/50"
                   />
-                </Link>
+                  {/* </Link> */}
+                </div>
+
+                {/* Info de la canción */}
+                <div className="text-center mb-6 w-full">
+                  <h1 className="text-xl font-bold text-white mb-2 leading-tight line-clamp-2">
+                    {currentSong.name}
+                  </h1>
+                  <p className="text-base text-zinc-400">
+                    {currentSong.artist_name ||
+                      currentSong.artist ||
+                      "Unknown artist"}
+                  </p>
+                </div>
               </div>
 
-              {/* Info de la canción */}
-              <div className="text-center mb-6 w-full">
-                <h1 className="text-xl font-bold text-white mb-2 leading-tight line-clamp-2">
-                  {currentSong.name}
-                </h1>
-                <p className="text-base text-zinc-400">
-                  {currentSong.artist_name ||
-                    currentSong.artist ||
-                    "Unknown artist"}
-                </p>
-              </div>
-            </div>
-
-            {/* Bottom section: Controls */}
-            <div className="space-y-2">
-              {/* Action buttons */}
-              <div className="grid grid-cols-3 gap-3">
-                {/* Botón Claim NFT */}
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button
-                    variant="outline"
-                    onClick={handleClaimClick}
-                    disabled={!hasWalletConnected || isMintingAny}
-                    className={`w-full h-12 ${
-                      !hasWalletConnected || isMintingAny
-                        ? "bg-zinc-800/30 text-zinc-600 border-zinc-700/50"
-                        : "bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30 hover:border-zinc-500/50"
-                    } rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm`}
-                    title={!hasWalletConnected ? "Connect wallet" : "Claim NFT"}
+              {/* Bottom section: Controls */}
+              <div className="space-y-2">
+                {/* Action buttons */}
+                <div className="grid grid-cols-3 gap-3">
+                  {/* Botón Claim NFT */}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    {isMintingAny ? (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{
-                          duration: 1,
-                          repeat: Infinity,
-                          ease: "linear",
-                        }}
-                      >
-                        <svg
-                          className="h-6 w-6"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
+                    <Button
+                      variant="outline"
+                      onClick={handleClaimClick}
+                      disabled={!hasWalletConnected || isMintingAny}
+                      className={`w-full h-12 ${
+                        !hasWalletConnected || isMintingAny
+                          ? "bg-zinc-800/30 text-zinc-600 border-zinc-700/50"
+                          : "bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30 hover:border-zinc-500/50"
+                      } rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm`}
+                      title={
+                        !hasWalletConnected ? "Connect wallet" : "Claim NFT"
+                      }
+                    >
+                      {isMintingAny ? (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
                         >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
+                          <svg
+                            className="h-6 w-6"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                        </motion.div>
+                      ) : (
+                        <GiftIcon className="h-6 w-6" />
+                      )}
+                    </Button>
+                  </motion.div>
+
+                  {/* Trading Button */}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      onClick={() => setIsTradingModalOpen(true)}
+                      variant="outline"
+                      className="w-full h-12 bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30 hover:border-zinc-500/50 rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm"
+                      title="Trade Tokens"
+                    >
+                      <Coins className="h-6 w-6" />
+                    </Button>
+                  </motion.div>
+
+                  {/* Botón de playlist */}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      onClick={togglePlaylist}
+                      variant="outline"
+                      className={`w-full h-12 relative ${
+                        showPlaylist
+                          ? "bg-zinc-700/40 text-white border-zinc-600/70"
+                          : "bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30"
+                      } rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm`}
+                      title={`Queue ${
+                        userPlaylist.length > 0
+                          ? `(${userPlaylist.length})`
+                          : ""
+                      }`}
+                    >
+                      <ListMusicIcon className="h-6 w-6" />
+                      {userPlaylist.length > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold text-[10px] shadow-lg">
+                          {userPlaylist.length > 9 ? "9+" : userPlaylist.length}
+                        </span>
+                      )}
+                    </Button>
+                  </motion.div>
+                </div>
+
+                {/* Like and Volume controls */}
+                <div className="flex items-center justify-between px-2">
+                  <LikeButton
+                    nftId={currentSong?._id || ""}
+                    variant="minimal"
+                    size="lg"
+                    showCount={true}
+                    className="text-white"
+                  />
+
+                  <div className="flex items-center space-x-3">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowVolumeControl(!showVolumeControl)}
+                      className="text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-full"
+                    >
+                      <Volume2Icon className="h-5 w-5" />
+                    </Button>
+
+                    {showVolumeControl && (
+                      <motion.div
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: "120px" }}
+                        exit={{ opacity: 0, width: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden"
+                      >
+                        <Slider
+                          value={[volume]}
+                          max={1}
+                          step={0.01}
+                          onValueChange={handleVolumeChange}
+                          className="w-full"
+                        />
                       </motion.div>
-                    ) : (
-                      <GiftIcon className="h-6 w-6" />
                     )}
-                  </Button>
-                </motion.div>
+                  </div>
+                </div>
 
-                {/* Trading Button */}
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button
-                    onClick={() => setIsTradingModalOpen(true)}
-                    variant="outline"
-                    className="w-full h-12 bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30 hover:border-zinc-500/50 rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm"
-                    title="Trade Tokens"
-                  >
-                    <Coins className="h-6 w-6" />
-                  </Button>
-                </motion.div>
+                {/* Progress bar */}
+                <div className="space-y-2">
+                  <Slider
+                    value={[currentTime]}
+                    max={duration}
+                    step={1}
+                    onValueChange={handleSeek}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-sm text-zinc-500 px-1">
+                    <span>{formatTime(currentTime)}</span>
+                    <span>{formatTime(duration)}</span>
+                  </div>
+                </div>
 
-                {/* Botón de playlist */}
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button
-                    onClick={togglePlaylist}
-                    variant="outline"
-                    className={`w-full h-12 relative ${
-                      showPlaylist
-                        ? "bg-zinc-700/40 text-white border-zinc-600/70"
-                        : "bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30"
-                    } rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm`}
-                    title={`Queue ${
-                      userPlaylist.length > 0 ? `(${userPlaylist.length})` : ""
-                    }`}
-                  >
-                    <ListMusicIcon className="h-6 w-6" />
-                    {userPlaylist.length > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold text-[10px] shadow-lg">
-                        {userPlaylist.length > 9 ? "9+" : userPlaylist.length}
-                      </span>
-                    )}
-                  </Button>
-                </motion.div>
-              </div>
-
-              {/* Like and Volume controls */}
-              <div className="flex items-center justify-between px-2">
-                <LikeButton
-                  nftId={currentSong?._id || ""}
-                  variant="minimal"
-                  size="lg"
-                  showCount={true}
-                  className="text-white"
-                />
-
-                <div className="flex items-center space-x-3">
+                {/* Main playback controls */}
+                <div className="flex items-center justify-center space-x-6">
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setShowVolumeControl(!showVolumeControl)}
-                    className="text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-full"
+                    onClick={handlePrevSong}
+                    className="text-white hover:bg-zinc-800/50 h-12 w-12 rounded-full"
                   >
-                    <Volume2Icon className="h-5 w-5" />
+                    <SkipBackIcon className="h-7 w-7" />
                   </Button>
 
-                  {showVolumeControl && (
-                    <motion.div
-                      initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: "120px" }}
-                      exit={{ opacity: 0, width: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="overflow-hidden"
-                    >
-                      <Slider
-                        value={[volume]}
-                        max={1}
-                        step={0.01}
-                        onValueChange={handleVolumeChange}
-                        className="w-full"
-                      />
-                    </motion.div>
-                  )}
+                  <Button
+                    onClick={handlePlayPause}
+                    className="bg-white hover:bg-zinc-200 text-black rounded-full h-16 w-16 flex items-center justify-center shadow-xl transition-transform hover:scale-105"
+                  >
+                    {isPlaying ? (
+                      <PauseIcon className="h-8 w-8" />
+                    ) : (
+                      <PlayIcon className="h-8 w-8 ml-1" />
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleNextSong}
+                    className="text-white hover:bg-zinc-800/50 h-12 w-12 rounded-full"
+                  >
+                    <SkipForwardIcon className="h-7 w-7" />
+                  </Button>
                 </div>
-              </div>
-
-              {/* Progress bar */}
-              <div className="space-y-2">
-                <Slider
-                  value={[currentTime]}
-                  max={duration}
-                  step={1}
-                  onValueChange={handleSeek}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-sm text-zinc-500 px-1">
-                  <span>{formatTime(currentTime)}</span>
-                  <span>{formatTime(duration)}</span>
-                </div>
-              </div>
-
-              {/* Main playback controls */}
-              <div className="flex items-center justify-center space-x-6">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handlePrevSong}
-                  className="text-white hover:bg-zinc-800/50 h-12 w-12 rounded-full"
-                >
-                  <SkipBackIcon className="h-7 w-7" />
-                </Button>
-
-                <Button
-                  onClick={handlePlayPause}
-                  className="bg-white hover:bg-zinc-200 text-black rounded-full h-16 w-16 flex items-center justify-center shadow-xl transition-transform hover:scale-105"
-                >
-                  {isPlaying ? (
-                    <PauseIcon className="h-8 w-8" />
-                  ) : (
-                    <PlayIcon className="h-8 w-8 ml-1" />
-                  )}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleNextSong}
-                  className="text-white hover:bg-zinc-800/50 h-12 w-12 rounded-full"
-                >
-                  <SkipForwardIcon className="h-7 w-7" />
-                </Button>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <PaymentDialog
         onConfirmClaim={(track) => Promise.resolve(handlePayment(track))}

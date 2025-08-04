@@ -187,63 +187,26 @@ const WalletAssets = () => {
         <h2 className="text-2xl font-bold text-white uppercase">Collected</h2>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          {/* Filtro de red mejorado */}
-          <div className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800 rounded-full p-1 flex items-center justify-center shadow-lg">
-            <button
-              onClick={() => setActiveNetwork("all")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
-                activeNetwork === "all"
-                  ? "bg-zinc-700/80 text-white shadow-inner"
-                  : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
-              }`}
-            >
-              <Globe className="h-4 w-4" />
-              <span className="text-sm font-medium">All</span>
-            </button>
-
-            <button
-              onClick={() => setActiveNetwork("solana")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
-                activeNetwork === "solana"
-                  ? "bg-purple-900/80 text-white shadow-inner"
-                  : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
-              }`}
-            >
-              <SolanaIcon />
-              <span className="text-sm font-medium">Solana</span>
-            </button>
-
-            <button
-              onClick={() => setActiveNetwork("evm")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
-                activeNetwork === "evm"
-                  ? "bg-blue-900/80 text-white shadow-inner"
-                  : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
-              }`}
-            >
-              <BaseIcon />
-              <span className="text-sm font-medium">Base/EVM</span>
-            </button>
-          </div>
-
           {(loading || assets.length > 0) && (
-            <div className="flex gap-2 ml-auto">
-              <Button
-                variant="ghost"
-                size="icon"
+            <div className="flex gap-2">
+              <button
+                type="button"
+                aria-label="Scroll left"
                 onClick={() => scroll("left")}
-                className="h-10 w-10 rounded-full bg-zinc-900/50 backdrop-blur-sm border border-zinc-800/50 hover:bg-zinc-800"
+                className="bg-zinc-900/80 border border-zinc-800 rounded-full p-1 w-9 h-9 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all shadow-md"
+                style={{ boxShadow: "0 2px 8px 0 rgba(0,0,0,0.12)" }}
               >
-                <ChevronLeft className="h-5 w-5 text-white" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                aria-label="Scroll right"
                 onClick={() => scroll("right")}
-                className="h-10 w-10 rounded-full bg-zinc-900/50 backdrop-blur-sm border border-zinc-800/50 hover:bg-zinc-800"
+                className="bg-zinc-900/80 border border-zinc-800 rounded-full p-1 w-9 h-9 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all shadow-md"
+                style={{ boxShadow: "0 2px 8px 0 rgba(0,0,0,0.12)" }}
               >
-                <ChevronRight className="h-5 w-5 text-white" />
-              </Button>
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
           )}
         </div>
