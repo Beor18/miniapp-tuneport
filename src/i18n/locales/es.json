@@ -484,7 +484,18 @@
     "categories": "categorías",
     "selected": "seleccionadas",
     "yourQueueEmpty": "Tu cola está vacía",
-    "searchTracks": "Buscar pistas..."
+    "searchTracks": "Buscar pistas...",
+    "creatingRevenueShare": "Creando sistema de distribución de ingresos...",
+    "configuringCascade": "Configurando economía en cascada...",
+    "savingPlaylist": "Guardando playlist...",
+    "playlistTokenizedSuccess": "¡Playlist tokenizada con economía en cascada!",
+    "playlistCreatedSuccess": "¡Playlist creada!",
+    "web2PlaylistDescription": "Creada en modo web2 - tokenización no disponible",
+    "playlistCreationError": "Error al crear la playlist",
+    "tryAgainLater": "Por favor, intenta nuevamente",
+    "cascadeEconomyError": "Error al crear playlist con economía en cascada",
+    "noCollectionsFound": "No se encontraron direcciones de colecciones originales",
+    "tokenCreatedSuccessfully": "creada exitosamente"
   },
   "farcaster": {
     "share": "Compartir",

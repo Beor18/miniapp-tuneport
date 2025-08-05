@@ -482,6 +482,17 @@
     "categories": "categorias",
     "selected": "selecionadas",
     "yourQueueEmpty": "Sua fila está vazia",
-    "searchTracks": "Buscar faixas..."
+    "searchTracks": "Buscar faixas...",
+    "creatingRevenueShare": "Criando sistema de distribuição de receita...",
+    "configuringCascade": "Configurando economia em cascata...",
+    "savingPlaylist": "Salvando playlist...",
+    "playlistTokenizedSuccess": "Playlist tokenizada com economia em cascata!",
+    "playlistCreatedSuccess": "Playlist criada!",
+    "web2PlaylistDescription": "Criada em modo web2 - tokenização não disponível",
+    "playlistCreationError": "Erro ao criar playlist",
+    "tryAgainLater": "Por favor, tente novamente",
+    "cascadeEconomyError": "Erro ao criar playlist com economia em cascata",
+    "noCollectionsFound": "Não foram encontrados endereços de coleções originais",
+    "tokenCreatedSuccessfully": "criada com sucesso"
   }
 }

@@ -484,7 +484,18 @@
     "categories": "categories",
     "selected": "selected",
     "yourQueueEmpty": "Your queue is empty",
-    "searchTracks": "Search tracks..."
+    "searchTracks": "Search tracks...",
+    "creatingRevenueShare": "Creating revenue distribution system...",
+    "configuringCascade": "Configuring cascade economy...",
+    "savingPlaylist": "Saving playlist...",
+    "playlistTokenizedSuccess": "Playlist tokenized with cascade economy!",
+    "playlistCreatedSuccess": "Playlist created!",
+    "web2PlaylistDescription": "Created in web2 mode - tokenization not available",
+    "playlistCreationError": "Error creating playlist",
+    "tryAgainLater": "Please try again",
+    "cascadeEconomyError": "Error creating playlist with cascade economy",
+    "noCollectionsFound": "No original collection addresses found",
+    "tokenCreatedSuccessfully": "created successfully"
   },
   "farcaster": {
     "share": "Share",

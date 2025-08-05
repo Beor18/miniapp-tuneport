@@ -381,7 +381,7 @@ export const Playlist: React.FC<PlaylistProps> = ({
         processPlaylistCollaboratorsForCascading(songs);
 
       if (originalCollections.length === 0) {
-        toast.error("No se encontraron direcciones de colecciones originales", {
+        toast.error(tPlaylist("noCollectionsFound"), {
           id: MAIN_TOAST_ID,
         });
         return;
@@ -413,7 +413,7 @@ export const Playlist: React.FC<PlaylistProps> = ({
 
       // 🏗️ 5. CREAR REVENUE SHARE CONTRACT PARA LA PLAYLIST
       console.log("🏗️ Creando RevenueShare contract para la playlist...");
-      toast.loading("Creando sistema de distribución de ingresos...", {
+      toast.loading(tPlaylist("creatingRevenueShare"), {
         id: MAIN_TOAST_ID,
       });
 
@@ -431,7 +431,7 @@ export const Playlist: React.FC<PlaylistProps> = ({
 
       // ⚙️ 6. CONFIGURAR ECONOMÍA EN CASCADA
       console.log("⚙️ Configurando economía en cascada...");
-      toast.loading("Configurando economía en cascada...", {
+      toast.loading(tPlaylist("configuringCascade"), {
         id: MAIN_TOAST_ID,
       });
 
@@ -442,7 +442,7 @@ export const Playlist: React.FC<PlaylistProps> = ({
 
       // 🏭 7. CREAR COLECCIÓN ERC1155 PARA LA PLAYLIST
       console.log("🏭 Creando colección ERC1155 para la playlist...");
-      toast.loading("Tokenizando playlist...", {
+      toast.loading(tPlaylist("tokenizing"), {
         id: MAIN_TOAST_ID,
       });
 
@@ -475,7 +475,7 @@ export const Playlist: React.FC<PlaylistProps> = ({
 
       // 💾 8. GUARDAR EN BASE DE DATOS CON INFORMACIÓN DE CASCADING
       console.log("💾 Guardando playlist en base de datos...");
-      toast.loading("Guardando playlist...", {
+      toast.loading(tPlaylist("savingPlaylist"), {
         id: MAIN_TOAST_ID,
       });
 
@@ -507,8 +507,10 @@ export const Playlist: React.FC<PlaylistProps> = ({
             "✅ Playlist tokenizada exitosamente:",
             collectionAddress
           );
-          toast.success("🪙 Playlist tokenizada con economía en cascada!", {
-            description: `$${playlistSymbol} creada exitosamente`,
+          toast.success(tPlaylist("playlistTokenizedSuccess"), {
+            description: `$${playlistSymbol} ${tPlaylist(
+              "tokenCreatedSuccessfully"
+            )}`,
             duration: 4000,
           });
           console.log("🎉 Economía en cascada implementada exitosamente:");
@@ -521,10 +523,13 @@ export const Playlist: React.FC<PlaylistProps> = ({
           );
         } else {
           console.warn("⚠️ Tokenización falló, continuando con web2...");
-          toast.success(`Playlist "${playlistName}" creada!`, {
-            description: "Creada en modo web2 - tokenización no disponible",
-            duration: 4000,
-          });
+          toast.success(
+            `${tPlaylist("playlistCreatedSuccess")} "${playlistName}"`,
+            {
+              description: tPlaylist("web2PlaylistDescription"),
+              duration: 4000,
+            }
+          );
         }
 
         // Limpiar formulario
@@ -536,17 +541,17 @@ export const Playlist: React.FC<PlaylistProps> = ({
       } else {
         // Cerrar loading y mostrar error
         toast.dismiss(MAIN_TOAST_ID);
-        toast.error("Error al crear la playlist", {
-          description: "Por favor, intenta nuevamente",
+        toast.error(tPlaylist("playlistCreationError"), {
+          description: tPlaylist("tryAgainLater"),
           duration: 4000,
         });
       }
     } catch (error) {
       // Cerrar cualquier toast de loading y mostrar error
       toast.dismiss(MAIN_TOAST_ID);
-      toast.error("Error al crear playlist con economía en cascada", {
+      toast.error(tPlaylist("cascadeEconomyError"), {
         description:
-          error instanceof Error ? error.message : "Error desconocido",
+          error instanceof Error ? error.message : tCommon("unexpectedError"),
         duration: 4000,
       });
       console.error("Error creating playlist:", error);
