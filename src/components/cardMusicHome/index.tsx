@@ -204,8 +204,11 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
 
         // Mostrar el FloatingPlayer después de un delay para permitir completar la navegación
         unmountTimeoutId = setTimeout(() => {
-          // Solo mostrar si no estamos en un álbum ni en foryou
-          if (!pathname.startsWith("/album/") && pathname !== "/foryou") {
+          // Solo mostrar si no estamos en un álbum ni en foryou (compatible con idiomas)
+          if (
+            !pathname.startsWith("/album/") &&
+            !pathname.match(/\/foryou(\/|$)/)
+          ) {
             console.log(
               `[CardMusicHome:${effectId}] Mostrando FloatingPlayer al desmontar`
             );

@@ -37,10 +37,18 @@ export default function FloatingPlayer() {
     setShowPlaylist,
   } = useAudioControls();
 
-  // Si no hay canción activa, el reproductor está oculto, o estamos en /foryou, no mostrar nada  
-  if (!currentSong || !showFloatingPlayer || pathname.match(/\/foryou(\/|$)/)) {
+  // Si no hay canción activa, no mostrar nada
+  if (!currentSong) {
     return null;
   }
+
+  // Si estamos en /foryou, ocultar siempre
+  if (pathname.match(/\/foryou(\/|$)/)) {
+    return null;
+  }
+
+  // Si tenemos canción y no estamos en foryou, mostrar independientemente de showFloatingPlayer
+  // (esto resuelve el problema del primer render después de salir de foryou)
 
   // Función simplificada para el manejo de mint y payment
   const handleMint = () => {
