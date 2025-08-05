@@ -203,12 +203,19 @@ export function PlayerBarMobile({
     setIsExpanded(false);
   };
 
+  // Debug para identificar por qué no se muestra
   if (!currentSong) {
-    return (
-      <div className="fixed bottom-16 left-0 right-0 z-50 bg-zinc-900 border-t border-zinc-800 p-2 animate-pulse sm:hidden">
-        <div className="h-16 bg-zinc-800 rounded-lg"></div>
-      </div>
-    );
+    // Solo mostrar en desarrollo para debugging
+    if (process.env.NODE_ENV === "development") {
+      return (
+        <div className="fixed bottom-16 left-0 right-0 z-50 bg-red-900/20 border-t border-red-800 p-2 md:hidden">
+          <div className="text-xs text-red-400 text-center">
+            PlayerBarMobile: No currentSong
+          </div>
+        </div>
+      );
+    }
+    return null;
   }
 
   const formatTime = (time: number) => {
@@ -412,7 +419,7 @@ export function PlayerBarMobile({
   return (
     <>
       {/* Player compacto (siempre visible en móvil) */}
-      <div className="fixed bottom-16 left-0 right-0 z-50 bg-zinc-900 text-white sm:hidden">
+      <div className="fixed bottom-16 left-0 right-0 z-50 bg-zinc-900 text-white md:hidden">
         {/* Barra compacta */}
         <div
           className="flex items-center px-4 py-3 border-t border-zinc-800 cursor-pointer"
@@ -515,7 +522,7 @@ export function PlayerBarMobile({
               stiffness: 300,
               duration: 0.4,
             }}
-            className="fixed inset-0 z-[60] bg-gradient-to-b from-zinc-900 via-zinc-900 to-black text-white sm:hidden flex flex-col"
+            className="fixed inset-0 z-[60] bg-gradient-to-b from-zinc-900 via-zinc-900 to-black text-white md:hidden flex flex-col"
           >
             {/* Header con botón de cerrar */}
             <div className="flex items-center justify-between p-4 border-b border-zinc-800/50 flex-shrink-0 backdrop-blur-sm">
