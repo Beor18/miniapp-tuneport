@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useUserQuality } from "@Src/lib/hooks/useUserQuality";
 import { useTranslations } from "next-intl";
 import { Users } from "lucide-react";
+import Link from "next/link";
 
 export default function SocialFeedPage() {
   const { getBatchUserQualityScores, contractReady } = useUserQuality();
@@ -54,7 +55,6 @@ export default function SocialFeedPage() {
 
       // Obtener scores de calidad para las direcciones de Farcaster
       const scores = await getBatchUserQualityScores(data.addresses);
-
       // Crear leaderboard con información completa del usuario de Farcaster
       const leaderboardData = Array.from(scores.entries())
         .map(([address, result]) => {
@@ -286,40 +286,42 @@ export default function SocialFeedPage() {
                         </div>
 
                         {/* Información principal del usuario - Responsive */}
-                        <div className="flex-1 min-w-0">
-                          {/* Fila superior: nickname y badges */}
-                          <div className="flex items-center gap-1 md:gap-2 mb-1">
-                            <h3 className="text-white font-semibold text-sm md:text-base truncate">
-                              @{user.nickname}
-                            </h3>
+                        <Link href={`/u/${user.nickname}`}>
+                          <div className="flex-1 min-w-0">
+                            {/* Fila superior: nickname y badges */}
+                            <div className="flex items-center gap-1 md:gap-2 mb-1">
+                              <h3 className="text-white font-semibold text-sm md:text-base truncate">
+                                @{user.nickname}
+                              </h3>
 
-                            {/* Badges premium - Responsive */}
-                            {user.powerBadge && (
-                              <span
-                                className="inline-flex items-center px-1 md:px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                                title={t("powerBadge")}
-                              >
-                                ⚡
-                              </span>
-                            )}
-                            {user.verified && (
-                              <span
-                                className="inline-flex items-center px-1 md:px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                                title={t("verified")}
-                              >
-                                ✓
-                              </span>
-                            )}
+                              {/* Badges premium - Responsive */}
+                              {user.powerBadge && (
+                                <span
+                                  className="inline-flex items-center px-1 md:px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                                  title={t("powerBadge")}
+                                >
+                                  ⚡
+                                </span>
+                              )}
+                              {user.verified && (
+                                <span
+                                  className="inline-flex items-center px-1 md:px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                  title={t("verified")}
+                                >
+                                  ✓
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Display name - Responsive */}
+                            {user.displayName &&
+                              user.displayName !== user.nickname && (
+                                <p className="text-zinc-300 text-xs md:text-sm mb-1 truncate">
+                                  {user.displayName}
+                                </p>
+                              )}
                           </div>
-
-                          {/* Display name - Responsive */}
-                          {user.displayName &&
-                            user.displayName !== user.nickname && (
-                              <p className="text-zinc-300 text-xs md:text-sm mb-1 truncate">
-                                {user.displayName}
-                              </p>
-                            )}
-                        </div>
+                        </Link>
 
                         {/* Score y Tier - Responsive */}
                         <div className="flex-shrink-0 text-right">
