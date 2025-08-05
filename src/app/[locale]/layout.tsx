@@ -67,7 +67,7 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider messages={messages}>
       <HomeLayout mockUsers={userData}>{children}</HomeLayout>
-      <Toaster richColors position="bottom-right" expand={false} closeButton />
+      <Toaster richColors position="top-right" expand={false} closeButton />
     </NextIntlClientProvider>
   );
 }

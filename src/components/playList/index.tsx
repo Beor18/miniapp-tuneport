@@ -368,6 +368,7 @@ export const Playlist: React.FC<PlaylistProps> = ({
     if (!userData?._id || songs.length === 0 || !playlistName.trim()) return;
 
     setIsCreating(true);
+    const MAIN_TOAST_ID = "playlist-creation-process";
 
     try {
       const nftIds = songs.map((track) => track._id);
@@ -380,7 +381,9 @@ export const Playlist: React.FC<PlaylistProps> = ({
         processPlaylistCollaboratorsForCascading(songs);
 
       if (originalCollections.length === 0) {
-        toast.error("No se encontraron direcciones de colecciones originales");
+        toast.error("No se encontraron direcciones de colecciones originales", {
+          id: MAIN_TOAST_ID,
+        });
         return;
       }
 
@@ -411,7 +414,7 @@ export const Playlist: React.FC<PlaylistProps> = ({
       // 🏗️ 5. CREAR REVENUE SHARE CONTRACT PARA LA PLAYLIST
       console.log("🏗️ Creando RevenueShare contract para la playlist...");
       toast.loading("Creando sistema de distribución de ingresos...", {
-        id: "revenue-share-creation",
+        id: MAIN_TOAST_ID,
       });
 
       const revenueShareAddress = await createRevenueShare({
@@ -425,14 +428,11 @@ export const Playlist: React.FC<PlaylistProps> = ({
       }
 
       console.log("✅ RevenueShare creado:", revenueShareAddress);
-      toast.success("Sistema de distribución creado", {
-        id: "revenue-share-creation",
-      });
 
       // ⚙️ 6. CONFIGURAR ECONOMÍA EN CASCADA
       console.log("⚙️ Configurando economía en cascada...");
       toast.loading("Configurando economía en cascada...", {
-        id: "cascade-config",
+        id: MAIN_TOAST_ID,
       });
 
       // TODO: Aquí necesitamos configurar:
@@ -442,7 +442,9 @@ export const Playlist: React.FC<PlaylistProps> = ({
 
       // 🏭 7. CREAR COLECCIÓN ERC1155 PARA LA PLAYLIST
       console.log("🏭 Creando colección ERC1155 para la playlist...");
-      toast.loading("Tokenizando playlist...", { id: "playlist-tokenization" });
+      toast.loading("Tokenizando playlist...", {
+        id: MAIN_TOAST_ID,
+      });
 
       const collectionAddress = await createCollection({
         name: `🎵 ${playlistName}`,
@@ -471,25 +473,12 @@ export const Playlist: React.FC<PlaylistProps> = ({
         revenueShareDescription: `Distribución automática: 70% artistas originales, 30% curator`,
       });
 
-      if (collectionAddress) {
-        console.log("✅ Playlist tokenizada exitosamente:", collectionAddress);
-        toast.success("🪙 Playlist tokenizada!", {
-          id: "playlist-tokenization",
-          description: `$${playlistSymbol} con economía en cascada activa`,
-        });
-        toast.success("Economía en cascada configurada", {
-          id: "cascade-config",
-        });
-      } else {
-        console.warn("⚠️ Tokenización falló, continuando con web2...");
-        toast.warning("Tokenización falló", {
-          id: "playlist-tokenization",
-          description: "Playlist creada en web2 solamente",
-        });
-      }
-
       // 💾 8. GUARDAR EN BASE DE DATOS CON INFORMACIÓN DE CASCADING
       console.log("💾 Guardando playlist en base de datos...");
+      toast.loading("Guardando playlist...", {
+        id: MAIN_TOAST_ID,
+      });
+
       const result = await createPlaylist({
         name: playlistName,
         description: playlistDescription,
@@ -510,15 +499,33 @@ export const Playlist: React.FC<PlaylistProps> = ({
       });
 
       if (result.success) {
-        toast.success(
-          `Playlist "${playlistName}" creada con economía en cascada!`
-        );
-        console.log("🎉 Economía en cascada implementada exitosamente:");
-        console.log("- 70% de ingresos → Artistas originales automáticamente");
-        console.log("- 30% de ingresos → Curator de la playlist");
-        console.log(
-          `- ${originalCollections.length} colecciones originales en herencia`
-        );
+        // Cerrar el toast de loading y mostrar éxito
+        toast.dismiss(MAIN_TOAST_ID);
+
+        if (collectionAddress) {
+          console.log(
+            "✅ Playlist tokenizada exitosamente:",
+            collectionAddress
+          );
+          toast.success("🪙 Playlist tokenizada con economía en cascada!", {
+            description: `$${playlistSymbol} creada exitosamente`,
+            duration: 4000,
+          });
+          console.log("🎉 Economía en cascada implementada exitosamente:");
+          console.log(
+            "- 70% de ingresos → Artistas originales automáticamente"
+          );
+          console.log("- 30% de ingresos → Curator de la playlist");
+          console.log(
+            `- ${originalCollections.length} colecciones originales en herencia`
+          );
+        } else {
+          console.warn("⚠️ Tokenización falló, continuando con web2...");
+          toast.success(`Playlist "${playlistName}" creada!`, {
+            description: "Creada en modo web2 - tokenización no disponible",
+            duration: 4000,
+          });
+        }
 
         // Limpiar formulario
         setPlaylistName("");
@@ -527,10 +534,21 @@ export const Playlist: React.FC<PlaylistProps> = ({
         setSelectedTags([]);
         setShowCreateForm(false);
       } else {
-        toast.error("Error creating playlist");
+        // Cerrar loading y mostrar error
+        toast.dismiss(MAIN_TOAST_ID);
+        toast.error("Error al crear la playlist", {
+          description: "Por favor, intenta nuevamente",
+          duration: 4000,
+        });
       }
     } catch (error) {
-      toast.error("Error creating playlist with cascade economy");
+      // Cerrar cualquier toast de loading y mostrar error
+      toast.dismiss(MAIN_TOAST_ID);
+      toast.error("Error al crear playlist con economía en cascada", {
+        description:
+          error instanceof Error ? error.message : "Error desconocido",
+        duration: 4000,
+      });
       console.error("Error creating playlist:", error);
     } finally {
       setIsCreating(false);
