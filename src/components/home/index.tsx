@@ -212,17 +212,17 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
     );
   }, [address, userNickname, tNav, locale, tCommon]);
 
-  // Memoizar flags de layout
+  // Memoizar flags de layout (compatible con locales)
   const layoutFlags = useMemo(
     () => ({
-      showFooter: pathname.includes("/u") || pathname.includes("/explore"),
-      showPlayerMobile: pathname.includes("/u") || pathname.startsWith("/"),
+      showFooter: pathname.match(/\/u(\/|$)/) || pathname.includes("/explore"),
+      showPlayerMobile: pathname.match(/\/u(\/|$)/) || pathname.match(/^\/(en|es|pt)?$/),
       // Flag para detectar cuando el player está realmente activo
       hasActivePlayer:
-        currentSong && showFloatingPlayer && !pathname.includes("/foryou"),
+        currentSong && showFloatingPlayer && !pathname.match(/\/foryou(\/|$)/),
       // Mostrar navegación en páginas de perfil y rutas principales
       showNavigation:
-        pathname.includes("/u") || pathname.includes("/social-feed"),
+        pathname.match(/\/u(\/|$)/) || pathname.match(/\/social-feed(\/|$)/),
     }),
     [pathname, currentSong, showFloatingPlayer]
   );

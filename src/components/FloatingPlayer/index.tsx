@@ -37,8 +37,8 @@ export default function FloatingPlayer() {
     setShowPlaylist,
   } = useAudioControls();
 
-  // Si no hay canción activa, el reproductor está oculto, o estamos en /foryou, no mostrar nada
-  if (!currentSong || !showFloatingPlayer || pathname.includes("/foryou")) {
+  // Si no hay canción activa, el reproductor está oculto, o estamos en /foryou, no mostrar nada  
+  if (!currentSong || !showFloatingPlayer || pathname.match(/\/foryou(\/|$)/)) {
     return null;
   }
 

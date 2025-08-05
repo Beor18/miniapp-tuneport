@@ -89,9 +89,9 @@ export function PlayerBarMobile({
   // Detectar la ruta actual para ajustar posicionamiento
   const pathname = usePathname();
 
-  // Determinar si la navegación móvil está visible (misma lógica que HomeLayout)
+  // Determinar si la navegación móvil está visible (compatible con locales)
   const showMobileNavigation =
-    pathname.includes("/u") || pathname.includes("/social-feed");
+    pathname.match(/\/u(\/|$)/) || pathname.match(/\/social-feed(\/|$)/);
 
   // Ajustar posición dinámicamente según si hay navegación móvil
   const bottomPosition = showMobileNavigation ? "bottom-16" : "bottom-0";
@@ -216,24 +216,6 @@ export function PlayerBarMobile({
   const closeExpanded = () => {
     setIsExpanded(false);
   };
-
-  // Debug para identificar por qué no se muestra
-  if (!currentSong) {
-    // Solo mostrar en desarrollo para debugging
-    if (process.env.NODE_ENV === "development") {
-      return (
-        <div
-          className={`fixed ${bottomPosition} left-0 right-0 z-[100] bg-red-900/50 border-t border-red-800 p-2 md:hidden`}
-        >
-          <div className="text-xs text-red-400 text-center">
-            PlayerBarMobile: No currentSong | Nav:{" "}
-            {showMobileNavigation ? "ON" : "OFF"} | Path: {pathname}
-          </div>
-        </div>
-      );
-    }
-    return null;
-  }
 
   const formatTime = (time: number) => {
     if (!time || isNaN(time)) return "0:00";
