@@ -216,7 +216,12 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   const layoutFlags = useMemo(
     () => ({
       showFooter: pathname.match(/\/u(\/|$)/) || pathname.includes("/explore"),
-      showPlayerMobile: pathname.match(/\/u(\/|$)/) || pathname.match(/^\/(en|es|pt)?$/),
+      showPlayerMobile:
+        pathname.match(/\/u(\/|$)/) || // Perfiles: /u/* o /es/u/* o /pt/u/*
+        pathname === "/foryou" || // ForYou en inglés
+        pathname.match(/^\/(es|pt)\/foryou$/) || // ForYou en otros idiomas
+        pathname === "/" || // Home en inglés
+        pathname.match(/^\/(es|pt)$/), // Home en otros idiomas
       // Flag para detectar cuando el player está realmente activo
       hasActivePlayer:
         currentSong && showFloatingPlayer && !pathname.match(/\/foryou(\/|$)/),

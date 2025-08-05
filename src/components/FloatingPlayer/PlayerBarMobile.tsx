@@ -419,20 +419,8 @@ export function PlayerBarMobile({
     <>
       {/* Player compacto (siempre visible en móvil) */}
       <div
-        className={`fixed ${bottomPosition} left-0 right-0 z-[100] bg-zinc-900 text-white md:hidden shadow-2xl ${
-          process.env.NODE_ENV === "development"
-            ? "border-2 border-green-500/50"
-            : ""
-        }`}
+        className={`fixed ${bottomPosition} left-0 right-0 z-[100] bg-zinc-900 text-white md:hidden shadow-2xl`}
       >
-        {/* Debug info en desarrollo */}
-        {process.env.NODE_ENV === "development" && (
-          <div className="bg-green-900/50 px-2 py-1 text-xs text-green-400 text-center border-b border-green-800">
-            PlayerBarMobile ACTIVE | Nav: {showMobileNavigation ? "ON" : "OFF"}{" "}
-            | {bottomPosition}
-          </div>
-        )}
-
         {/* Barra compacta */}
         <div
           className="flex items-center px-4 py-3 border-t border-zinc-800 cursor-pointer"
