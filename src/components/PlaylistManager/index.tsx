@@ -192,7 +192,7 @@ export const PlaylistManager: React.FC<PlaylistManagerProps> = ({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
           transition={{ duration: 0.3 }}
-          className="fixed bottom-24 right-4 w-80 bg-zinc-800 bg-opacity-70 backdrop-filter backdrop-blur-lg rounded-lg shadow-lg overflow-hidden border border-zinc-700 z-50"
+          className="fixed bottom-24 right-4 w-80 bg-zinc-800 bg-opacity-70 backdrop-filter backdrop-blur-lg rounded-lg shadow-lg overflow-hidden border border-zinc-700 z-[300]"
         >
           {/* Header - estilo similar a In Queue */}
           <div className="flex justify-between items-center p-4 border-b border-zinc-700">
