@@ -12,6 +12,8 @@ import {
   ChevronUpIcon,
   XIcon,
   GiftIcon,
+  PlusIcon,
+  MinusIcon,
 } from "lucide-react";
 import { Button } from "@Src/ui/components/ui/button";
 import { Slider } from "@Src/ui/components/ui/slider";
@@ -139,6 +141,8 @@ export function PlayerBarMobile({
     userPlaylist,
     removeFromPlaylist,
     nftData,
+    isInPlaylist,
+    addToPlaylist,
   } = usePlayer();
 
   // Adaptador para la función handleReorder que convierte el nuevo formato al antiguo
@@ -216,6 +220,23 @@ export function PlayerBarMobile({
   const closeExpanded = () => {
     setIsExpanded(false);
   };
+
+  // Verificar si la canción actual está en la playlist
+  const isCurrentSongInPlaylist = currentSong
+    ? isInPlaylist(currentSong._id)
+    : false;
+
+  // Función para manejar agregar/quitar de playlist (implementación local)
+  const handleTogglePlaylist = useCallback(
+    (track: any) => {
+      if (isInPlaylist(track._id)) {
+        removeFromPlaylist(track._id);
+      } else {
+        addToPlaylist(track);
+      }
+    },
+    [isInPlaylist, removeFromPlaylist, addToPlaylist]
+  );
 
   const formatTime = (time: number) => {
     if (!time || isNaN(time)) return "0:00";
@@ -475,6 +496,29 @@ export function PlayerBarMobile({
             <Coins className="h-4 w-4" />
           </Button>
 
+          {/* Add/Remove Playlist Button compacto */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (currentSong) {
+                handleTogglePlaylist(currentSong);
+              }
+            }}
+            className="mr-2 text-zinc-400 hover:text-white hover:bg-zinc-800 h-8 w-8 relative"
+            title={
+              isCurrentSongInPlaylist ? "Remove from queue" : "Add to queue"
+            }
+          >
+            <ListMusicIcon className="h-4 w-4" />
+            {isCurrentSongInPlaylist ? (
+              <MinusIcon className="h-2 w-2 absolute -top-1 -right-1 text-white bg-red-500 rounded-full p-[1px]" />
+            ) : (
+              <PlusIcon className="h-2 w-2 absolute -top-1 -right-1 text-white bg-green-500 rounded-full p-[1px]" />
+            )}
+          </Button>
+
           {/* Botón de play/pause */}
           <Button
             variant="ghost"
@@ -586,7 +630,7 @@ export function PlayerBarMobile({
               {/* Bottom section: Controls */}
               <div className="space-y-2">
                 {/* Action buttons */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-4 gap-2">
                   {/* Botón Claim NFT */}
                   <motion.div
                     whileHover={{ scale: 1.05 }}
@@ -680,6 +724,38 @@ export function PlayerBarMobile({
                         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold text-[10px] shadow-lg">
                           {userPlaylist.length > 9 ? "9+" : userPlaylist.length}
                         </span>
+                      )}
+                    </Button>
+                  </motion.div>
+
+                  {/* Botón Add/Remove Playlist */}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      onClick={() => {
+                        if (currentSong) {
+                          handleTogglePlaylist(currentSong);
+                        }
+                      }}
+                      variant="outline"
+                      className={`w-full h-12 relative ${
+                        isCurrentSongInPlaylist
+                          ? "bg-green-800/30 text-white border-green-600/50 hover:bg-green-700/40"
+                          : "bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30"
+                      } rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm`}
+                      title={
+                        isCurrentSongInPlaylist
+                          ? "Remove from queue"
+                          : "Add to queue"
+                      }
+                    >
+                      <ListMusicIcon className="h-6 w-6" />
+                      {isCurrentSongInPlaylist ? (
+                        <MinusIcon className="h-3 w-3 absolute -top-1 -right-1 text-white bg-red-500 rounded-full p-[1px]" />
+                      ) : (
+                        <PlusIcon className="h-3 w-3 absolute -top-1 -right-1 text-white bg-green-500 rounded-full p-[1px]" />
                       )}
                     </Button>
                   </motion.div>
