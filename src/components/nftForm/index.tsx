@@ -262,8 +262,8 @@ export default function NftForm({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-[90vw] max-w-[500px] h-[90vh] max-h-[800px] flex flex-col p-0 overflow-hidden bg-zinc-900 border border-zinc-800">
-        <DialogHeader className="px-6 py-4 border-b border-zinc-800">
-          <DialogTitle className="text-xl font-semibold text-zinc-100">
+        <DialogHeader className="px-6 py-4 border-b border-zinc-800 relative">
+          <DialogTitle className="text-xl font-semibold text-zinc-100 pr-8">
             {album?.collection_type === "SINGLE"
               ? `${tNft("single")}: ${album.name}`
               : album?.collection_type === "ALBUM"
@@ -272,8 +272,19 @@ export default function NftForm({
               ? `${tNft("collectiveDrop")}: ${album.name}`
               : tNft("addTracks")}
           </DialogTitle>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="absolute top-4 right-6 h-6 w-6 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-sm"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </DialogHeader>
-        <Tabs className="flex-grow flex flex-col overflow-hidden">
+        <Tabs
+          defaultValue="basic"
+          className="flex-grow flex flex-col overflow-hidden"
+        >
           <TabsList className="px-6 pt-2 justify-start border-zinc-800 bg-zinc-900">
             <TabsTrigger
               value="basic"
