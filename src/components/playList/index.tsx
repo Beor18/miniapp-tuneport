@@ -607,161 +607,166 @@ export const Playlist: React.FC<PlaylistProps> = ({
             </div>
           </div>
 
-          {/* Formulario de creación inline */}
-          {showCreateForm && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bg-zinc-800/50 mx-4 mt-4 rounded-lg p-4 border border-zinc-600/30 backdrop-blur-sm"
-            >
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-zinc-200 mb-2 block">
-                    {tPlaylist("playlistName")}
-                  </label>
-                  <Input
-                    value={playlistName}
-                    onChange={(e) => setPlaylistName(e.target.value)}
-                    className="bg-zinc-700/50 border-zinc-500/30 text-white focus:border-zinc-400/50 focus:ring-zinc-400/20 transition-all duration-200"
-                    placeholder={tPlaylist("enterPlaylistName")}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-zinc-200 mb-2 block">
-                    {tPlaylist("descriptionOptional")}
-                  </label>
-                  <Textarea
-                    value={playlistDescription}
-                    onChange={(e) => setPlaylistDescription(e.target.value)}
-                    className="bg-zinc-700/50 border-zinc-500/30 text-white focus:border-zinc-400/50 focus:ring-zinc-400/20 transition-all duration-200 resize-none"
-                    placeholder={tPlaylist("enterDescription")}
-                    rows={3}
-                  />
-                </div>
-
-                {/* Tags Selection */}
-                <div>
-                  <label className="text-sm font-medium text-zinc-200 mb-3 block">
-                    {tPlaylist("categoriesOptional")}
-                  </label>
-                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                    {MUSIC_CATEGORIES.map((category) => {
-                      const isSelected = selectedTags.includes(category.id);
-                      return (
-                        <button
-                          key={category.id}
-                          onClick={() => toggleTag(category.id)}
-                          className={`
-                            flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium
-                            transition-all duration-200 border
-                            ${
-                              isSelected
-                                ? `${category.color} text-white border-white/20 shadow-sm scale-105`
-                                : "bg-zinc-700/50 text-zinc-300 border-zinc-600/50 hover:bg-zinc-600/50 hover:border-zinc-500/50"
-                            }
-                          `}
-                          type="button"
-                        >
-                          {isSelected && <Check className="w-3 h-3" />}
-                          {category.name}
-                        </button>
-                      );
-                    })}
+          {/* Contenedor con scroll general */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            {/* Formulario de creación inline */}
+            {showCreateForm && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-zinc-800/50 mx-4 mt-4 rounded-lg p-4 border border-zinc-600/30 backdrop-blur-sm"
+              >
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-zinc-200 mb-2 block">
+                      {tPlaylist("playlistName")}
+                    </label>
+                    <Input
+                      value={playlistName}
+                      onChange={(e) => setPlaylistName(e.target.value)}
+                      className="bg-zinc-700/50 border-zinc-500/30 text-white focus:border-zinc-400/50 focus:ring-zinc-400/20 transition-all duration-200"
+                      placeholder={tPlaylist("enterPlaylistName")}
+                    />
                   </div>
-                  {selectedTags.length > 0 && (
-                    <p className="text-xs text-zinc-400 mt-2">
-                      {selectedTags.length}{" "}
-                      {selectedTags.length === 1
-                        ? tPlaylist("category")
-                        : tPlaylist("categories")}{" "}
-                      {tPlaylist("selected")}
-                    </p>
+                  <div>
+                    <label className="text-sm font-medium text-zinc-200 mb-2 block">
+                      {tPlaylist("descriptionOptional")}
+                    </label>
+                    <Textarea
+                      value={playlistDescription}
+                      onChange={(e) => setPlaylistDescription(e.target.value)}
+                      className="bg-zinc-700/50 border-zinc-500/30 text-white focus:border-zinc-400/50 focus:ring-zinc-400/20 transition-all duration-200 resize-none"
+                      placeholder={tPlaylist("enterDescription")}
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* Tags Selection */}
+                  <div>
+                    <label className="text-sm font-medium text-zinc-200 mb-3 block">
+                      {tPlaylist("categoriesOptional")}
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {MUSIC_CATEGORIES.map((category) => {
+                        const isSelected = selectedTags.includes(category.id);
+                        return (
+                          <button
+                            key={category.id}
+                            onClick={() => toggleTag(category.id)}
+                            className={`
+                              flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium
+                              transition-all duration-200 border
+                              ${
+                                isSelected
+                                  ? `${category.color} text-white border-white/20 shadow-sm scale-105`
+                                  : "bg-zinc-700/50 text-zinc-300 border-zinc-600/50 hover:bg-zinc-600/50 hover:border-zinc-500/50"
+                              }
+                            `}
+                            type="button"
+                          >
+                            {isSelected && <Check className="w-3 h-3" />}
+                            {category.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {selectedTags.length > 0 && (
+                      <p className="text-xs text-zinc-400 mt-2">
+                        {selectedTags.length}{" "}
+                        {selectedTags.length === 1
+                          ? tPlaylist("category")
+                          : tPlaylist("categories")}{" "}
+                        {tPlaylist("selected")}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-sm text-zinc-200 font-medium">
+                      {tPlaylist("makePublic")}
+                    </span>
+                    <Switch
+                      checked={isPublic}
+                      onCheckedChange={setIsPublic}
+                      className="data-[state=checked]:bg-zinc-600"
+                    />
+                  </div>
+                  <div className="pt-2">
+                    <Button
+                      onClick={handleSubmitPlaylist}
+                      disabled={
+                        !playlistName.trim() ||
+                        isCreating ||
+                        isTokenizing ||
+                        isCreatingRevenueShare
+                      }
+                      className="w-full h-10 bg-zinc-700 hover:bg-zinc-600 text-white font-medium rounded-lg transition-all duration-200 border border-zinc-600/50 hover:border-zinc-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isCreating || isTokenizing || isCreatingRevenueShare ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          {isCreatingRevenueShare
+                            ? "Creando Revenue Share..."
+                            : isTokenizing
+                            ? tPlaylist("tokenizing")
+                            : tPlaylist("creating")}
+                        </div>
+                      ) : (
+                        tPlaylist("createPlaylist")
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            <div className="p-4">
+              {/* <div className="relative mb-4">
+                <input
+                  ref={searchRef}
+                  type="text"
+                  placeholder={tPlaylist("searchTracks")}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-zinc-700 bg-opacity-50 text-white placeholder-zinc-400 rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400" />
+              </div> */}
+              <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="playlist">
+                  {(provided) => (
+                    <ul
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className="space-y-2"
+                    >
+                      {filteredSongs.length === 0 ? (
+                        <li className="text-center text-zinc-400 py-4">
+                          {tPlaylist("yourQueueEmpty")}
+                        </li>
+                      ) : (
+                        filteredSongs.map((song, index) => (
+                          <PlaylistItem
+                            key={song.id || song._id}
+                            song={song}
+                            index={index}
+                            isPlaying={
+                              currentSong
+                                ? compareIds(currentSong, song)
+                                : false
+                            }
+                            onSelect={onSongSelect}
+                            onRemove={onRemove}
+                          />
+                        ))
+                      )}
+                      {provided.placeholder}
+                    </ul>
                   )}
-                </div>
-
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm text-zinc-200 font-medium">
-                    {tPlaylist("makePublic")}
-                  </span>
-                  <Switch
-                    checked={isPublic}
-                    onCheckedChange={setIsPublic}
-                    className="data-[state=checked]:bg-zinc-600"
-                  />
-                </div>
-                <div className="pt-2">
-                  <Button
-                    onClick={handleSubmitPlaylist}
-                    disabled={
-                      !playlistName.trim() ||
-                      isCreating ||
-                      isTokenizing ||
-                      isCreatingRevenueShare
-                    }
-                    className="w-full h-10 bg-zinc-700 hover:bg-zinc-600 text-white font-medium rounded-lg transition-all duration-200 border border-zinc-600/50 hover:border-zinc-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isCreating || isTokenizing || isCreatingRevenueShare ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        {isCreatingRevenueShare
-                          ? "Creando Revenue Share..."
-                          : isTokenizing
-                          ? tPlaylist("tokenizing")
-                          : tPlaylist("creating")}
-                      </div>
-                    ) : (
-                      tPlaylist("createPlaylist")
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          <div className="p-4">
-            {/* <div className="relative mb-4">
-              <input
-                ref={searchRef}
-                type="text"
-                placeholder={tPlaylist("searchTracks")}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-zinc-700 bg-opacity-50 text-white placeholder-zinc-400 rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400" />
-            </div> */}
-            <DragDropContext onDragEnd={onDragEnd}>
-              <Droppable droppableId="playlist">
-                {(provided) => (
-                  <ul
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className="max-h-64 overflow-y-auto pr-2 space-y-2 custom-scrollbar"
-                  >
-                    {filteredSongs.length === 0 ? (
-                      <li className="text-center text-zinc-400 py-4">
-                        {tPlaylist("yourQueueEmpty")}
-                      </li>
-                    ) : (
-                      filteredSongs.map((song, index) => (
-                        <PlaylistItem
-                          key={song.id || song._id}
-                          song={song}
-                          index={index}
-                          isPlaying={
-                            currentSong ? compareIds(currentSong, song) : false
-                          }
-                          onSelect={onSongSelect}
-                          onRemove={onRemove}
-                        />
-                      ))
-                    )}
-                    {provided.placeholder}
-                  </ul>
-                )}
-              </Droppable>
-            </DragDropContext>
+                </Droppable>
+              </DragDropContext>
+            </div>
           </div>
           <style jsx global>{`
             .custom-scrollbar::-webkit-scrollbar {
