@@ -271,6 +271,7 @@ export default function ProfileFanUser({
     const result = await followUser({
       nickname: profileFans.nickname,
       followerId: currentUserId,
+      enableFarcaster: true,
     });
 
     if (result) {
