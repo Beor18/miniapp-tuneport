@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { useState, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import {
   SkipBackIcon,
   SkipForwardIcon,
@@ -84,6 +85,19 @@ export function PlayerBarMobile({
 }: PlayerBarMobileProps) {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [showVolumeControl, setShowVolumeControl] = useState<boolean>(false);
+
+  // Detectar la ruta actual para ajustar posicionamiento
+  const pathname = usePathname();
+
+  // Determinar si la navegación móvil está visible (misma lógica que HomeLayout)
+  const showMobileNavigation =
+    pathname.includes("/u") || pathname.includes("/social-feed");
+
+  // Ajustar posición dinámicamente según si hay navegación móvil
+  const bottomPosition = showMobileNavigation ? "bottom-16" : "bottom-0";
+  const bottomPositionExpanded = showMobileNavigation
+    ? "bottom-16"
+    : "bottom-0";
 
   // Hooks para minting
   const { mint, isMinting } = useCandyMachineMint();
@@ -208,9 +222,12 @@ export function PlayerBarMobile({
     // Solo mostrar en desarrollo para debugging
     if (process.env.NODE_ENV === "development") {
       return (
-        <div className="fixed bottom-16 left-0 right-0 z-50 bg-red-900/20 border-t border-red-800 p-2 md:hidden">
+        <div
+          className={`fixed ${bottomPosition} left-0 right-0 z-[100] bg-red-900/50 border-t border-red-800 p-2 md:hidden`}
+        >
           <div className="text-xs text-red-400 text-center">
-            PlayerBarMobile: No currentSong
+            PlayerBarMobile: No currentSong | Nav:{" "}
+            {showMobileNavigation ? "ON" : "OFF"} | Path: {pathname}
           </div>
         </div>
       );
@@ -419,7 +436,21 @@ export function PlayerBarMobile({
   return (
     <>
       {/* Player compacto (siempre visible en móvil) */}
-      <div className="fixed bottom-16 left-0 right-0 z-50 bg-zinc-900 text-white md:hidden">
+      <div
+        className={`fixed ${bottomPosition} left-0 right-0 z-[100] bg-zinc-900 text-white md:hidden shadow-2xl ${
+          process.env.NODE_ENV === "development"
+            ? "border-2 border-green-500/50"
+            : ""
+        }`}
+      >
+        {/* Debug info en desarrollo */}
+        {process.env.NODE_ENV === "development" && (
+          <div className="bg-green-900/50 px-2 py-1 text-xs text-green-400 text-center border-b border-green-800">
+            PlayerBarMobile ACTIVE | Nav: {showMobileNavigation ? "ON" : "OFF"}{" "}
+            | {bottomPosition}
+          </div>
+        )}
+
         {/* Barra compacta */}
         <div
           className="flex items-center px-4 py-3 border-t border-zinc-800 cursor-pointer"
@@ -522,7 +553,7 @@ export function PlayerBarMobile({
               stiffness: 300,
               duration: 0.4,
             }}
-            className="fixed inset-0 z-[60] bg-gradient-to-b from-zinc-900 via-zinc-900 to-black text-white md:hidden flex flex-col"
+            className="fixed inset-0 z-[200] bg-gradient-to-b from-zinc-900 via-zinc-900 to-black text-white md:hidden flex flex-col"
           >
             {/* Header con botón de cerrar */}
             <div className="flex items-center justify-between p-4 border-b border-zinc-800/50 flex-shrink-0 backdrop-blur-sm">
@@ -795,7 +826,7 @@ export function PlayerBarMobile({
 
       {/* Trading Modal */}
       <Dialog open={isTradingModalOpen} onOpenChange={setIsTradingModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-neutral-800 shadow-2xl z-[100] data-[state=open]:z-[100]">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-neutral-800 shadow-2xl z-[300] data-[state=open]:z-[300]">
           <DialogHeader className="border-b border-neutral-800 pb-4 relative">
             <Button
               variant="ghost"
