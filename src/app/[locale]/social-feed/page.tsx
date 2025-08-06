@@ -45,26 +45,34 @@ export default function SocialFeedPage() {
     async (artistAddress: string) => {
       if (!walletContext) {
         console.error("No wallet context found");
+        toast.error("Wallet no conectada");
         return;
       }
 
       setIsSupporting(true);
 
-      console.log("Sending transaction to: ", artistAddress);
+      try {
+        console.log("Sending transaction to: ", artistAddress);
 
-      await walletContext?.request({
-        method: "eth_sendTransaction",
-        params: [
-          {
-            to: artistAddress,
-            value: "0.0000777",
-          },
-        ],
-      });
+        await walletContext?.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              to: artistAddress,
+              data: "0x",
+              value: `0x${(0.0000777 * 10 ** 18).toString(16)}`,
+              from: walletContext.address as `0x${string}`,
+            },
+          ],
+        });
 
-      setIsSupporting(false);
-
-      toast.success("Transaction sent");
+        toast.success("¡Transacción enviada exitosamente!");
+      } catch (error) {
+        console.error("Transaction failed:", error);
+        toast.error("Transacción rechazada o falló");
+      } finally {
+        setIsSupporting(false);
+      }
     },
     [walletContext]
   );
@@ -361,30 +369,35 @@ export default function SocialFeedPage() {
                           </div>
                         </Link>
 
-                        {/* Score y Tier - Responsive */}
-                        <div className="flex-shrink-0 text-right">
-                          <div className="flex flex-col items-end gap-1">
+                        {/* Stats y botón de apoyo - Responsive */}
+                        <div className="flex-shrink-0 text-right ml-auto pr-1">
+                          <div className="flex flex-col items-end gap-2">
+                            {/* Estadísticas del usuario */}
+                            <div className="text-right space-y-1">
+                              <div className="flex items-center gap-1 justify-end">
+                                <Users className="w-4 h-4 text-zinc-400" />
+                                <span className="text-zinc-400 text-sm">
+                                  {user.followerCount?.toLocaleString() || 0}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Botón de apoyo más prominente */}
                             <Button
                               onClick={() => handleSupportArtist(user.address)}
                               disabled={isSupporting}
+                              size="sm"
+                              className="text-xs"
                             >
-                              {isSupporting ? "Apoyando..." : "Apoyar"}
-                            </Button>
-                            {/* Score principal */}
-                            <div className="text-white font-bold text-base md:text-lg">
-                              {user.followerCount && user.followerCount > 0 && (
-                                <div className="flex items-center gap-1">
-                                  <Users className="w-4 h-4 text-zinc-400" />
-                                  <span className="text-zinc-400">
-                                    {user.followerCount.toLocaleString()}
-                                  </span>
-                                </div>
+                              {isSupporting ? (
+                                <>
+                                  <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin mr-1"></div>
+                                  TIPS...
+                                </>
+                              ) : (
+                                <>💎 TIPS</>
                               )}
-                              <span className="font-mono text-xs text-zinc-400">
-                                {user.address.slice(0, 6)}...
-                                {user.address.slice(-4)}
-                              </span>
-                            </div>
+                            </Button>
                           </div>
                         </div>
                       </div>
