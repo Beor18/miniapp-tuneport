@@ -154,7 +154,10 @@ export async function followUser({
 
     // Revalidar rutas
     revalidatePath("/");
-
+    console.log(
+      "✅ [followUser] Follow completado en base de datos",
+      farcasterResult
+    );
     return {
       database: dbResult,
       farcaster: farcasterResult,
@@ -251,7 +254,10 @@ async function followUserFarcaster({
     }
 
     const result = await response.json();
-
+    console.log(
+      "✅ [followUserFarcaster] Follow completado en Farcaster",
+      result
+    );
     // Revalidar rutas relevantes
     revalidatePath("/");
 
