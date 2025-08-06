@@ -219,7 +219,9 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
       showPlayerMobile:
         pathname.match(/\/u(\/|$)/) || // Perfiles: /u/* o /es/u/* o /pt/u/*
         pathname === "/foryou" || // ForYou en inglés
-        pathname.match(/^\/(es|pt)\/foryou$/) || // ForYou en otros idiomas
+        pathname === "/social-feed" || // Social Feed en inglés
+        pathname.match(/^\/(es|pt)\/foryou$/) ||
+        pathname.match(/^\/(es|pt)\/social-feed$/) || // ForYou en otros idiomas
         pathname === "/" || // Home en inglés
         pathname.match(/^\/(es|pt)$/), // Home en otros idiomas
       // Flag para detectar cuando el player está realmente activo
@@ -325,7 +327,8 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
               ? "pb-36 md:pb-4" // Player activo: ~144px móvil (player + nav + margen), ~16px desktop (solo margen)
               : layoutFlags.showNavigation
               ? "pb-16 md:pb-4" // Solo navegación móvil: 64px móvil (altura del nav), ~16px desktop
-              : pathname.includes("/foryou")
+              : pathname.includes("/foryou") ||
+                pathname.includes("/social-feed")
               ? "pb-0" // For You: sin padding porque no hay nav ni player
               : "pb-4" // Otras páginas sin player ni navegación: margen básico
           }
