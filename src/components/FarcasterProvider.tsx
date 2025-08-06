@@ -43,6 +43,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         setIsSDKLoaded(true);
 
         console.log("Farcaster SDK loaded successfully:", appContext);
+        console.log("Wallet context:", appWalletContext);
       } catch (error) {
         console.error("Error loading Farcaster SDK:", error);
         // Para desarrollo, marcar como listo de todas formas
