@@ -11,16 +11,19 @@ import {
 interface FarcasterContextType {
   isSDKLoaded: boolean;
   context: any;
+  walletContext: any;
 }
 
 const FarcasterContext = createContext<FarcasterContextType>({
   isSDKLoaded: false,
   context: null,
+  walletContext: null,
 });
 
 export function FarcasterProvider({ children }: { children: ReactNode }) {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<any>(null);
+  const [walletContext, setWalletContext] = useState<any>(null);
 
   useEffect(() => {
     // Cargar SDK de Farcaster Mini Apps
@@ -33,7 +36,9 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
 
         // Obtener contexto de la mini app
         const appContext = await sdk.context;
+        const appWalletContext = await sdk.wallet.getEthereumProvider();
 
+        setWalletContext(appWalletContext);
         setContext(appContext);
         setIsSDKLoaded(true);
 
@@ -49,7 +54,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <FarcasterContext.Provider value={{ isSDKLoaded, context }}>
+    <FarcasterContext.Provider value={{ isSDKLoaded, context, walletContext }}>
       {children}
     </FarcasterContext.Provider>
   );

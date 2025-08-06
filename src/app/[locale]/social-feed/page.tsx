@@ -6,11 +6,13 @@ import { useTranslations } from "next-intl";
 import { Users } from "lucide-react";
 import Link from "next/link";
 import { useFarcasterMiniApp } from "@Src/components/FarcasterProvider";
+import { toast } from "sonner";
+import { Button } from "@/ui/components/ui/button";
 
 export default function SocialFeedPage() {
   const { getBatchUserQualityScores, contractReady } = useUserQuality();
 
-  const { context } = useFarcasterMiniApp();
+  const { context, walletContext } = useFarcasterMiniApp();
 
   console.log("Context Farcaster Mini App: ", context);
 
@@ -35,6 +37,37 @@ export default function SocialFeedPage() {
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [isSupporting, setIsSupporting] = useState(false);
+
+  // TODO: Implementar la logica para que el usuario pueda apoyar a un artista haciendo click en el boton de apoyar
+  const handleSupportArtist = useCallback(
+    async (artistAddress: string) => {
+      if (!walletContext) {
+        console.error("No wallet context found");
+        return;
+      }
+
+      setIsSupporting(true);
+
+      console.log("Sending transaction to: ", artistAddress);
+
+      await walletContext?.request({
+        method: "eth_sendTransaction",
+        params: [
+          {
+            to: artistAddress,
+            value: "0.0000777",
+          },
+        ],
+      });
+
+      setIsSupporting(false);
+
+      toast.success("Transaction sent");
+    },
+    [walletContext]
+  );
 
   // Función para crear leaderboard con usuarios de Farcaster reales
   const createFarcasterQualityLeaderboard = useCallback(async () => {
@@ -331,6 +364,12 @@ export default function SocialFeedPage() {
                         {/* Score y Tier - Responsive */}
                         <div className="flex-shrink-0 text-right">
                           <div className="flex flex-col items-end gap-1">
+                            <Button
+                              onClick={() => handleSupportArtist(user.address)}
+                              disabled={isSupporting}
+                            >
+                              {isSupporting ? "Apoyando..." : "Apoyar"}
+                            </Button>
                             {/* Score principal */}
                             <div className="text-white font-bold text-base md:text-lg">
                               {user.followerCount && user.followerCount > 0 && (
