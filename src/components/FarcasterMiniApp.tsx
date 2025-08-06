@@ -6,7 +6,7 @@ import { useAccount, useWalletClient } from "wagmi";
 import { Button } from "@Src/ui/components/ui/button";
 
 export default function FarcasterMiniApp() {
-  const { isSDKLoaded, context, authData } = useFarcasterMiniApp();
+  const { isSDKLoaded, context } = useFarcasterMiniApp();
   const { address, isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
 
@@ -50,13 +50,6 @@ export default function FarcasterMiniApp() {
           <div>
             <span className="text-gray-400">Contexto:</span>
             <span className="ml-2">{JSON.stringify(context)}</span>
-          </div>
-        )}
-
-        {authData && (
-          <div>
-            <span className="text-gray-400">Auth Data:</span>
-            <span className="ml-2">{JSON.stringify(authData)}</span>
           </div>
         )}
 

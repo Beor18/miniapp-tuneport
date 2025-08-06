@@ -5,9 +5,14 @@ import { useUserQuality } from "@Src/lib/hooks/useUserQuality";
 import { useTranslations } from "next-intl";
 import { Users } from "lucide-react";
 import Link from "next/link";
+import { useFarcasterMiniApp } from "@Src/components/FarcasterProvider";
 
 export default function SocialFeedPage() {
   const { getBatchUserQualityScores, contractReady } = useUserQuality();
+
+  const { context } = useFarcasterMiniApp();
+
+  console.log("Context Farcaster Mini App: ", context);
 
   const t = useTranslations("farcaster");
   const tCommon = useTranslations("common");
