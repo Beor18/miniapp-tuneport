@@ -293,6 +293,7 @@ export default function ProfileArtistUser({
     const result = await followUser({
       nickname: profile.nickname,
       followerId: currentUserId,
+      enableFarcaster: true,
     });
 
     if (result) {

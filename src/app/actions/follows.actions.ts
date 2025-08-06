@@ -36,13 +36,6 @@ interface CreateSignerResponse {
   approval_url: string | null;
 }
 
-interface RegisterSignedKeyInput {
-  signer_uuid: string;
-  app_fid: number;
-  deadline: number;
-  signature: string;
-}
-
 export async function getUserByAddress({
   address,
   address_solana,
@@ -112,7 +105,6 @@ export async function followUser({
   nickname,
   followerId,
   enableFarcaster = false,
-  signer_uuid,
 }: FollowUserInput) {
   try {
     // 1. FLUJO ORIGINAL: Follow en tu base de datos (siempre se ejecuta)
@@ -152,36 +144,12 @@ export async function followUser({
         };
       }
 
+      const signerFlow = await initiateFarcasterSignerFlow();
       // Si ya tienes un signer aprobado, usarlo directamente
-      if (signer_uuid) {
-        farcasterResult = await followUserFarcaster({
-          signer_uuid,
-          target_fids: [targetFid],
-        });
-      } else {
-        // Si no tienes signer, crear el flujo completo
-        console.log("🔧 [followUser] Creando nuevo signer para Farcaster...");
-        const signerFlow = await initiateFarcasterSignerFlow();
-
-        if (signerFlow) {
-          console.log(
-            "⚠️ [followUser] Signer creado. Usuario debe aprobar en Warpcast:",
-            signerFlow.approval_url
-          );
-          // Aquí retornas la approval_url para que el usuario apruebe
-          return {
-            database: dbResult,
-            farcaster: {
-              status: "pending_approval",
-              approval_url: signerFlow.approval_url,
-              signer_uuid: signerFlow.signer_uuid,
-              target_fid: targetFid, // Incluir el FID para usar después
-              message:
-                "Usuario debe aprobar en Warpcast para completar follow en Farcaster",
-            },
-          };
-        }
-      }
+      farcasterResult = await followUserFarcaster({
+        signer_uuid: signerFlow?.signer_uuid || "",
+        target_fids: [targetFid],
+      });
     }
 
     // Revalidar rutas
@@ -350,16 +318,6 @@ async function initiateFarcasterSignerFlow(): Promise<CreateSignerResponse | nul
     const signer = await createSigner();
     if (!signer) return null;
 
-    // Paso 2 & 3: Por ahora solo retornamos el signer
-    // TODO: Implementar creación y registro de firma cuando tengas tu clave privada
-    console.log(
-      "⚠️ [initiateFarcasterSignerFlow] Signer creado. APP_FID configurado:",
-      APP_FID
-    );
-    console.log(
-      "📝 [initiateFarcasterSignerFlow] Necesitas implementar la creación de firma con tu clave privada de Farcaster"
-    );
-
     return signer;
   } catch (error) {
     console.error("❌ [initiateFarcasterSignerFlow] Error:", error);
@@ -392,205 +350,6 @@ async function createSigner(): Promise<CreateSignerResponse | null> {
   } catch (error) {
     console.error("❌ [createSigner] Error:", error);
     return null;
-  }
-}
-
-/**
- * Paso 3: Registrar la clave firmada con Neynar
- * Nota: El paso 2 (crear la firma) debe hacerse en el cliente con la clave privada de la app
- */
-async function registerSignedKey({
-  signer_uuid,
-  app_fid,
-  deadline,
-  signature,
-}: RegisterSignedKeyInput): Promise<CreateSignerResponse | null> {
-  try {
-    const response = await fetch(
-      "https://api.neynar.com/v2/farcaster/signer/signed_key",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.NEYNAR_API_KEY || "",
-        },
-        body: JSON.stringify({
-          signer_uuid,
-          app_fid,
-          deadline,
-          signature,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        `Error al registrar clave firmada. Status: ${response.status}`
-      );
-    }
-
-    const result = await response.json();
-    console.log("✅ [registerSignedKey] Clave registrada para:", signer_uuid);
-
-    return result;
-  } catch (error) {
-    console.error("❌ [registerSignedKey] Error:", error);
-    return null;
-  }
-}
-
-/**
- * Paso 4 y 6: Verificar el estado del signer (polling)
- * Estados: 'generated' -> 'pending_approval' -> 'approved'
- */
-async function getSignerStatus(
-  signer_uuid: string
-): Promise<CreateSignerResponse | null> {
-  try {
-    const response = await fetch(
-      `https://api.neynar.com/v2/farcaster/signer?signer_uuid=${signer_uuid}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.NEYNAR_API_KEY || "",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        `Error al obtener estado del signer. Status: ${response.status}`
-      );
-    }
-
-    const result = await response.json();
-    console.log(
-      `📡 [getSignerStatus] Estado de ${signer_uuid}:`,
-      result.status
-    );
-
-    return result;
-  } catch (error) {
-    console.error("❌ [getSignerStatus] Error:", error);
-    return null;
-  }
-}
-
-/**
- * Función auxiliar para hacer polling del estado del signer hasta que sea aprobado
- * Útil después de presentar la approval_url al usuario
- */
-async function pollSignerUntilApproved(
-  signer_uuid: string,
-  maxAttempts: number = 30,
-  intervalMs: number = 2000
-): Promise<CreateSignerResponse | null> {
-  let attempts = 0;
-
-  while (attempts < maxAttempts) {
-    const signerStatus = await getSignerStatus(signer_uuid);
-
-    if (!signerStatus) {
-      console.error("❌ [pollSignerUntilApproved] Error al obtener estado");
-      return null;
-    }
-
-    if (signerStatus.status === "approved") {
-      console.log("🎉 [pollSignerUntilApproved] Signer aprobado!");
-      return signerStatus;
-    }
-
-    if (signerStatus.status === "revoked") {
-      console.log("⚠️ [pollSignerUntilApproved] Signer revocado");
-      return null;
-    }
-
-    console.log(
-      `⏳ [pollSignerUntilApproved] Esperando aprobación... (${
-        attempts + 1
-      }/${maxAttempts})`
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
-    attempts++;
-  }
-
-  console.log("⏰ [pollSignerUntilApproved] Timeout esperando aprobación");
-  return null;
-}
-
-// ============================================
-// FUNCIONES EXPORTADAS PARA COMPLETAR FLUJO
-// ============================================
-
-/**
- * Función para completar el follow en Farcaster después de que el usuario apruebe el signer
- * Se llama después de que el usuario apruebe en Warpcast
- */
-export async function completeFollowFarcaster(
-  signer_uuid: string,
-  nickname: string // Obtiene el FID automáticamente desde el nickname
-) {
-  try {
-    // Verificar que el signer esté aprobado
-    const signerStatus = await getSignerStatus(signer_uuid);
-
-    if (!signerStatus || signerStatus.status !== "approved") {
-      return {
-        success: false,
-        error:
-          "Signer no está aprobado. Estado actual: " +
-          (signerStatus?.status || "desconocido"),
-      };
-    }
-
-    // Obtener el FID del usuario objetivo
-    const targetFid = await getUserFidByNickname(nickname);
-    if (!targetFid) {
-      return {
-        success: false,
-        error: `No se pudo obtener FID para el usuario: ${nickname}`,
-      };
-    }
-
-    // Hacer el follow en Farcaster
-    const result = await followUserFarcaster({
-      signer_uuid,
-      target_fids: [targetFid],
-    });
-
-    revalidatePath("/");
-
-    return {
-      success: true,
-      data: result,
-    };
-  } catch (error) {
-    console.error("❌ [completeFollowFarcaster] Error:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Error desconocido",
-    };
-  }
-}
-
-/**
- * Función para verificar el estado de un signer (usar para polling desde el cliente)
- */
-export async function checkSignerStatus(signer_uuid: string) {
-  try {
-    const status = await getSignerStatus(signer_uuid);
-    return {
-      success: true,
-      data: status,
-    };
-  } catch (error) {
-    console.error("❌ [checkSignerStatus] Error:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Error desconocido",
-    };
   }
 }
 
