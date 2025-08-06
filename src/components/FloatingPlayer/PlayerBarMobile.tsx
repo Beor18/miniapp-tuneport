@@ -331,9 +331,10 @@ export function PlayerBarMobile({
           : BigInt(0); // Convert price to wei
 
         console.log("Amount to mint:", amount);
+        console.log("fullNftData:", fullNftData);
 
         const mintSuccess = await baseOperations.mintNFT({
-          collectionAddress: fullNftData?.addressCollection || "",
+          collectionAddress: fullNftData?.address_collection || "",
           to: evmWalletAddress || address || "",
           tokenId: fullNftData?.id_item || 0, // Use the NFT tokenId
           amount: amount, // Cantidad seleccionada por el usuario
@@ -342,7 +343,7 @@ export function PlayerBarMobile({
         });
 
         if (mintSuccess) {
-          result = `${fullNftData?.addressCollection}:${fullNftData?.id_item}`;
+          result = `${fullNftData?.address_collection}:${fullNftData?.id_item}`;
           toast.success("NFT successfully minted on Base!");
         } else {
           throw new Error("Error minting NFT on Base");

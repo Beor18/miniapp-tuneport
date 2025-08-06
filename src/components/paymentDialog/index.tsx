@@ -329,6 +329,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ onConfirmClaim }) => {
       };
       return mintOptions;
     } else if (selectedBlockchain === "base") {
+      console.log("Minting NFT on Base: ", completeTrackData);
       const mintOptions: BaseMintOptions = {
         recipient:
           completeTrackData.artist_address_mint || TUNEPORT_WALLET_ADDRESS,
