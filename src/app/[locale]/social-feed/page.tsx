@@ -53,23 +53,50 @@ export default function SocialFeedPage() {
 
       try {
         console.log("Sending transaction to: ", artistAddress);
+        console.log("Wallet context:", walletContext);
 
-        await walletContext?.request({
+        // Convertir 0.0000777 ETH a wei correctamente
+        const amountInWei = BigInt(Math.floor(0.0000777 * 10 ** 18));
+        const valueHex = `0x${amountInWei.toString(16)}`;
+
+        console.log("Amount in wei:", amountInWei.toString());
+        console.log("Value hex:", valueHex);
+
+        const transactionParams = {
+          to: artistAddress,
+          value: valueHex,
+          // Removed 'from' - not needed in Farcaster Mini Apps
+          // Removed 'data' - not needed for simple ETH transfer
+        };
+
+        console.log("Transaction params:", transactionParams);
+
+        const result = await walletContext?.request({
           method: "eth_sendTransaction",
-          params: [
-            {
-              to: artistAddress,
-              data: "0x",
-              value: `0x${(0.0000777 * 10 ** 18).toString(16)}`,
-              from: walletContext.address as `0x${string}`,
-            },
-          ],
+          params: [transactionParams],
         });
 
+        console.log("Transaction result:", result);
         toast.success("¡Transacción enviada exitosamente!");
       } catch (error) {
         console.error("Transaction failed:", error);
-        toast.error("Transacción rechazada o falló");
+        console.error("Error details:", JSON.stringify(error, null, 2));
+
+        // Mejor manejo de errores específicos de Farcaster
+        if (error && typeof error === "object") {
+          const errorObj = error as any;
+          if (errorObj.code === 4001) {
+            toast.error("Transacción cancelada por el usuario");
+          } else if (errorObj.code === -32603) {
+            toast.error("Error interno del wallet");
+          } else if (errorObj.message) {
+            toast.error(`Error: ${errorObj.message}`);
+          } else {
+            toast.error("Transacción rechazada o falló");
+          }
+        } else {
+          toast.error("Error desconocido en la transacción");
+        }
       } finally {
         setIsSupporting(false);
       }
