@@ -62,10 +62,10 @@ export default function SocialFeedPage() {
           recipientAddress?: string;
           recipientFid?: number;
         } = {
-          // Token Base ETH (eip155:8453/slip44:60) - ETH en Base Network
-          token: "eip155:8453/slip44:60",
-          // 0.0000777 ETH en wei como string
-          amount: "77700000000000", // 0.0000777 ETH
+          // Usar USDC en Base Network (formato CAIP-19 correcto según docs)
+          token: "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          // 1 USDC (6 decimales) = 1000000
+          amount: "1000000", // 1 USDC
           recipientAddress: artistAddress,
         };
 
@@ -438,16 +438,7 @@ export default function SocialFeedPage() {
                               variant="outline"
                               className="text-xs border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50 transition-all duration-300"
                             >
-                              {isSupporting ? (
-                                <>
-                                  <div className="w-3 h-3 border border-purple-300 border-t-transparent rounded-full animate-spin mr-1"></div>
-                                  Enviando...
-                                </>
-                              ) : !tipContext?.sendToken ? (
-                                <>🔒 Tips</>
-                              ) : (
-                                <>💎 0.0000777 ETH</>
-                              )}
+                              💎 TIPS
                             </Button>
                           </div>
                         </div>
