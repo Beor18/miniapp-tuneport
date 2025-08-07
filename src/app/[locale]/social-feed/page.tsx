@@ -12,7 +12,7 @@ import { Button } from "@/ui/components/ui/button";
 export default function SocialFeedPage() {
   const { getBatchUserQualityScores, contractReady } = useUserQuality();
 
-  const { context } = useFarcasterMiniApp();
+  const { context, tipContext } = useFarcasterMiniApp();
 
   console.log("Context Farcaster Mini App: ", context);
 
@@ -43,8 +43,8 @@ export default function SocialFeedPage() {
   // Función para apoyar a un artista usando Farcaster Mini App SDK
   const handleSupportArtist = useCallback(
     async (artistAddress: string, artistFid?: number) => {
-      if (!context?.client) {
-        console.error("No Farcaster Mini App context found");
+      if (!tipContext?.sendToken) {
+        console.error("No Farcaster sendToken action available");
         toast.error("Mini App no disponible");
         return;
       }
@@ -77,7 +77,7 @@ export default function SocialFeedPage() {
         console.log("SendToken params:", sendTokenParams);
 
         // Usar sendToken del SDK de Farcaster Mini App
-        const result = await context.client.sendToken(sendTokenParams);
+        const result = await tipContext.sendToken(sendTokenParams);
 
         console.log("SendToken result:", result);
 
@@ -120,7 +120,7 @@ export default function SocialFeedPage() {
         setIsSupporting(false);
       }
     },
-    [context?.client]
+    [tipContext]
   );
 
   // Función para crear leaderboard con usuarios de Farcaster reales
@@ -433,7 +433,7 @@ export default function SocialFeedPage() {
                               onClick={() =>
                                 handleSupportArtist(user.address, user.fid)
                               }
-                              disabled={isSupporting || !context?.client}
+                              disabled={isSupporting || !tipContext?.sendToken}
                               size="sm"
                               variant="outline"
                               className="text-xs border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50 transition-all duration-300"
@@ -443,7 +443,7 @@ export default function SocialFeedPage() {
                                   <div className="w-3 h-3 border border-purple-300 border-t-transparent rounded-full animate-spin mr-1"></div>
                                   Enviando...
                                 </>
-                              ) : !context?.client ? (
+                              ) : !tipContext?.sendToken ? (
                                 <>🔒 Tips</>
                               ) : (
                                 <>💎 0.0000777 ETH</>
