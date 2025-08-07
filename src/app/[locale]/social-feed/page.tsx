@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { usePrivy, useWallets, useFundWallet } from "@privy-io/react-auth";
 import { useUserQuality } from "@Src/lib/hooks/useUserQuality";
 import { useTranslations } from "next-intl";
 import { Users } from "lucide-react";
@@ -42,6 +43,8 @@ export default function SocialFeedPage() {
 
   const [isSupporting, setIsSupporting] = useState(false);
 
+  const { wallets } = useWallets();
+
   // TODO: Implementar la logica para que el usuario pueda apoyar a un artista haciendo click en el boton de apoyar
   const handleSupportArtist = useCallback(
     async (artistAddress: string) => {
@@ -73,7 +76,7 @@ export default function SocialFeedPage() {
         const transactionParams = {
           to: artistAddress,
           value: valueHex,
-          from: evmWalletAddress, // ✅ Agregado para que funcione correctamente
+          from: wallets[0].address, // ✅ Agregado para que funcione correctamente
           // Removed 'data' - not needed for simple ETH transfer
         };
 
