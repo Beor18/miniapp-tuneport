@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Users } from "lucide-react";
 import Link from "next/link";
 import { useFarcasterMiniApp } from "@Src/components/FarcasterProvider";
+import { useAppKitAccount } from "@Src/lib/privy/hooks/usePrivyAccount";
 import { toast } from "sonner";
 import { Button } from "@/ui/components/ui/button";
 
@@ -13,6 +14,7 @@ export default function SocialFeedPage() {
   const { getBatchUserQualityScores, contractReady } = useUserQuality();
 
   const { context, walletContext } = useFarcasterMiniApp();
+  const { evmWalletAddress } = useAppKitAccount();
 
   console.log("Context Farcaster Mini App: ", context);
 
@@ -49,6 +51,12 @@ export default function SocialFeedPage() {
         return;
       }
 
+      if (!evmWalletAddress) {
+        console.error("No EVM wallet address found");
+        toast.error("Dirección de wallet no disponible");
+        return;
+      }
+
       setIsSupporting(true);
 
       try {
@@ -65,7 +73,7 @@ export default function SocialFeedPage() {
         const transactionParams = {
           to: artistAddress,
           value: valueHex,
-          // Removed 'from' - not needed in Farcaster Mini Apps
+          from: evmWalletAddress, // ✅ Agregado para que funcione correctamente
           // Removed 'data' - not needed for simple ETH transfer
         };
 
@@ -101,7 +109,7 @@ export default function SocialFeedPage() {
         setIsSupporting(false);
       }
     },
-    [walletContext]
+    [walletContext, evmWalletAddress]
   );
 
   // Función para crear leaderboard con usuarios de Farcaster reales
