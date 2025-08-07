@@ -36,7 +36,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
 
         // Obtener contexto de la mini app
         const appContext = await sdk.context;
-        const appWalletContext = sdk.wallet.ethProvider;
+        const appWalletContext = await sdk.wallet.getEthereumProvider();
 
         setWalletContext(appWalletContext);
         setContext(appContext);
