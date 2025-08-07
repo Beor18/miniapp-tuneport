@@ -1,21 +1,18 @@
 "use client";
 
-import { useCallback, useContext, useEffect, useState } from "react";
-import { usePrivy, useWallets, useFundWallet } from "@privy-io/react-auth";
+import { useCallback, useEffect, useState } from "react";
 import { useUserQuality } from "@Src/lib/hooks/useUserQuality";
 import { useTranslations } from "next-intl";
 import { Users } from "lucide-react";
 import Link from "next/link";
 import { useFarcasterMiniApp } from "@Src/components/FarcasterProvider";
-import { useAppKitAccount } from "@Src/lib/privy/hooks/usePrivyAccount";
 import { toast } from "sonner";
 import { Button } from "@/ui/components/ui/button";
 
 export default function SocialFeedPage() {
   const { getBatchUserQualityScores, contractReady } = useUserQuality();
 
-  const { context, walletContext } = useFarcasterMiniApp();
-  const { evmWalletAddress } = useAppKitAccount();
+  const { context } = useFarcasterMiniApp();
 
   console.log("Context Farcaster Mini App: ", context);
 
@@ -43,76 +40,87 @@ export default function SocialFeedPage() {
 
   const [isSupporting, setIsSupporting] = useState(false);
 
-  const { wallets } = useWallets();
-
-  // TODO: Implementar la logica para que el usuario pueda apoyar a un artista haciendo click en el boton de apoyar
+  // Función para apoyar a un artista usando Farcaster Mini App SDK
   const handleSupportArtist = useCallback(
-    async (artistAddress: string) => {
-      if (!walletContext) {
-        console.error("No wallet context found");
-        toast.error("Wallet no conectada");
-        return;
-      }
-
-      if (!evmWalletAddress) {
-        console.error("No EVM wallet address found");
-        toast.error("Dirección de wallet no disponible");
+    async (artistAddress: string, artistFid?: number) => {
+      if (!context?.client) {
+        console.error("No Farcaster Mini App context found");
+        toast.error("Mini App no disponible");
         return;
       }
 
       setIsSupporting(true);
 
       try {
-        console.log("Sending transaction to: ", artistAddress);
-        console.log("Wallet context:", walletContext);
+        console.log("Sending tip to artist:", artistAddress);
+        console.log("Artist FID:", artistFid);
 
-        // Convertir 0.0000777 ETH a wei correctamente
-        const amountInWei = BigInt(Math.floor(0.0000777 * 10 ** 18));
-        const valueHex = `0x${amountInWei.toString(16)}`;
-
-        console.log("Amount in wei:", amountInWei.toString());
-        console.log("Value hex:", valueHex);
-
-        const transactionParams = {
-          to: artistAddress,
-          value: valueHex,
-          from: wallets[0].address, // ✅ Agregado para que funcione correctamente
-          // Removed 'data' - not needed for simple ETH transfer
+        // Configuración para envío de tokens usando sendToken
+        const sendTokenParams: {
+          token?: string;
+          amount?: string;
+          recipientAddress?: string;
+          recipientFid?: number;
+        } = {
+          // Token Base ETH (eip155:8453/slip44:60) - ETH en Base Network
+          token: "eip155:8453/slip44:60",
+          // 0.0000777 ETH en wei como string
+          amount: "77700000000000", // 0.0000777 ETH
+          recipientAddress: artistAddress,
         };
 
-        console.log("Transaction params:", transactionParams);
+        // Si tenemos FID del artista, lo incluimos para mejor UX
+        if (artistFid) {
+          sendTokenParams.recipientFid = artistFid;
+        }
 
-        const result = await walletContext?.request({
-          method: "eth_sendTransaction",
-          params: [transactionParams],
-        });
+        console.log("SendToken params:", sendTokenParams);
 
-        console.log("Transaction result:", result);
-        toast.success("¡Transacción enviada exitosamente!");
+        // Usar sendToken del SDK de Farcaster Mini App
+        const result = await context.client.sendToken(sendTokenParams);
+
+        console.log("SendToken result:", result);
+
+        if (result.success) {
+          toast.success("¡Tips enviados exitosamente! 💎");
+          console.log("Transaction hash:", result.send.transaction);
+        } else {
+          // Manejo de errores específicos de sendToken
+          switch (result.reason) {
+            case "rejected_by_user":
+              toast.error("Tips cancelados por el usuario");
+              break;
+            case "send_failed":
+              toast.error("Error al enviar tips. Intenta de nuevo.");
+              break;
+            default:
+              toast.error("Error desconocido al enviar tips");
+          }
+
+          if (result.error) {
+            console.error("SendToken error details:", result.error);
+          }
+        }
       } catch (error) {
-        console.error("Transaction failed:", error);
+        console.error("SendToken failed:", error);
         console.error("Error details:", JSON.stringify(error, null, 2));
 
-        // Mejor manejo de errores específicos de Farcaster
+        // Manejo de errores de red o del SDK
         if (error && typeof error === "object") {
           const errorObj = error as any;
-          if (errorObj.code === 4001) {
-            toast.error("Transacción cancelada por el usuario");
-          } else if (errorObj.code === -32603) {
-            toast.error("Error interno del wallet");
-          } else if (errorObj.message) {
+          if (errorObj.message) {
             toast.error(`Error: ${errorObj.message}`);
           } else {
-            toast.error("Transacción rechazada o falló");
+            toast.error("Error al conectar con Farcaster");
           }
         } else {
-          toast.error("Error desconocido en la transacción");
+          toast.error("Error desconocido al enviar tips");
         }
       } finally {
         setIsSupporting(false);
       }
     },
-    [walletContext, evmWalletAddress]
+    [context?.client]
   );
 
   // Función para crear leaderboard con usuarios de Farcaster reales
@@ -420,20 +428,25 @@ export default function SocialFeedPage() {
                               </div>
                             </div>
 
-                            {/* Botón de apoyo más prominente */}
+                            {/* Botón de tips con SDK de Farcaster */}
                             <Button
-                              onClick={() => handleSupportArtist(user.address)}
-                              disabled={isSupporting}
+                              onClick={() =>
+                                handleSupportArtist(user.address, user.fid)
+                              }
+                              disabled={isSupporting || !context?.client}
                               size="sm"
-                              className="text-xs"
+                              variant="outline"
+                              className="text-xs border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50 transition-all duration-300"
                             >
                               {isSupporting ? (
                                 <>
-                                  <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin mr-1"></div>
-                                  TIPS...
+                                  <div className="w-3 h-3 border border-purple-300 border-t-transparent rounded-full animate-spin mr-1"></div>
+                                  Enviando...
                                 </>
+                              ) : !context?.client ? (
+                                <>🔒 Tips</>
                               ) : (
-                                <>💎 TIPS</>
+                                <>💎 0.0000777 ETH</>
                               )}
                             </Button>
                           </div>
