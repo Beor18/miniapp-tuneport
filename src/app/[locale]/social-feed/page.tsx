@@ -93,7 +93,7 @@ export default async function SocialFeedPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#18181b] via-[#1a1a1d] to-[#18181b]">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header Premium con elementos virales */}
-        <div className="text-center mb-12 relative">
+        <div className="text-center mb-6 relative">
           {/* Efecto de partículas de fondo */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-10 left-1/4 w-2 h-2 bg-yellow-400 rounded-full opacity-70 animate-pulse"></div>

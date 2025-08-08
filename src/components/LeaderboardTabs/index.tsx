@@ -23,13 +23,13 @@ export default function LeaderboardTabs({
   return (
     <>
       {/* Navegación de tabs */}
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="flex justify-center">
           <div className="flex bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/60 rounded-xl p-1">
             <button
               onClick={() => setActiveTab("artists")}
               className={`
-                flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300
+                flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300
                 ${
                   activeTab === "artists"
                     ? "bg-gradient-to-r from-purple-500/80 to-blue-500/80 text-white shadow-lg"
@@ -43,7 +43,7 @@ export default function LeaderboardTabs({
             <button
               onClick={() => setActiveTab("playlists")}
               className={`
-                flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300
+                flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300
                 ${
                   activeTab === "playlists"
                     ? "bg-gradient-to-r from-purple-500/80 to-blue-500/80 text-white shadow-lg"
