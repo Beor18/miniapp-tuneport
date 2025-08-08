@@ -274,6 +274,7 @@ export function PlayerBarMobile({
 
     // Find the complete NFT data to get collection information
     const fullNftData = nftData.find((nft: any) => nft._id === currentSong._id);
+    console.log("🔍 Full NFT data:", nftData);
 
     if (!fullNftData) {
       toast.error("NFT data not found", {
@@ -326,9 +327,12 @@ export function PlayerBarMobile({
         });
       } else if (network === "base") {
         // Mint NFT on Base using ERC1155 con cantidad seleccionada
-        const priceInWei = fullNftData?.mint_price
-          ? BigInt(Math.floor(fullNftData.mint_price * 1e18))
-          : BigInt(0); // Convert price to wei
+        const priceInWei =
+          fullNftData?.mint_price || fullNftData?.price
+            ? BigInt(
+                Math.floor((fullNftData.mint_price || fullNftData.price) * 1e18)
+              )
+            : BigInt(0); // Convert price to wei
 
         console.log("Amount to mint:", amount);
         console.log("fullNftData:", fullNftData);

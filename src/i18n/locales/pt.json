@@ -539,6 +539,8 @@
     "leaderboard": {
       "title": "LEADERBOARD",
       "subtitle": "Descubra os artistas mais destacados ⚡",
+      "artists": "Artistas",
+      "playlists": "Playlists",
       "tips": "TIPS",
       "sending": "Enviando...",
       "lockedTips": "Tips",
@@ -553,7 +555,19 @@
       "connectFarcasterToAppear": "Conecte sua conta Farcaster para aparecer aqui.",
       "reload": "Recarregar",
       "preparingRanking": "Preparando o ranking!",
-      "calculatingQualityScores": "Estamos calculando as pontuações de qualidade dos usuários Farcaster..."
+      "calculatingQualityScores": "Estamos calculando as pontuações de qualidade dos usuários Farcaster...",
+      "beFirstToCreatePlaylists": "Seja o primeiro a criar playlists!",
+      "noPublicPlaylistsAvailable": "Ainda não há playlists públicas disponíveis.",
+      "createPlaylistAppearRanking": "Crie sua playlist e apareça no ranking.",
+      "preparingPlaylistRanking": "Preparando o ranking de playlists",
+      "calculatingPopularPlaylists": "Calculando as playlists mais populares...",
+      "tracks": "faixas",
+      "min": "min",
+      "score": "pontuação",
+      "play": "Tocar",
+      "by": "por",
+      "verified": "Verificado",
+      "tip": "TIP"
     }
   }
 }

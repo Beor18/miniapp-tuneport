@@ -541,6 +541,8 @@
     "leaderboard": {
       "title": "LEADERBOARD",
       "subtitle": "Discover the most outstanding artists ⚡",
+      "artists": "Artists",
+      "playlists": "Playlists",
       "tips": "TIPS",
       "sending": "Sending...",
       "lockedTips": "Tips",
@@ -555,7 +557,19 @@
       "connectFarcasterToAppear": "Connect your Farcaster account to appear here.",
       "reload": "Reload",
       "preparingRanking": "Preparing the ranking!",
-      "calculatingQualityScores": "We're calculating the quality scores of Farcaster users..."
+      "calculatingQualityScores": "We're calculating the quality scores of Farcaster users...",
+      "beFirstToCreatePlaylists": "Be the first to create playlists!",
+      "noPublicPlaylistsAvailable": "No public playlists available yet.",
+      "createPlaylistAppearRanking": "Create your playlist and appear in the ranking.",
+      "preparingPlaylistRanking": "Preparing the playlists ranking",
+      "calculatingPopularPlaylists": "Calculating the most popular playlists...",
+      "tracks": "tracks",
+      "min": "min",
+      "score": "score",
+      "play": "Play",
+      "by": "by",
+      "verified": "Verified",
+      "tip": "TIP"
     }
   }
 }
