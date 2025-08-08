@@ -183,7 +183,7 @@ export default function Providers({ children }: { children: ReactNode }) {
               showWalletLoginFirst: false, // Mostrar opciones de wallet primero
               walletList: ["metamask"], // Solo mostrar Phantom y MetaMask
             },
-            loginMethods: ["farcaster"],
+            loginMethods: ["farcaster", "google"],
             embeddedWallets: {
               createOnLogin: "all-users",
             },

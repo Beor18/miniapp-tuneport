@@ -19,6 +19,7 @@ export default function SocialFeedPage() {
   const t = useTranslations("farcaster");
   const tCommon = useTranslations("common");
   const tNav = useTranslations("navigation");
+  const tLeaderboard = useTranslations("farcaster.leaderboard");
 
   const [leaderboard, setLeaderboard] = useState<
     Array<{
@@ -82,19 +83,19 @@ export default function SocialFeedPage() {
         console.log("SendToken result:", result);
 
         if (result.success) {
-          toast.success("¡Tips enviados exitosamente! 💎");
+          toast.success(tLeaderboard("tipsSentSuccessfully"));
           console.log("Transaction hash:", result.send.transaction);
         } else {
           // Manejo de errores específicos de sendToken
           switch (result.reason) {
             case "rejected_by_user":
-              toast.error("Tips cancelados por el usuario");
+              toast.error(tLeaderboard("tipsCancelledByUser"));
               break;
             case "send_failed":
-              toast.error("Error al enviar tips. Intenta de nuevo.");
+              toast.error(tLeaderboard("errorSendingTips"));
               break;
             default:
-              toast.error("Error desconocido al enviar tips");
+              toast.error(tLeaderboard("unknownErrorSendingTips"));
           }
 
           if (result.error) {
@@ -111,16 +112,16 @@ export default function SocialFeedPage() {
           if (errorObj.message) {
             toast.error(`Error: ${errorObj.message}`);
           } else {
-            toast.error("Error al conectar con Farcaster");
+            toast.error(tLeaderboard("errorConnectingFarcaster"));
           }
         } else {
-          toast.error("Error desconocido al enviar tips");
+          toast.error(tLeaderboard("unknownErrorInTransaction"));
         }
       } finally {
         setIsSupporting(false);
       }
     },
-    [tipContext]
+    [tipContext, tLeaderboard]
   );
 
   // Función para crear leaderboard con usuarios de Farcaster reales
@@ -313,11 +314,11 @@ export default function SocialFeedPage() {
           {/* Título principal viral */}
           <div className="relative">
             <h1 className="text-3xl md:text-6xl font-black mb-4 bg-gradient-to-r from-yellow-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent leading-tight">
-              🏆 LEADERBOARD
+              🏆 {tLeaderboard("title")}
             </h1>
             {/* Subtítulo con call-to-action viral */}
             <p className="text-md text-zinc-300 mb-6 max-w-2xl mx-auto">
-              Descubre los artistas más destacados ⚡
+              {tLeaderboard("subtitle")}
             </p>
           </div>
         </div>
@@ -334,11 +335,10 @@ export default function SocialFeedPage() {
                 const position = index + 1;
                 const tierConfig = getTierConfig(user.tier);
                 const rankingStyle = getRankingStyle(position);
-
                 return (
                   <div
                     key={user.address}
-                    className={`relative group transition-all duration-300 hover:scale-[1.02] ${
+                    className={`relative group transition-all duration-300 hover:scale-[1.02] rounded-xl ${
                       position <= 3 ? rankingStyle.glow : ""
                     }`}
                   >
@@ -438,7 +438,7 @@ export default function SocialFeedPage() {
                               variant="outline"
                               className="text-xs border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50 transition-all duration-300"
                             >
-                              💎 TIPS
+                              💎 {tLeaderboard("tips")}
                             </Button>
                           </div>
                         </div>
@@ -459,18 +459,18 @@ export default function SocialFeedPage() {
                   🎭
                 </span>
                 <h3 className="text-blue-400 font-bold text-xl mb-3">
-                  ¡Sé el primero en el leaderboard!
+                  {tLeaderboard("beFirstInLeaderboard")}
                 </h3>
                 <p className="text-zinc-300 mb-4">
-                  Aún no hay usuarios de Farcaster registrados.
+                  {tLeaderboard("noFarcasterUsersRegistered")}
                   <br />
-                  Conecta tu cuenta de Farcaster para aparecer aquí.
+                  {tLeaderboard("connectFarcasterToAppear")}
                 </p>
                 <button
                   onClick={createFarcasterQualityLeaderboard}
                   className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300"
                 >
-                  🔄 Recargar
+                  🔄 {tLeaderboard("reload")}
                 </button>
               </div>
             </div>
@@ -486,11 +486,10 @@ export default function SocialFeedPage() {
                 <div className="relative">
                   <span className="text-6xl mb-6 block animate-pulse">🚀</span>
                   <h3 className="text-white font-bold text-2xl mb-3">
-                    ¡Preparando el ranking!
+                    {tLeaderboard("preparingRanking")}
                   </h3>
                   <p className="text-zinc-300 mb-6">
-                    Estamos calculando los scores de calidad de los usuarios de
-                    Farcaster...
+                    {tLeaderboard("calculatingQualityScores")}
                   </p>
                   <div className="flex justify-center">
                     <div className="flex space-x-1">

@@ -537,6 +537,25 @@
       "medium": "Medium",
       "low": "Low",
       "bot": "Bot"
+    },
+    "leaderboard": {
+      "title": "LEADERBOARD",
+      "subtitle": "Discover the most outstanding artists ⚡",
+      "tips": "TIPS",
+      "sending": "Sending...",
+      "lockedTips": "Tips",
+      "tipsSentSuccessfully": "Tips sent successfully! 💎",
+      "tipsCancelledByUser": "Tips cancelled by user",
+      "errorSendingTips": "Error sending tips. Try again.",
+      "unknownErrorSendingTips": "Unknown error sending tips",
+      "errorConnectingFarcaster": "Error connecting to Farcaster",
+      "unknownErrorInTransaction": "Unknown error sending tips",
+      "beFirstInLeaderboard": "Be the first on the leaderboard!",
+      "noFarcasterUsersRegistered": "No Farcaster users registered yet.",
+      "connectFarcasterToAppear": "Connect your Farcaster account to appear here.",
+      "reload": "Reload",
+      "preparingRanking": "Preparing the ranking!",
+      "calculatingQualityScores": "We're calculating the quality scores of Farcaster users..."
     }
   }
 }

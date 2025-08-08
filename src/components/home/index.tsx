@@ -90,13 +90,14 @@ function BaseIcon(props: any) {
 const getNavItems = (
   publicKey: any,
   userNickname: string | null,
+  userType: string | null,
   tNav: any,
   locale: string,
   tCommon: any
 ) => {
-  // Si hay wallet conectado, mostrar For You, Social Feed, Create y Profile
+  // Si hay wallet conectado, mostrar For You, Social Feed y Profile
   if (publicKey?.toString()) {
-    return [
+    const baseItems = [
       {
         href: `/${locale}/foryou`,
         icon: Music2Icon,
@@ -109,19 +110,27 @@ const getNavItems = (
         label: "Leaderboard",
         type: "link",
       },
-      {
+    ];
+
+    // Solo añadir Create si el usuario es artista
+    if (userType === "artist") {
+      baseItems.push({
         href: "#",
         icon: Plus,
         label: tCommon("create"),
         type: "create",
-      },
-      {
-        href: userNickname ? `/${locale}/u/${userNickname}` : `/${locale}/u`,
-        icon: User,
-        label: tNav("profile"),
-        type: "link",
-      },
-    ];
+      });
+    }
+
+    // Siempre añadir el perfil al final
+    baseItems.push({
+      href: userNickname ? `/${locale}/u/${userNickname}` : `/${locale}/u`,
+      icon: User,
+      label: tNav("profile"),
+      type: "link",
+    });
+
+    return baseItems;
   }
 
   // Si no hay wallet conectado, no mostrar navegación
@@ -131,6 +140,7 @@ const getNavItems = (
 export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   const [loading, setLoading] = useState(false);
   const [userNickname, setUserNickname] = useState<string | null>(null);
+  const [userType, setUserType] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [hostname, setHostname] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -190,11 +200,14 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
 
         if (user) {
           setUserNickname(user.nickname);
+          setUserType(user.type);
         } else {
           setUserNickname(null);
+          setUserType(null);
         }
       } else {
         setUserNickname(null);
+        setUserType(null);
       }
     };
 
@@ -206,11 +219,12 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
     return getNavItems(
       address?.toString(),
       userNickname,
+      userType,
       tNav,
       locale,
       tCommon
     );
-  }, [address, userNickname, tNav, locale, tCommon]);
+  }, [address, userNickname, userType, tNav, locale, tCommon]);
 
   // Memoizar flags de layout (compatible con locales)
   const layoutFlags = useMemo(
