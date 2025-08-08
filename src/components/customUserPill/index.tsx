@@ -138,10 +138,12 @@ export function CustomUserPill({
           <Avatar className="h-8 w-8 ring-2 ring-[#ffffff]">
             <AvatarImage
               src={
-                profile?.picture ||
-                `https://avatar.iran.liara.run/username?username=${
-                  profile?.name || "User"
-                }`
+                farcasterConnected && farcasterData?.pfp
+                  ? farcasterData.pfp
+                  : profile?.picture ||
+                    `https://avatar.iran.liara.run/username?username=${
+                      profile?.name || "User"
+                    }`
               }
               alt="avatar"
             />

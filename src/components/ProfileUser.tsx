@@ -108,7 +108,8 @@ const CONTRACT_ADDRESS = "0x01A4348B8f0bA8a55C3534153E4FB47331E93895";
 
 const ProfileUser: React.FC<ProfileUserProps> = ({ userData, albums }) => {
   const { nickname } = useParams<{ nickname: string }>();
-  const { address, evmWalletAddress } = useAppKitAccount();
+  const { address, evmWalletAddress, farcasterConnected, farcasterData } =
+    useAppKitAccount();
   const tUser = useTranslations("user");
 
   const [userNFTs, setUserNFTs] = useState<NFT[]>([]);
@@ -194,7 +195,10 @@ const ProfileUser: React.FC<ProfileUserProps> = ({ userData, albums }) => {
         profileFans={{
           _id: userData._id,
           name: userData.name,
-          picture: userData.picture,
+          picture:
+            farcasterConnected && farcasterData?.pfp
+              ? farcasterData.pfp
+              : userData.picture,
           nickname: userData.nickname,
           biography: userData.biography,
           twitter: userData.twitter,
@@ -257,7 +261,13 @@ const ProfileUser: React.FC<ProfileUserProps> = ({ userData, albums }) => {
 
   return (
     <ProfileArtistUser
-      profile={userData}
+      profile={{
+        ...userData,
+        picture:
+          farcasterConnected && farcasterData?.pfp
+            ? farcasterData.pfp
+            : userData.picture,
+      }}
       albums={formattedAlbums}
       nfts={[]} // Los artistas no necesitan NFTs de colección
       isOwnProfile={isOwnProfile}

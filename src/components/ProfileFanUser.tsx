@@ -31,6 +31,7 @@ import { followUser, getUserByAddress } from "@Src/app/actions/follows.actions";
 import { ProfileEditModal } from "@Src/components/ProfileEditModal";
 import PlaylistCarousel from "./PlaylistCarousel";
 import { useTranslations } from "next-intl";
+import { useAppKitAccount } from "@Src/lib/privy";
 
 interface NFT {
   id: string;
@@ -125,6 +126,9 @@ export default function ProfileFanUser({
   const tUser = useTranslations("user");
   const tCommon = useTranslations("common");
 
+  // 🆕 FARCASTER: Obtener datos de Farcaster del usuario actual
+  const { farcasterConnected, farcasterData } = useAppKitAccount();
+
   const initialFollowersCount = profileFans.followers
     ? profileFans.followers?.length
     : 0;
@@ -174,11 +178,16 @@ export default function ProfileFanUser({
     setInstagram(profileFans.instagram || "");
     setSpotify(profileFans.spotify || "");
     setFacebook(profileFans.facebook || "");
-    setProfilePicture(
-      profileFans.picture ||
-        `https://avatar.iran.liara.run/username?username=${profileFans.name}`
-    );
-  }, [profileFans]);
+
+    // 🆕 FARCASTER: Priorizar foto de Farcaster si está disponible y es el perfil propio
+    const finalPicture =
+      isOwnProfile && farcasterConnected && farcasterData?.pfp
+        ? farcasterData.pfp
+        : profileFans.picture ||
+          `https://avatar.iran.liara.run/username?username=${profileFans.name}`;
+
+    setProfilePicture(finalPicture);
+  }, [profileFans, isOwnProfile, farcasterConnected, farcasterData]);
 
   // Obtener el userId del usuario actual a partir de publicKey
   useEffect(() => {
