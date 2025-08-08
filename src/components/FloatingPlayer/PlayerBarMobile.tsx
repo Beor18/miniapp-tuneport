@@ -445,7 +445,7 @@ export function PlayerBarMobile({
     <>
       {/* Player compacto (siempre visible en móvil) */}
       <div
-        className={`fixed ${bottomPosition} left-0 right-0 z-[100] bg-zinc-900 text-white md:hidden shadow-2xl`}
+        className={`fixed ${bottomPosition} left-0 right-0 z-[40] bg-zinc-900 text-white md:hidden shadow-2xl`}
       >
         {/* Barra compacta */}
         <div

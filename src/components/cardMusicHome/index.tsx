@@ -539,9 +539,9 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
                   </div>
 
                   {/* Contenido central con botones laterales */}
-                  <div className="flex-grow min-h-0 flex items-center md:items-end justify-end pr-4 z-20 sm:flex-1">
+                  <div className="flex-grow min-h-0 flex items-center md:items-end justify-end pr-4 z-40 sm:flex-1">
                     {/* Botones de acción laterales */}
-                    <div className="flex flex-col space-y-3">
+                    <div className="flex flex-col space-y-2">
                       <motion.div
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}

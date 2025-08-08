@@ -555,7 +555,7 @@ export default function ProfileArtistUser({
       )}
 
       {/* Albums Section - Convertido a Carrusel */}
-      <div className="px-4 sm:px-6 lg:px-8 mt-12">
+      <div className="px-4 sm:px-6 lg:px-8 mt-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold text-zinc-100 uppercase">
             {/* {tMusic("music")} */}
@@ -602,7 +602,7 @@ export default function ProfileArtistUser({
           <div className="relative">
             <div
               ref={scrollRef}
-              className="flex gap-4 overflow-x-auto pb-2 mb-8 scroll-smooth"
+              className="flex gap-4 overflow-x-auto pb-2 mb-2 scroll-smooth"
               style={{
                 scrollbarWidth: "none",
                 msOverflowStyle: "none",
@@ -642,7 +642,7 @@ export default function ProfileArtistUser({
       </div>
 
       {/* Playlists Section */}
-      <div className="px-4 sm:px-6 lg:px-8 mt-12">
+      <div className="px-4 sm:px-6 lg:px-8 mt-6">
         <PlaylistCarousel userId={profile._id} isOwnProfile={isOwnProfile} />
       </div>
 
@@ -681,17 +681,20 @@ const AlbumCard = ({
       </div>
     </CardContent>
     <CardFooter className="flex flex-col items-start p-4 bg-zinc-900/95">
-      <Link href={`/album/${album.slug}`} className="group/link block">
-        <h4 className="font-medium text-zinc-100 group-hover/link:text-white transition-colors">
+      <Link href={`/album/${album.slug}`} className="group/link block w-full">
+        <h4
+          className="font-medium text-zinc-100 group-hover/link:text-white transition-colors truncate w-full"
+          title={album.name}
+        >
           {album.name}
         </h4>
       </Link>
-      <p className="text-sm text-zinc-400">{album.artist}</p>
+      <p className="text-sm text-zinc-400 truncate w-full" title={album.artist}>
+        {album.artist}
+      </p>
       <div className="flex items-center gap-1.5 mt-1">
         <Music2Icon className="w-3.5 h-3.5 text-zinc-500" />
-        <span className="text-xs text-zinc-500">
-          {album.tracks} {tMusic("addTracks")}
-        </span>
+        <span className="text-xs text-zinc-500">{album.tracks} tracks</span>
       </div>
 
       {isOwnProfile && (
