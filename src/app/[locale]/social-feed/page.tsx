@@ -7,7 +7,7 @@ async function getFarcasterUsers() {
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL
         ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000";
+        : "https://miniapp.tuneport.xyz";
 
     const fullUrl = `${baseUrl}/api/farcaster/user-quality-leaderboard?limit=15`;
 
