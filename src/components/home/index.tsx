@@ -95,46 +95,41 @@ const getNavItems = (
   locale: string,
   tCommon: any
 ) => {
-  // Si hay wallet conectado, mostrar For You, Social Feed y Profile
-  if (publicKey?.toString()) {
-    const baseItems = [
-      {
-        href: `/${locale}/foryou`,
-        icon: Music2Icon,
-        label: tNav("forYou"),
-        type: "link",
-      },
-      {
-        href: `/${locale}/social-feed`,
-        icon: MedalIcon,
-        label: "Leaderboard",
-        type: "link",
-      },
-    ];
-
-    // Solo añadir Create si el usuario es artista
-    if (userType === "artist") {
-      baseItems.push({
-        href: "#",
-        icon: Plus,
-        label: tCommon("create"),
-        type: "create",
-      });
-    }
-
-    // Siempre añadir el perfil al final
-    baseItems.push({
-      href: userNickname ? `/${locale}/u/${userNickname}` : `/${locale}/u`,
-      icon: User,
-      label: tNav("profile"),
+  // Siempre mostrar los elementos básicos de navegación
+  const baseItems = [
+    {
+      href: `/${locale}/foryou`,
+      icon: Music2Icon,
+      label: tNav("forYou"),
       type: "link",
-    });
+    },
+    {
+      href: `/${locale}/social-feed`,
+      icon: MedalIcon,
+      label: "Leaderboard",
+      type: "link",
+    },
+  ];
 
-    return baseItems;
+  // Solo añadir Create si el usuario es artista Y está conectado
+  if (publicKey?.toString() && userType === "artist") {
+    baseItems.push({
+      href: "#",
+      icon: Plus,
+      label: tCommon("create"),
+      type: "create",
+    });
   }
 
-  // Si no hay wallet conectado, no mostrar navegación
-  return [];
+  // Siempre añadir el perfil al final
+  baseItems.push({
+    href: userNickname ? `/${locale}/u/${userNickname}` : `/${locale}/u`,
+    icon: User,
+    label: tNav("profile"),
+    type: "link",
+  });
+
+  return baseItems;
 };
 
 export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
@@ -243,7 +238,9 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
         currentSong && showFloatingPlayer && !pathname.match(/\/foryou(\/|$)/),
       // Mostrar navegación en páginas de perfil y rutas principales
       showNavigation:
-        pathname.match(/\/u(\/|$)/) || pathname.match(/\/social-feed(\/|$)/),
+        pathname.match(/\/u(\/|$)/) ||
+        pathname.match(/\/social-feed(\/|$)/) ||
+        pathname.match(/\/foryou(\/|$)/),
     }),
     [pathname, currentSong, showFloatingPlayer]
   );
@@ -363,6 +360,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
               <MobileNavLink
                 key={item.href}
                 {...item}
+                isConnected={isConnected}
                 onCreateClick={() => setIsCreateModalOpen(true)}
               />
             ))}
@@ -457,34 +455,72 @@ function MobileNavLink({
   icon: Icon,
   label,
   type = "link",
+  isConnected = false,
   onCreateClick,
 }: {
   href: string;
   icon: any;
   label: string;
   type?: string;
+  isConnected?: boolean;
   onCreateClick?: () => void;
 }) {
   const pathname = usePathname();
   const isActive = pathname === href && type === "link";
+  const isDisabled = !isConnected;
 
   if (type === "create") {
     return (
       <button
-        onClick={onCreateClick}
+        onClick={isDisabled ? undefined : onCreateClick}
+        disabled={isDisabled}
         className={`
           flex flex-col items-center justify-center px-2 py-1 min-w-0 flex-1 transition-all duration-200
-          text-zinc-400 hover:text-zinc-200
-          active:scale-95 touch-manipulation
+          ${
+            isDisabled
+              ? "text-zinc-600 cursor-not-allowed"
+              : "text-zinc-400 hover:text-zinc-200 active:scale-95"
+          }
+          touch-manipulation
         `}
       >
-        <div className="p-2 rounded-lg transition-all duration-200 hover:bg-zinc-800/50">
-          <Icon className="h-5 w-5 text-zinc-300" />
+        <div
+          className={`p-2 rounded-lg transition-all duration-200 ${
+            isDisabled ? "" : "hover:bg-zinc-800/50"
+          }`}
+        >
+          <Icon
+            className={`h-5 w-5 ${
+              isDisabled ? "text-zinc-600" : "text-zinc-300"
+            }`}
+          />
         </div>
-        <span className="text-[10px] font-medium truncate max-w-full mt-1 leading-none text-zinc-400">
+        <span
+          className={`text-[10px] font-medium truncate max-w-full mt-1 leading-none ${
+            isDisabled ? "text-zinc-600" : "text-zinc-400"
+          }`}
+        >
           {label}
         </span>
       </button>
+    );
+  }
+
+  if (isDisabled) {
+    return (
+      <div
+        className={`
+          flex flex-col items-center justify-center px-2 py-1 min-w-0 flex-1 transition-all duration-200
+          text-zinc-600 cursor-not-allowed
+        `}
+      >
+        <div className="p-2 rounded-lg transition-all duration-200">
+          <Icon className="h-5 w-5 text-zinc-600" />
+        </div>
+        <span className="text-[10px] font-medium truncate max-w-full mt-1 leading-none text-zinc-600">
+          {label}
+        </span>
+      </div>
     );
   }
 
