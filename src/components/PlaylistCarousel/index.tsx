@@ -235,7 +235,7 @@ export default function PlaylistCarousel({
                 {/* Content */}
                 <div className="relative h-full p-4 pb-2 flex flex-col justify-between">
                   <div className="flex-1">
-                    <h3 className="text-lg sm:text-xl font-bold text-white group-hover:scale-105 transition-transform duration-300 line-clamp-2">
+                    <h3 className="text-sm sm:text-base font-bold text-white group-hover:scale-105 transition-transform duration-300 line-clamp-2">
                       {playlist.name}
                     </h3>
                   </div>
