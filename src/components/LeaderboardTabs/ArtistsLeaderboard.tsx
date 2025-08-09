@@ -38,7 +38,9 @@ export default function ArtistsLeaderboard({
   const [leaderboard, setLeaderboard] = useState<UserData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isSupporting, setIsSupporting] = useState(false);
+  const [supportingArtists, setSupportingArtists] = useState<Set<string>>(
+    new Set()
+  );
   const [loaded, setLoaded] = useState(false);
 
   // Función para apoyar a un artista usando Farcaster Mini App SDK
@@ -50,7 +52,7 @@ export default function ArtistsLeaderboard({
         return;
       }
 
-      setIsSupporting(true);
+      setSupportingArtists((prev) => new Set(prev).add(artistAddress));
 
       try {
         const sendTokenParams: {
@@ -88,7 +90,11 @@ export default function ArtistsLeaderboard({
         console.error("SendToken failed:", error);
         toast.error(tLeaderboard("errorConnectingFarcaster"));
       } finally {
-        setIsSupporting(false);
+        setSupportingArtists((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(artistAddress);
+          return newSet;
+        });
       }
     },
     [tipContext, tLeaderboard]
@@ -404,12 +410,19 @@ export default function ArtistsLeaderboard({
                       onClick={() =>
                         handleSupportArtist(user.address, user.fid)
                       }
-                      disabled={isSupporting || !tipContext?.sendToken}
+                      disabled={
+                        supportingArtists.has(user.address) ||
+                        !tipContext?.sendToken
+                      }
                       size="sm"
                       variant="outline"
-                      className="text-xs border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50 transition-all duration-300"
+                      className="text-xs border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50 transition-all duration-300 disabled:opacity-50"
                     >
-                      💎 {tLeaderboard("tips")}
+                      {supportingArtists.has(user.address) ? (
+                        <>⏳ {tLeaderboard("sending")}</>
+                      ) : (
+                        <>💎 {tLeaderboard("tips")}</>
+                      )}
                     </Button>
                   </div>
                 </div>

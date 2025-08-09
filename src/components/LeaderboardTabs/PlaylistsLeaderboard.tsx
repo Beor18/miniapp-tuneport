@@ -37,6 +37,7 @@ export default function PlaylistsLeaderboard({
     addToPlaylist,
     clearPlaylist,
     setShowFloatingPlayer,
+    setNftData,
   } = usePlayer();
 
   const [playlists, setPlaylists] = useState<PlaylistData[]>([]);
@@ -60,7 +61,7 @@ export default function PlaylistsLeaderboard({
         return;
       }
 
-      // Transformar los NFTs de la playlist al formato Track
+      // Transformar los NFTs de la playlist al formato Track con TODOS los datos necesarios
       const tracks = playlist.nfts.map((nft: any) => ({
         _id: nft._id,
         name: nft.name,
@@ -83,9 +84,25 @@ export default function PlaylistsLeaderboard({
         collectionId: nft.collectionId,
         attributes: nft.attributes,
         properties: nft.properties,
-        network: nft.collectionId?.network,
-        price: nft.collectionId?.price,
+        network: nft.collectionId?.network || nft.network,
+        price: nft.collectionId?.price || nft.price,
+        // CAMPOS CRÍTICOS PARA MINTING - agregados desde la información de la colección/nft
+        address_collection:
+          nft.collectionId?.address_collection || nft.address_collection,
+        addressCollection:
+          nft.collectionId?.address_collection || nft.address_collection, // Alias por compatibilidad
+        mint_price: nft.collectionId?.mint_price || nft.mint_price || nft.price,
+        mint_currency: nft.collectionId?.mint_currency || nft.mint_currency,
+        start_mint_date:
+          nft.collectionId?.start_mint_date || nft.start_mint_date,
+        candy_machine: nft.candy_machine,
+        artist_address_mint: nft.artist_address_mint,
+        id_item: nft.id_item || nft.tokenId,
+        metadata_uri: nft.metadata_uri || nft.tokenURI,
       }));
+
+      // IMPORTANTE: Actualizar el nftData global para que PlayerBarMobile pueda encontrar los datos completos
+      setNftData(tracks);
 
       // Limpiar playlist anterior y cargar la nueva
       clearPlaylist();
@@ -102,8 +119,15 @@ export default function PlaylistsLeaderboard({
       console.log(
         `🎵 Reproduciendo playlist: ${playlist.name} con ${tracks.length} tracks`
       );
+      console.log("🔍 Datos NFT actualizados para minting:", tracks);
     },
-    [setCurrentSong, addToPlaylist, clearPlaylist, setShowFloatingPlayer]
+    [
+      setCurrentSong,
+      addToPlaylist,
+      clearPlaylist,
+      setShowFloatingPlayer,
+      setNftData,
+    ]
   );
 
   // Función para hacer tip a una playlist
