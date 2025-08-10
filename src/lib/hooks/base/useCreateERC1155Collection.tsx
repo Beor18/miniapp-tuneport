@@ -49,10 +49,9 @@ export const useCreateERC1155Collection = (
         const metadata: NFTMetadata = {
           name: params.name,
           description:
-            params.description ||
-            `NFT Collection ${params.name} (${params.symbol})`,
+            params.description || `${params.name} (${params.symbol})`,
           image: imageUrl,
-          external_url: `https://app.tuneport.xyz/album/${slug}`,
+          external_url: `https://miniapp.tuneport.xyz/album/${slug}`,
           attributes: [
             {
               trait_type: "Collection",
@@ -373,8 +372,7 @@ export const useCreateERC1155Collection = (
             address_creator_collection: evmAddress as string,
             address_collection: newCollectionAddress as string,
             description:
-              params.description ||
-              `NFT Collection ${params.name} (${params.symbol})`,
+              params.description || `${params.name} (${params.symbol})`,
             max_items: params.maxItems || 1000,
             image_cover: imageUrl,
             slug: slugify(params.name),

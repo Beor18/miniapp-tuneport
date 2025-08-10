@@ -114,7 +114,7 @@ export function useCreateBaseCollection() {
         symbol: params.symbol,
         description: params.description,
         image: coverImageUrl,
-        external_url: `https://app.tuneport.xyz/album/${slugify(
+        external_url: `https://miniapp.tuneport.xyz/album/${slugify(
           params.collectionName
         )}`,
         address_creator_collection: evmWalletAddress,

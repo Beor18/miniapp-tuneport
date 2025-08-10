@@ -683,21 +683,17 @@ export default function BaseAlbumNewForm({
                     </Card>
 
                     <div className="space-y-6">
-                      <div className="bg-blue-900/20 border border-blue-600 p-4 rounded-lg">
-                        <h4 className="font-semibold text-blue-400">
-                          🎵 {tForms("projectType")}
-                        </h4>
-                        <p className="text-sm text-blue-300 mt-1">
+                      <div className="flex flex-col gap-2">
+                        <Label
+                          htmlFor="collectionType"
+                          className="text-lg font-semibold text-zinc-100"
+                        >
+                          {tForms("selectProjectType")}
+                        </Label>
+                        <p className="text-sm text-zinc-400">
                           {tForms("chooseProjectType")}
                         </p>
                       </div>
-
-                      <Label
-                        htmlFor="collectionType"
-                        className="text-lg font-semibold pt-4 text-zinc-100"
-                      >
-                        {tForms("selectProjectType")}
-                      </Label>
                       <RadioGroup
                         value={collectionType}
                         onValueChange={(value) => setCollectionType(value)}

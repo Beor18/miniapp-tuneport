@@ -185,7 +185,7 @@ export const useERC1155Mint = () => {
           name: params.name,
           description: params.description,
           image: imageUrl,
-          external_url: `https://app.tuneport.xyz/track/${params.name
+          external_url: `https://miniapp.tuneport.xyz/track/${params.name
             .toLowerCase()
             .replace(/\s+/g, "-")}`,
           animation_url: musicUrl,
