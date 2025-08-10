@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { Music, Play, Gem } from "lucide-react";
 import { Button } from "@/ui/components/ui/button";
 import { usePlayer } from "@Src/contexts/PlayerContext";
+import { useFarcasterMiniApp } from "@Src/components/FarcasterProvider";
+import { toast } from "sonner";
 
 interface PlaylistData {
   _id: string;
@@ -15,6 +17,8 @@ interface PlaylistData {
     nickname: string;
     picture?: string;
     verified?: boolean;
+    address?: string; // Dirección de wallet del creador
+    fid?: number; // FID de Farcaster del creador
   };
   nfts: Array<any>;
   totalDuration: number;
@@ -31,6 +35,7 @@ interface PlaylistsLeaderboardProps {
 export default function PlaylistsLeaderboard({
   playlistsData,
 }: PlaylistsLeaderboardProps) {
+  const { tipContext } = useFarcasterMiniApp();
   const tLeaderboard = useTranslations("farcaster.leaderboard");
   const {
     setCurrentSong,
@@ -42,6 +47,9 @@ export default function PlaylistsLeaderboard({
 
   const [playlists, setPlaylists] = useState<PlaylistData[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [supportingPlaylists, setSupportingPlaylists] = useState<Set<string>>(
+    new Set()
+  );
 
   // Cargar datos pre-fetched al montar el componente
   useEffect(() => {
@@ -130,14 +138,70 @@ export default function PlaylistsLeaderboard({
     ]
   );
 
-  // Función para hacer tip a una playlist
-  const handleTipPlaylist = useCallback((playlist: PlaylistData) => {
-    console.log(
-      `💎 Enviando tip a la playlist: ${playlist.name} por ${playlist.userId.nickname}`
-    );
-    // TODO: Implementar lógica de tip usando el SDK de Farcaster o el sistema de pagos
-    // Por ahora solo mostramos un console.log como placeholder
-  }, []);
+  // Función para apoyar a un creador de playlist usando Farcaster Mini App SDK
+  const handleSupportPlaylist = useCallback(
+    async (playlist: PlaylistData) => {
+      //console.log("🔍 Datos NFT actualizados para minting:", playlist);
+      if (!tipContext?.sendToken) {
+        console.error("No Farcaster sendToken action available");
+        toast.error("Mini App no disponible");
+        return;
+      }
+
+      setSupportingPlaylists((prev) => new Set(prev).add(playlist._id));
+
+      try {
+        const sendTokenParams: {
+          token?: string;
+          amount?: string;
+          recipientAddress?: string;
+          recipientFid?: number;
+        } = {
+          token: "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          amount: "1000000", // 1 USDC
+          // Usar la dirección si está disponible, sino Farcaster puede resolverlo por username
+          recipientAddress: playlist.userId.address,
+        };
+
+        // Si tenemos el FID del usuario, agregarlo (más confiable que address)
+        if (playlist.userId.fid) {
+          sendTokenParams.recipientFid = playlist.userId.fid;
+        }
+
+        console.log(
+          `💎 Enviando tip a la playlist: ${playlist.name} por ${playlist.userId.nickname}`
+        );
+
+        // Enviar tip usando Farcaster SDK - puede resolverlo por FID o username
+        const result = await tipContext.sendToken(sendTokenParams);
+
+        if (result.success) {
+          toast.success(tLeaderboard("tipsSentSuccessfully"));
+        } else {
+          switch (result.reason) {
+            case "rejected_by_user":
+              toast.error(tLeaderboard("tipsCancelledByUser"));
+              break;
+            case "send_failed":
+              toast.error(tLeaderboard("errorSendingTips"));
+              break;
+            default:
+              toast.error(tLeaderboard("unknownErrorSendingTips"));
+          }
+        }
+      } catch (error) {
+        console.error("SendToken failed:", error);
+        toast.error(tLeaderboard("errorConnectingFarcaster"));
+      } finally {
+        setSupportingPlaylists((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(playlist._id);
+          return newSet;
+        });
+      }
+    },
+    [tipContext, tLeaderboard]
+  );
 
   // Función para obtener estilo del ranking position
   const getRankingStyle = (position: number) => {
@@ -332,11 +396,19 @@ export default function PlaylistsLeaderboard({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleTipPlaylist(playlist)}
+                        onClick={() => handleSupportPlaylist(playlist)}
+                        disabled={
+                          supportingPlaylists.has(playlist._id) ||
+                          !tipContext?.sendToken
+                        }
                         title={tLeaderboard("tip")}
-                        className="text-xs border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50 transition-all duration-300 px-2"
+                        className="text-xs border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50 transition-all duration-300 px-2 disabled:opacity-50"
                       >
-                        <Gem className="w-3 h-3" />
+                        {supportingPlaylists.has(playlist._id) ? (
+                          <>⏳</>
+                        ) : (
+                          <Gem className="w-3 h-3" />
+                        )}
                       </Button>
                     </div>
                   </div>
