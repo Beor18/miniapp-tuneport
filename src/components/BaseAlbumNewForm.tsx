@@ -56,6 +56,7 @@ import { useWallets } from "@Src/lib/privy";
 import { ethers } from "ethers";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   useBlockchainOperations,
   BlockchainType,
@@ -123,7 +124,7 @@ export default function BaseAlbumNewForm({
       address: "",
       mintPercentage: 100,
       royaltyPercentage: 100,
-      name: "Main Artist",
+      name: "Main Artist", // Se actualizará en useEffect
     },
   ]);
 
@@ -166,26 +167,32 @@ export default function BaseAlbumNewForm({
       // Configurar automáticamente el artista principal
       setCollaborators((prev) =>
         prev.map((collab, index) =>
-          index === 0 ? { ...collab, address: evmWallet.address } : collab
+          index === 0
+            ? {
+                ...collab,
+                address: evmWallet.address,
+                name: tAlbum("mainArtist"),
+              }
+            : collab
         )
       );
     }
-  }, [wallets]);
+  }, [wallets, tAlbum]);
 
   // Funciones para colaboradores - Actualizadas
-  const getTotalMintPercentage = () => {
+  const getTotalMintPercentage = useCallback(() => {
     return collaborators.reduce(
       (sum, collab) => sum + collab.mintPercentage,
       0
     );
-  };
+  }, [collaborators]);
 
-  const getTotalRoyaltyPercentage = () => {
+  const getTotalRoyaltyPercentage = useCallback(() => {
     return collaborators.reduce(
       (sum, collab) => sum + collab.royaltyPercentage,
       0
     );
-  };
+  }, [collaborators]);
 
   // Función para redistribuir porcentajes automáticamente
   const redistributePercentages = (newCollaborators: Collaborator[]) => {
@@ -323,8 +330,8 @@ export default function BaseAlbumNewForm({
 
     // Reset payment system
     setCreateNewPaymentSystem(true);
-    setPaymentSystemName("My Music Project");
-    setPaymentSystemDescription("Music project with my collaborators");
+    setPaymentSystemName(tForms("myMusicProject"));
+    setPaymentSystemDescription(tForms("musicProjectDescription"));
 
     // Reset collaborators - Nueva estructura
     setTotalRoyaltyPercentage(5);
@@ -333,21 +340,21 @@ export default function BaseAlbumNewForm({
         address: evmAddress,
         mintPercentage: 100,
         royaltyPercentage: 100,
-        name: "Main Artist",
+        name: tAlbum("mainArtist"),
       },
     ]);
 
     // Reset payment config
     setEnableDAI(false);
     setPaymentToken("ETH");
-  }, [evmAddress]);
+  }, [evmAddress, tForms, tAlbum]);
 
   // Cerrar el diálogo
   useEffect(() => {
     if (!isDialogOpen) {
       resetForm();
     }
-  }, [isDialogOpen, resetForm, setIsDialogOpen]);
+  }, [isDialogOpen, resetForm]);
 
   // Efecto para cerrar después de crear
   useEffect(() => {
@@ -359,7 +366,7 @@ export default function BaseAlbumNewForm({
 
       return () => clearTimeout(timer);
     }
-  }, [isCreated, router]);
+  }, [isCreated, router, setIsDialogOpen]);
 
   // Crear colección
   const createCollectionFunc = useCallback(async () => {
@@ -649,11 +656,6 @@ export default function BaseAlbumNewForm({
                     <Card className="bg-gradient-to-r from-zinc-800 to-zinc-900 border-zinc-700/50">
                       <CardContent className="p-4">
                         <div className="flex items-start space-x-3">
-                          <div className="flex-shrink-0">
-                            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                              <Zap className="h-4 w-4 text-white" />
-                            </div>
-                          </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="text-sm font-medium text-zinc-100 mb-1">
                               🪙 {tAlbum("automaticTokenization")}
@@ -976,10 +978,11 @@ export default function BaseAlbumNewForm({
                               >
                                 {coverUrl ? (
                                   <div className="relative w-full h-full">
-                                    <img
+                                    <Image
                                       src={coverUrl}
                                       alt="Preview"
-                                      className="h-full w-full object-contain rounded-lg"
+                                      fill
+                                      className="object-contain rounded-lg"
                                     />
                                   </div>
                                 ) : (

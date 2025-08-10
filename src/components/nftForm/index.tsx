@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@Src/ui/components/ui/button";
@@ -37,6 +36,7 @@ import {
 } from "@Src/ui/components/ui/tooltip";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 
 interface NftAttribute {
   trait_type: string;
@@ -86,8 +86,6 @@ export default function NftForm({
     blockchain: (album?.network || "solana") as "solana" | "base" | "ethereum",
     useERC1155: true,
   });
-
-  console.log("album FERNANDOOOO FFF", album);
 
   useEffect(() => {
     if (open) {
@@ -153,10 +151,6 @@ export default function NftForm({
         });
         return;
       }
-
-      console.log("Album completo:", album);
-      console.log("Album ID (collectionId):", album?.id);
-      console.log("Album network:", album?.network);
 
       // Usar la dirección seleccionada/ingresada por el usuario
       const paymentAddress = mintPaymentAddress.trim();
@@ -473,10 +467,11 @@ export default function NftForm({
                         )}
 
                         {coverImage && (
-                          <img
+                          <Image
                             src={coverPreview}
                             alt="Cover preview"
-                            className="absolute inset-0 w-full h-full object-cover rounded-lg z-10"
+                            fill
+                            className="object-cover rounded-lg z-10"
                           />
                         )}
 

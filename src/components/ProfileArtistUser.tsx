@@ -393,12 +393,12 @@ export default function ProfileArtistUser({
           </div>
         </div>
 
-        <div className="mt-6 space-y-6">
+        <div className="mt-6 space-y-4">
           {/* Header con nombre y acciones */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="flex flex-col gap-2">
-                <h2 className="text-2xl font-bold text-white uppercase">
+                <h2 className="text-xl font-bold text-white uppercase">
                   {profileName}
                 </h2>
                 {nickname && (
@@ -457,14 +457,13 @@ export default function ProfileArtistUser({
           {/* Social links */}
           <div className="flex items-center gap-4">
             {/* 🆕 FARCASTER: Mostrar enlace de Farcaster si está conectado */}
-            {farcasterConnected && farcasterUsername && (
-              <Link
-                href={getFarcasterProfileUrl() || "#"}
-                className="text-gray-400 hover:text-white"
-              >
-                <FarcasterIcon className="h-5 w-5 text-white" />
-              </Link>
-            )}
+
+            <Link
+              href={getFarcasterProfileUrl() || "#"}
+              className="text-gray-400 hover:text-white"
+            >
+              <FarcasterIcon className="h-5 w-5 text-white" />
+            </Link>
 
             {profile.twitter && (
               <a

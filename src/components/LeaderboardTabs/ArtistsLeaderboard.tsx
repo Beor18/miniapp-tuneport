@@ -200,21 +200,21 @@ export default function ArtistsLeaderboard({
       return {
         bg: "bg-gradient-to-r from-yellow-600/30 to-amber-600/30",
         text: "text-yellow-300",
-        icon: "🥇",
+        icon: "1",
         glow: "shadow-lg shadow-yellow-500/30",
       };
     if (position === 2)
       return {
         bg: "bg-gradient-to-r from-gray-400/30 to-zinc-400/30",
         text: "text-gray-300",
-        icon: "🥈",
+        icon: "2",
         glow: "shadow-lg shadow-gray-400/30",
       };
     if (position === 3)
       return {
         bg: "bg-gradient-to-r from-amber-700/30 to-orange-700/30",
         text: "text-amber-300",
-        icon: "🥉",
+        icon: "3",
         glow: "shadow-lg shadow-amber-600/30",
       };
     return {
@@ -365,8 +365,15 @@ export default function ArtistsLeaderboard({
                 <Link href={`/u/${user.nickname}`}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1 md:gap-2 mb-1">
+                      <div className="flex items-center gap-1">
+                        <img
+                          src={user.pfp}
+                          alt={user.nickname}
+                          className="w-6 h-6 rounded-full"
+                        />
+                      </div>
                       <h3 className="text-white font-semibold text-sm md:text-base truncate">
-                        @{user.nickname}
+                        {user.nickname}
                       </h3>
 
                       {user.powerBadge && (
@@ -375,14 +382,6 @@ export default function ArtistsLeaderboard({
                           title={t("powerBadge")}
                         >
                           ⚡
-                        </span>
-                      )}
-                      {user.verified && (
-                        <span
-                          className="inline-flex items-center px-1 md:px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                          title={t("verified")}
-                        >
-                          ✓
                         </span>
                       )}
                     </div>
