@@ -31,6 +31,7 @@ import {
   Plus,
   ShareIcon,
   MedalIcon,
+  Trophy,
 } from "lucide-react";
 import BaseAlbumNewForm from "@Src/components/BaseAlbumNewForm";
 import { useAppKitAccount } from "@Src/lib/privy";
@@ -105,7 +106,7 @@ const getNavItems = (
     },
     {
       href: `/${locale}/social-feed`,
-      icon: MedalIcon,
+      icon: Trophy,
       label: "Leaderboard",
       type: "link",
     },
