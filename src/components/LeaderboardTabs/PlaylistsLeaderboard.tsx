@@ -209,21 +209,21 @@ export default function PlaylistsLeaderboard({
       return {
         bg: "bg-gradient-to-r from-yellow-600/30 to-amber-600/30",
         text: "text-yellow-300",
-        icon: "🥇",
+        icon: "1",
         glow: "shadow-lg shadow-yellow-500/30",
       };
     if (position === 2)
       return {
         bg: "bg-gradient-to-r from-gray-400/30 to-zinc-400/30",
         text: "text-gray-300",
-        icon: "🥈",
+        icon: "2",
         glow: "shadow-lg shadow-gray-400/30",
       };
     if (position === 3)
       return {
         bg: "bg-gradient-to-r from-amber-700/30 to-orange-700/30",
         text: "text-amber-300",
-        icon: "🥉",
+        icon: "3",
         glow: "shadow-lg shadow-amber-600/30",
       };
     return {
@@ -405,9 +405,9 @@ export default function PlaylistsLeaderboard({
                         className="text-xs border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50 transition-all duration-300 px-2 disabled:opacity-50"
                       >
                         {supportingPlaylists.has(playlist._id) ? (
-                          <>⏳</>
+                          <>⏳ {tLeaderboard("sending")}</>
                         ) : (
-                          <Gem className="w-3 h-3" />
+                          <>💎 {tLeaderboard("tips")}</>
                         )}
                       </Button>
                     </div>
