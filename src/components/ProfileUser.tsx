@@ -193,12 +193,14 @@ const ProfileUser: React.FC<ProfileUserProps> = ({ userData, albums }) => {
     return (
       <ProfileFanUser
         profileFans={{
-          _id: userData._id,
-          name: userData.name,
+          ...userData,
           picture:
             farcasterConnected && farcasterData?.pfp
               ? farcasterData.pfp
               : userData.picture,
+          _id: userData._id,
+          name: userData.name,
+
           nickname: userData.nickname,
           biography: userData.biography,
           twitter: userData.twitter,
