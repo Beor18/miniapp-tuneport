@@ -80,19 +80,33 @@ export default function WalletConnector() {
     user?.google?.email ||
     null;
 
-  // Direcciones memoizadas
-  const walletAddresses = useMemo(
+  // Datos de usuario memoizados (incluyendo campos opcionales)
+  const userParams = useMemo(
     () => ({
       evm: evmWalletAddress,
       solana: solanaWalletAddress,
       email: user?.email?.address || user?.google?.email || null,
+      farcaster_username: farcasterData?.username || null,
+      nickname: userData?.nickname || null, // Si ya tenemos userData, usar ese nickname
     }),
     [
       evmWalletAddress,
       solanaWalletAddress,
       user?.email?.address,
       user?.google?.email,
+      farcasterData?.username,
+      userData?.nickname,
     ]
+  );
+
+  // Mantener walletAddresses para compatibilidad
+  const walletAddresses = useMemo(
+    () => ({
+      evm: userParams.evm,
+      solana: userParams.solana,
+      email: userParams.email,
+    }),
+    [userParams.evm, userParams.solana, userParams.email]
   );
 
   // Estado de conexión memoizado
@@ -140,8 +154,10 @@ export default function WalletConnector() {
 
       // Crear nueva verificación
       const verificationPromise = getUserData({
-        address: walletAddresses.evm,
-        address_solana: walletAddresses.solana,
+        address: userParams.evm || undefined,
+        address_solana: userParams.solana || undefined,
+        farcaster_username: userParams.farcaster_username || undefined,
+        nickname: userParams.nickname || undefined,
       })
         .then((user: any) => {
           // Guardar en cache
@@ -172,23 +188,34 @@ export default function WalletConnector() {
         setUserData(null);
       }
     },
-    [walletAddresses.evm, walletAddresses.solana, setIsRegistered, setUserData]
+    [
+      userParams.evm,
+      userParams.solana,
+      userParams.farcaster_username,
+      userParams.nickname,
+      setIsRegistered,
+      setUserData,
+    ]
   );
 
   // Effect para verificación - altamente optimizado
   useEffect(() => {
     if (!isReady) return;
 
-    const currentAddressKey = `${walletAddresses.evm || ""}-${
-      walletAddresses.solana || ""
-    }`;
+    const currentAddressKey = `${userParams.evm || ""}-${
+      userParams.solana || ""
+    }-${userParams.farcaster_username || ""}-${userParams.nickname || ""}`;
 
     if (hasWalletConnected) {
-      // Solo verificar si cambió la dirección Y hay al menos una dirección válida
-      const hasValidAddress = walletAddresses.evm || walletAddresses.solana;
+      // Solo verificar si cambió algún parámetro Y hay al menos un parámetro válido
+      const hasValidParam =
+        userParams.evm ||
+        userParams.solana ||
+        userParams.farcaster_username ||
+        userParams.nickname;
 
       if (
-        hasValidAddress &&
+        hasValidParam &&
         addressKeyRef.current !== currentAddressKey &&
         !verificationRef.current
       ) {
@@ -210,8 +237,10 @@ export default function WalletConnector() {
   }, [
     isReady,
     hasWalletConnected,
-    walletAddresses.evm,
-    walletAddresses.solana,
+    userParams.evm,
+    userParams.solana,
+    userParams.farcaster_username,
+    userParams.nickname,
     verifyUser,
     setIsRegistered,
     setUserData,
@@ -266,9 +295,9 @@ export default function WalletConnector() {
   if (isRegistered === false) {
     return (
       <RegistrationForm
-        walletAddressEvm={walletAddresses.evm || ""}
-        walletAddressSolana={walletAddresses.solana || ""}
-        email={walletAddresses.email}
+        walletAddressEvm={userParams.evm || ""}
+        walletAddressSolana={userParams.solana || ""}
+        email={userParams.email}
         // 🆕 FARCASTER: Pasar datos de Farcaster al formulario
         farcasterData={
           farcasterConnected && farcasterData && farcasterData.fid

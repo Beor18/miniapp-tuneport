@@ -5,22 +5,29 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const walletAddress = searchParams.get("address");
     const walletAddressSolana = searchParams.get("address_solana");
+    const farcasterUsername = searchParams.get("farcaster_username");
+    const nickname = searchParams.get("nickname");
 
     // 🔧 VALIDACIÓN MEJORADA: Verificar que al menos uno de los parámetros esté presente y no vacío
-    const hasValidAddress =
+    const hasValidParam =
       (walletAddress && walletAddress.trim() !== "") ||
-      (walletAddressSolana && walletAddressSolana.trim() !== "");
+      (walletAddressSolana && walletAddressSolana.trim() !== "") ||
+      (farcasterUsername && farcasterUsername.trim() !== "") ||
+      (nickname && nickname.trim() !== "");
 
-    if (!hasValidAddress) {
-      console.log("⚠️ [API /user] No valid addresses provided");
+    if (!hasValidParam) {
+      console.log("⚠️ [API /user] No valid parameters provided");
       return NextResponse.json(
-        { error: "At least one valid address is required" },
+        {
+          error:
+            "At least one valid parameter (address, address_solana, farcaster_username, or nickname) is required",
+        },
         { status: 400 }
       );
     }
 
-    // Construir la URL dinámica dependiendo de cuál parámetro esté presente
-    let queryParams = [];
+    // Construir la URL dinámica dependiendo de cuáles parámetros estén presentes
+    const queryParams: string[] = [];
     if (walletAddress && walletAddress.trim() !== "") {
       queryParams.push(`address=${encodeURIComponent(walletAddress.trim())}`);
     }
@@ -28,6 +35,14 @@ export async function GET(request: Request) {
       queryParams.push(
         `address_solana=${encodeURIComponent(walletAddressSolana.trim())}`
       );
+    }
+    if (farcasterUsername && farcasterUsername.trim() !== "") {
+      queryParams.push(
+        `farcaster_username=${encodeURIComponent(farcasterUsername.trim())}`
+      );
+    }
+    if (nickname && nickname.trim() !== "") {
+      queryParams.push(`nickname=${encodeURIComponent(nickname.trim())}`);
     }
 
     const queryString = queryParams.join("&");
