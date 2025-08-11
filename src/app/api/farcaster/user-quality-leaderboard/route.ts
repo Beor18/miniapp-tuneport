@@ -21,7 +21,10 @@ export async function GET(request: NextRequest) {
 
     try {
       const fidsResponse = await fetch(
-        `${process.env.API_ELEI}/api/users/getUserFids?limit=${limit}`
+        `${process.env.API_ELEI}/api/users/getUserFids?limit=${limit}`,
+        {
+          cache: "no-store",
+        }
       );
 
       if (fidsResponse.ok) {
@@ -156,6 +159,7 @@ export async function GET(request: NextRequest) {
         powerBadge: user.power_badge || false,
         followerCount: user.follower_count || 0,
         neynarScore: user.experimental?.neynar_user_score || 0,
+        type: user.type,
       };
     });
 
