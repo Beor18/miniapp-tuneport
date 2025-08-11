@@ -513,9 +513,9 @@
     "discoverIncredibleMusic": "Descubre música increíble y colecciona NFTs únicos",
     "musicRelatedDetected": "🎵 Detectamos música relacionada:",
     "shareTexts": {
-      "song": "🎵 ¡Descubrí esta increíble canción en @tuneport!\n\n\"{name}\" por {artist}\n{album}💿 Álbum: {albumName}\n{genre}🎤 Género: {genreName}\n\n⚡ Escúchala y mintéala como NFT\n🎁 Cada segundo de música se convierte en valor",
-      "album": "💿 ¡Álbum completo en @tuneport!\n\n\"{name}\" por {artist}\n{genre}🎤 Género: {genreName}\n\n🎵 Música + NFTs + Web3\n⚡ El futuro de la música está aquí",
-      "playlist": "📝 Mi playlist en @tuneport:\n\n\"{name}\"\n🎵 {artist}\n\n⚡ Descubre música increíble\n🎁 Colecciona NFTs únicos"
+      "song": "🎵 ¡Descubrí esta increíble canción en @tuneport!\n\n\"{name}\" por {artist}\n\n⚡ Escúchala y mintéala como NFT\n🎁 Cada segundo de música se convierte en valor",
+      "album": "💿 ¡Álbum completo en @tuneport!\n\n\"{name}\" por {artist}\n\n🎵 Música + NFTs + Web3\n⚡ El futuro de la música está aquí",
+      "playlist": "📝 Mi playlist en @tuneport:\n\n\"{name}\"\n\n⚡ Descubre música increíble\n🎁 Colecciona NFTs únicos"
     },
     "userQualityLeaderboard": "Leaderboard",
     "realFarcasterArtists": "Artistas",

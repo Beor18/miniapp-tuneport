@@ -35,6 +35,7 @@ export function ShareToFarcaster({
       return;
     }
 
+    console.log("nft FER >>>>> ", nft);
     setIsSharing(true);
 
     try {
@@ -47,17 +48,7 @@ export function ShareToFarcaster({
 
         return template
           .replace("{name}", nft.name)
-          .replace("{artist}", nft.artist)
-          .replace(
-            "{album}",
-            nft.album ? `💿 ${t("music.album")}: ${nft.album}\n` : ""
-          )
-          .replace("{albumName}", nft.album || "")
-          .replace(
-            "{genre}",
-            nft.genre ? `🎤 ${t("music.genre")}: ${nft.genre}\n` : ""
-          )
-          .replace("{genreName}", nft.genre || "");
+          .replace("{artist}", nft.artist);
       };
 
       // URL del contenido para el embed

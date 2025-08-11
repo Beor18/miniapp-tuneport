@@ -513,8 +513,8 @@
     "discoverIncredibleMusic": "Discover incredible music and collect unique NFTs",
     "musicRelatedDetected": "🎵 We detected related music:",
     "shareTexts": {
-      "song": "🎵 I discovered this incredible song on @tuneport!\n\n\"{name}\" by {artist}\n{album}💿 Album: {albumName}\n{genre}🎤 Genre: {genreName}\n\n⚡ Listen and mint it as an NFT\n🎁 Every second of music becomes value",
-      "album": "💿 Complete album on @tuneport!\n\n\"{name}\" by {artist}\n{genre}🎤 Genre: {genreName}\n\n🎵 Music + NFTs + Web3\n⚡ The future of music is here",
+      "song": "🎵 I discovered this incredible song on @tuneport!\n\n\"{name}\" by {artist}\n\n⚡ Listen and mint it as an NFT\n🎁 Every second of music becomes value",
+      "album": "💿 Complete album on @tuneport!\n\n\"{name}\" by {artist}\n\n🎵 Music + NFTs + Web3\n⚡ The future of music is here",
       "playlist": "📝 My playlist on @tuneport:\n\n\"{name}\"\n🎵 {artist}\n\n⚡ Discover incredible music\n🎁 Collect unique NFTs"
     },
     "userQualityLeaderboard": "User Quality Leaderboard",
