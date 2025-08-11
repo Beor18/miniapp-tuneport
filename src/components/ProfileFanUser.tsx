@@ -196,11 +196,10 @@ export default function ProfileFanUser({
     setFacebook(profileFans.facebook || "");
 
     // 🆕 FARCASTER: Priorizar foto de Farcaster si está disponible y es el perfil propio
-    const finalPicture =
-      isOwnProfile && profileFans?.farcaster_pfp
-        ? profileFans?.farcaster_pfp
-        : profileFans.picture ||
-          `https://avatar.iran.liara.run/username?username=${profileFans.name}`;
+    const finalPicture = profileFans?.farcaster_pfp
+      ? profileFans?.farcaster_pfp
+      : profileFans.picture ||
+        `https://avatar.iran.liara.run/username?username=${profileFans.name}`;
 
     setProfilePicture(finalPicture);
   }, [profileFans, isOwnProfile, farcasterConnected, farcasterData]);
