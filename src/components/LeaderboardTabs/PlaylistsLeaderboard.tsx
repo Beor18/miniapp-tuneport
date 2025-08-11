@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Music, Play, Gem } from "lucide-react";
 import { Button } from "@/ui/components/ui/button";
 import { usePlayer } from "@Src/contexts/PlayerContext";
 import { useFarcasterMiniApp } from "@Src/components/FarcasterProvider";
 import { toast } from "sonner";
+import Link from "next/link";
 
 interface PlaylistData {
   _id: string;
@@ -37,6 +38,7 @@ export default function PlaylistsLeaderboard({
 }: PlaylistsLeaderboardProps) {
   const { tipContext } = useFarcasterMiniApp();
   const tLeaderboard = useTranslations("farcaster.leaderboard");
+  const locale = useLocale();
   const {
     setCurrentSong,
     addToPlaylist,
@@ -350,9 +352,11 @@ export default function PlaylistsLeaderboard({
                   </div>
 
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="text-zinc-300 text-xs md:text-sm truncate">
-                      {tLeaderboard("by")} @{playlist.userId.nickname}
-                    </p>
+                    <Link href={`/${locale}/u/${playlist.userId.nickname}`}>
+                      <p className="text-zinc-300 text-xs md:text-sm truncate">
+                        {tLeaderboard("by")} @{playlist.userId.nickname}
+                      </p>
+                    </Link>
                     {playlist.userId.verified && (
                       <span
                         className="inline-flex items-center px-1 md:px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30"
