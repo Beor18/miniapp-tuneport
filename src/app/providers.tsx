@@ -181,9 +181,9 @@ export default function Providers({ children }: { children: ReactNode }) {
               walletChainType: "ethereum-and-solana", // Explícitamente configurar para soportar ambas cadenas
               // Configuración para personalizar la UI de conexión de wallet
               showWalletLoginFirst: false, // Mostrar opciones de wallet primero
-              walletList: ["metamask", "coinbase_wallet"], // Solo mostrar Phantom y MetaMask
+              walletList: ["coinbase_wallet"], // Solo mostrar Phantom y MetaMask
             },
-            loginMethods: ["farcaster", "google"],
+            loginMethods: ["farcaster", "google", "wallet"],
             embeddedWallets: {
               createOnLogin: "all-users",
             },
