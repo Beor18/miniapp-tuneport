@@ -13,6 +13,7 @@ interface UserData {
   address: string;
   score: number;
   tier: string;
+  nicknameVerified?: string;
   nickname?: string;
   displayName?: string;
   fid?: number;
@@ -113,20 +114,28 @@ export default function ArtistsLeaderboard({
         throw new Error("Invalid farcaster data");
       }
 
-      const scores = await getBatchUserQualityScores(farcasterData.addresses);
-      console.log("Scores: ", scores);
+      // Obtener scores de calidad del contrato
+      const [scores] = await Promise.all([
+        getBatchUserQualityScores(farcasterData.addresses),
+      ]);
+
       const leaderboardData = Array.from(scores.entries())
         .map(([address, result]) => {
           const user = farcasterData.users.find(
             (u: any) => u.address === address
           );
-          console.log("Leader: ", user);
+
+          // Usar nickname de la BD si existe, sino fallback a Farcaster
+
+          // console.log("farcasterData ANTES DE USER: ", farcasterData.users);
+          // console.log("user: ", user);
           return {
             address,
             score: result.score,
             tier: result.tier,
-            nickname: user?.nickname || "Unknown",
-            displayName: user?.displayName || user?.nickname,
+            nickname: user?.nickname,
+            nicknameVerified: user?.nicknameVerified,
+            displayName: user?.displayName,
             fid: user?.fid,
             pfp: user?.pfp,
             verified: user?.verified || true,
@@ -376,7 +385,7 @@ export default function ArtistsLeaderboard({
                         />
                       </div>
                       <h3 className="text-white font-semibold text-sm md:text-base truncate">
-                        {user.nickname}
+                        {user.displayName}
                       </h3>
 
                       {user.powerBadge && (

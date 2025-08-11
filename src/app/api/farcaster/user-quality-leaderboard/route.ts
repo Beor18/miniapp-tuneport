@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
 
     // 🆕 OBTENER FIDs REALES DE USUARIOS REGISTRADOS EN NUESTRA BD
     let realUserFids: number[] = [];
+    let realUserNickname: string[] = [];
     let diagnostics: any = {};
 
     try {
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
         const fidsData = await fidsResponse.json();
         realUserFids = fidsData.fids || [];
         diagnostics = fidsData.diagnostics || {};
-
+        realUserNickname = fidsData.users.map((user: any) => user) || [];
         console.log(
           `✅ Obtenidos ${realUserFids.length} FIDs reales de la BD:`,
           realUserFids.slice(0, 5)
@@ -52,6 +53,7 @@ export async function GET(request: NextRequest) {
 
     // Solo usar usuarios reales de la base de datos
     const fidsToUse = realUserFids;
+    const nicknamesToUse = realUserNickname;
 
     console.log(
       `🎯 Usando SOLO usuarios reales: ${fidsToUse.length} FIDs de la BD`
@@ -127,18 +129,35 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    console.log("nicknamesToUse: ", nicknamesToUse);
+
+    // Crear mapa de address -> nickname desde la BD
+    const dbNicknameMap = new Map<string, string>();
+    nicknamesToUse.forEach((userData: any) => {
+      if (userData.fid && userData.nickname) {
+        dbNicknameMap.set(userData.fid, userData.nickname);
+      }
+    });
+
     // Preparar datos para el leaderboard
-    const leaderboardData = usersWithAddresses.map((user: any) => ({
-      address: user.address,
-      nickname: user.username || "Unknown",
-      displayName: user.display_name || user.username,
-      fid: user.fid,
-      pfp: user.pfp_url,
-      verified: !!user.verified_addresses?.eth_addresses?.length,
-      powerBadge: user.power_badge || false,
-      followerCount: user.follower_count || 0,
-      neynarScore: user.experimental?.neynar_user_score || 0,
-    }));
+    const leaderboardData = usersWithAddresses.map((user: any) => {
+      // Buscar nickname de la BD primero, luego fallback a Farcaster
+      const dbNickname = dbNicknameMap.get(user.fid);
+
+      return {
+        address: user.address,
+        nickname: dbNickname || user.username || "Unknown", // Nickname de BD o fallback a Farcaster
+        nicknameVerified: user.username, // Username verificado de Farcaster
+        displayName:
+          user.display_name || dbNickname || user.username || "Unknown",
+        fid: user.fid,
+        pfp: user.pfp_url,
+        verified: !!user.verified_addresses?.eth_addresses?.length,
+        powerBadge: user.power_badge || false,
+        followerCount: user.follower_count || 0,
+        neynarScore: user.experimental?.neynar_user_score || 0,
+      };
+    });
 
     return NextResponse.json({
       success: true,

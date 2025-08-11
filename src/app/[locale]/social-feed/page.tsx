@@ -6,10 +6,10 @@ async function getFarcasterUsers() {
   try {
     const baseUrl = "https://miniapp.tuneport.xyz";
 
-    const fullUrl = `${baseUrl}/api/farcaster/user-quality-leaderboard?limit=15`;
+    const fullUrl = `${baseUrl}/api/farcaster/user-quality-leaderboard`;
 
     const response = await fetch(fullUrl, {
-      cache: "no-store",
+      cache: "no-cache",
     });
 
     if (!response.ok) {
@@ -17,8 +17,8 @@ async function getFarcasterUsers() {
     }
 
     const data = await response.json();
-
-    return data.success ? data : null;
+    // Forzar serialización correcta para evitar pérdida de campos
+    return data.success ? JSON.parse(JSON.stringify(data)) : null;
   } catch (error) {
     console.error("Error fetching Farcaster users:", error);
     return null;

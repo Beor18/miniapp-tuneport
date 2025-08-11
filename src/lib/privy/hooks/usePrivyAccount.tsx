@@ -149,6 +149,7 @@ export function useAppKitAccount() {
             displayName: farcasterAccount.displayName,
             pfp: farcasterAccount.pfp,
             bio: farcasterAccount.bio,
+            ownerAddress: farcasterAccount.ownerAddress,
           }
         : null,
       // Mantener compatible con la API de AppKit pero ahora incluye ambos tipos de wallets
