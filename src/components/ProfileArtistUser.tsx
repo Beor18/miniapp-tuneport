@@ -91,6 +91,7 @@ interface ProfileArtistUserProps {
     following?: string[];
     farcaster_bio?: string;
     farcaster_pfp?: string;
+    farcaster_username?: string;
   };
   albums: Album[];
   nfts: NFT[];
@@ -142,7 +143,6 @@ export default function ProfileArtistUser({
   const {
     isConnected: farcasterConnected,
     username: farcasterUsername,
-    displayName: farcasterDisplayName,
     pfp: farcasterPfp,
     getFarcasterProfileUrl,
   } = useFarcaster();
@@ -464,7 +464,7 @@ export default function ProfileArtistUser({
             {/* 🆕 FARCASTER: Mostrar enlace de Farcaster si está conectado */}
 
             <Link
-              href={getFarcasterProfileUrl() || "#"}
+              href={`https://warpcast.com/${profile.farcaster_username}`}
               className="text-gray-400 hover:text-white"
             >
               <FarcasterIcon className="h-5 w-5 text-white" />
