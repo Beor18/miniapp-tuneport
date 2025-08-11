@@ -210,7 +210,7 @@ const ProfileUser: React.FC<ProfileUserProps> = ({ userData, albums }) => {
           followers: userData.followers,
           following: userData.following,
         }}
-        nfts={userNFTs}
+        nfts={[]}
         isOwnProfile={isOwnProfile}
         publicKey={address?.toString()}
         isLoadingNFTs={loading}
