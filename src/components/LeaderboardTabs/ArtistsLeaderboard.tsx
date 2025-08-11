@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useUserQuality } from "@Src/lib/hooks/useUserQuality";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Users } from "lucide-react";
 import Link from "next/link";
 import { useFarcasterMiniApp } from "@Src/components/FarcasterProvider";
@@ -34,6 +34,7 @@ export default function ArtistsLeaderboard({
   const { tipContext } = useFarcasterMiniApp();
   const t = useTranslations("farcaster");
   const tLeaderboard = useTranslations("farcaster.leaderboard");
+  const locale = useLocale();
 
   const [leaderboard, setLeaderboard] = useState<UserData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -113,11 +114,13 @@ export default function ArtistsLeaderboard({
       }
 
       const scores = await getBatchUserQualityScores(farcasterData.addresses);
+      console.log("Scores: ", scores);
       const leaderboardData = Array.from(scores.entries())
         .map(([address, result]) => {
           const user = farcasterData.users.find(
             (u: any) => u.address === address
           );
+          console.log("Leader: ", user);
           return {
             address,
             score: result.score,
@@ -132,7 +135,7 @@ export default function ArtistsLeaderboard({
             neynarScore: user?.neynarScore || 0,
           };
         })
-        .sort((a, b) => b.score - a.score);
+        .sort((a, b) => b.neynarScore - a.neynarScore);
 
       setLeaderboard(leaderboardData);
       setLoaded(true);
@@ -362,7 +365,7 @@ export default function ArtistsLeaderboard({
                   )}
                 </div>
 
-                <Link href={`/u/${user.nickname}`}>
+                <Link href={`/${locale}/u/${user.nickname}`}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1 md:gap-2 mb-1">
                       <div className="flex items-center gap-1">

@@ -89,6 +89,8 @@ interface ProfileArtistUserProps {
     verified: boolean;
     followers?: string[];
     following?: string[];
+    farcaster_bio?: string;
+    farcaster_pfp?: string;
   };
   albums: Album[];
   nfts: NFT[];
@@ -379,6 +381,7 @@ export default function ProfileArtistUser({
                   farcasterConnected && farcasterPfp && isOwnProfile
                     ? farcasterPfp
                     : profile.picture ||
+                      profile.farcaster_pfp ||
                       `https://avatar.iran.liara.run/username?username=${profile.name}`
                 }
                 alt={profile.name}
@@ -406,10 +409,12 @@ export default function ProfileArtistUser({
                     @{nickname}
                   </p>
                 )}
-                {biography && (
+                {biography ? (
                   <p className="text-sm text-zinc-300 leading-relaxed max-w-2xl">
                     {biography}
                   </p>
+                ) : (
+                  <p>{profile.farcaster_bio}</p>
                 )}
               </div>
               <div className="flex items-center gap-2">

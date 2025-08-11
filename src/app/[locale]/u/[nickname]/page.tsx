@@ -207,6 +207,7 @@ export default async function Page({
 }) {
   try {
     const userData = await getUserByNickname(params.nickname);
+    console.log("userData FER >>>>> ", userData);
     if (!userData) {
       notFound();
     }
