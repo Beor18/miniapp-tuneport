@@ -222,28 +222,28 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
     );
   }, [address, userNickname, userType, tNav, locale, tCommon]);
 
-  // Memoizar flags de layout (compatible con locales)
+  // normaliza locale si ya lo tenés, o usa directamente pathname
+  const rawPath = usePathname();
+  const path = useMemo(
+    () => rawPath.replace(/^\/[a-z]{2}(?:-[A-Z]{2})?(?=\/|$)/i, "") || "/",
+    [rawPath]
+  );
+
+  const isForYou = /^\/(?:foryou|album)(?:\/|$)/i.test(path);
+
   const layoutFlags = useMemo(
     () => ({
-      showFooter: pathname.match(/\/u(\/|$)/) || pathname.includes("/explore"),
-      showPlayerMobile:
-        pathname.match(/\/u(\/|$)/) || // Perfiles: /u/* o /es/u/* o /pt/u/*
-        pathname === "/foryou" || // ForYou en inglés
-        pathname === "/social-feed" || // Social Feed en inglés
-        pathname.match(/^\/(es|pt)\/foryou$/) ||
-        pathname.match(/^\/(es|pt)\/social-feed$/) || // ForYou en otros idiomas
-        pathname === "/" || // Home en inglés
-        pathname.match(/^\/(es|pt)$/), // Home en otros idiomas
-      // Flag para detectar cuando el player está realmente activo
-      hasActivePlayer:
-        currentSong && showFloatingPlayer && !pathname.match(/\/foryou(\/|$)/),
-      // Mostrar navegación en páginas de perfil y rutas principales
+      showFooter: /\/u(\/|$)/.test(path) || path.includes("/explore"),
+      showPlayerMobile: /\/u(\/|$)/.test(path) || isForYou || path === "/",
+      hasActivePlayer: Boolean(currentSong && showFloatingPlayer && !isForYou),
       showNavigation:
-        pathname.match(/\/u(\/|$)/) ||
-        pathname.match(/\/social-feed(\/|$)/) ||
-        pathname.match(/\/foryou(\/|$)/),
+        /\/u(\/|$)/.test(path) ||
+        /\/social-feed(\/|$)/.test(path) ||
+        /\/foryou(\/|$)/.test(path) ||
+        /\/album(\/|$)/.test(path),
+      isForYou,
     }),
-    [pathname, currentSong, showFloatingPlayer]
+    [path, currentSong, showFloatingPlayer, isForYou]
   );
 
   // const handleLogout = async () => {
@@ -251,6 +251,16 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   //   disconnect();
   //   router.push("/explore");
   // };
+
+  // constantes (ajustá a tu UI real)
+  const MOBILE_NAV_H = 64; // h-16
+  const PLAYER_H = 80;
+
+  const bottomSpacer = layoutFlags.hasActivePlayer
+    ? MOBILE_NAV_H + PLAYER_H
+    : layoutFlags.showNavigation
+    ? MOBILE_NAV_H
+    : 0;
 
   // Eliminamos el check de mounting que causaba el flash
   // Según reglas de Next.js, usar states de mounting es anti-patrón
@@ -333,7 +343,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
         <main
           className={`
           flex-1 bg-neutral-800
-          ${layoutFlags.showPlayerMobile ? "p-0" : "p-4 sm:p-6"}
+          ${layoutFlags.showPlayerMobile ? "p-0" : "p-0 sm:p-0"}
           ${
             layoutFlags.hasActivePlayer
               ? "pb-36 md:pb-4" // Player activo: ~144px móvil (player + nav + margen), ~16px desktop (solo margen)
@@ -350,6 +360,16 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
         `}
         >
           {children}
+
+          <div
+            aria-hidden
+            className="block md:hidden bg-gradient-to-br from-[#18181b] via-[#1a1a1d] to-[#18181b]"
+            style={{
+              height: layoutFlags.isForYou
+                ? 0
+                : `calc(${bottomSpacer}px + env(safe-area-inset-bottom))`,
+            }}
+          />
         </main>
       </div>
 
@@ -370,7 +390,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
       )}
 
       {/* FloatingPlayer solo si hay usuario autenticado */}
-      {isConnected && (
+      {isConnected && !layoutFlags.isForYou && (
         <Suspense fallback={null}>
           <FloatingPlayer />
         </Suspense>
