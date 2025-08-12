@@ -160,7 +160,7 @@ export default function PlaylistsLeaderboard({
           recipientFid?: number;
         } = {
           token: "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-          amount: "1000000", // 1 USDC
+          //amount: "1000000", // 1 USDC
           // Usar la dirección si está disponible, sino Farcaster puede resolverlo por username
           recipientAddress: playlist.userId.address,
         };

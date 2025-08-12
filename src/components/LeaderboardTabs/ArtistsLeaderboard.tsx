@@ -64,7 +64,7 @@ export default function ArtistsLeaderboard({
           recipientFid?: number;
         } = {
           token: "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-          amount: "1000000", // 1 USDC
+          //amount: "1000000", // 1 USDC
           recipientAddress: artistAddress,
         };
 
