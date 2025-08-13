@@ -1,7 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useState, useRef, useEffect, useContext } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useContext,
+  useCallback,
+} from "react";
 import {
   X,
   Search,
@@ -56,7 +62,7 @@ export interface Song {
   artist_name?: string;
   albumArt?: string;
   image?: string;
-  coin_address?: string;
+  coin_address?: string; // ✅ Dirección de la colección original del artista (para herencia)
 }
 
 interface PlaylistProps {
@@ -186,7 +192,48 @@ export const Playlist: React.FC<PlaylistProps> = ({
     createRevenueShare,
     isLoading: isCreatingRevenueShare,
     configureCollectionSplits,
+    setInheritance,
+    setCascadePercentage,
+    setMintSplitsForCurator,
   } = useRevenueShare(DEFAULT_NETWORK);
+
+  // 🎯 FUNCIÓN PARA OBTENER EL SIGUIENTE TOKEN ID DINÁMICAMENTE
+  const getNextPlaylistTokenId = useCallback(
+    async (collectionAddress: string): Promise<number> => {
+      try {
+        // Consultar la API local para obtener el último tokenId de la colección
+        const response = await fetch(
+          `/api/nfts/last-token-id?collectionId=${collectionAddress}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          // Si hay NFTs en la colección, retornar el siguiente ID
+          // Si lastTokenId es -1 (no hay NFTs), el próximo será 0
+          const nextTokenId = data.lastTokenId + 1;
+          console.log("🎯 Próximo tokenId para playlist:", nextTokenId);
+          return nextTokenId;
+        } else {
+          // Si la API falla o no encuentra datos, empezar desde 0
+          console.warn(
+            "No se pudo obtener el último tokenId, comenzando desde 0"
+          );
+          return 0;
+        }
+      } catch (error) {
+        console.error("Error al obtener el último tokenId:", error);
+        // En caso de error, empezar desde 0
+        return 0;
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (isVisible && searchRef.current) {
@@ -266,15 +313,22 @@ export const Playlist: React.FC<PlaylistProps> = ({
 
     playlistSongs.forEach((song, index) => {
       console.log(`🔍 Canción ${index + 1}: ${song.name}`);
+      console.log(`🔍 Estructura completa de la canción:`, song);
 
-      // ✅ OBTENER DIRECCIÓN DE COLECCIÓN ORIGINAL (coin_address)
-      const collectionAddress = (song as any).coin_address;
+      // ✅ OBTENER DIRECCIÓN DE COLECCIÓN ORIGINAL (múltiples opciones)
+      const collectionAddress = (song as any).address_collection;
+      // (song as any).artist_address_mint ||
+      // (song as any).collection_address ||
+      // (song as any).collectionId;
 
       if (collectionAddress && typeof collectionAddress === "string") {
         originalCollections.push(collectionAddress);
         console.log(`✅ Colección encontrada: ${collectionAddress}`);
       } else {
-        console.warn(`⚠️ No se encontró coin_address para: ${song.name}`);
+        console.warn(
+          `⚠️ No se encontró dirección de colección para: ${song.name}`
+        );
+        console.warn(`📋 Campos disponibles:`, Object.keys(song));
       }
 
       // Procesar artista para referencia (no para splits, sino para logs)
@@ -429,24 +483,14 @@ export const Playlist: React.FC<PlaylistProps> = ({
 
       console.log("✅ RevenueShare creado:", revenueShareAddress);
 
-      // ⚙️ 6. CONFIGURAR ECONOMÍA EN CASCADA
-      console.log("⚙️ Configurando economía en cascada...");
-      toast.loading(tPlaylist("configuringCascade"), {
-        id: MAIN_TOAST_ID,
-      });
-
-      // TODO: Aquí necesitamos configurar:
-      // - setInheritance(playlistTokenId, originalCollections)
-      // - setCascadePercentage(playlistTokenId, 7000) // 70% a artistas originales
-      // - setMintSplits para el 30% del curator
-
+      // ⚙️ 6. CONFIGURAR ECONOMÍA EN CASCADA (DESPUÉS DE CREAR COLECCIÓN)
       // 🏭 7. CREAR COLECCIÓN ERC1155 PARA LA PLAYLIST
       console.log("🏭 Creando colección ERC1155 para la playlist...");
       toast.loading(tPlaylist("tokenizing"), {
         id: MAIN_TOAST_ID,
       });
 
-      const collectionAddress = await createCollection({
+      const collectionResult = await createCollection({
         name: `🎵 ${playlistName}`,
         symbol: playlistSymbol,
         baseURI: "", // Se generará automáticamente por el hook
@@ -473,8 +517,80 @@ export const Playlist: React.FC<PlaylistProps> = ({
         revenueShareDescription: `Distribución automática: 70% artistas originales, 30% curator`,
       });
 
-      // 💾 8. GUARDAR EN BASE DE DATOS CON INFORMACIÓN DE CASCADING
+      // ✅ EXTRAER DIRECCIONES DEL RESULTADO
+      const collectionAddress = collectionResult?.collectionAddress;
+      const coinAddress = collectionResult?.coinAddress;
+
+      console.log("✅ Collection address:", collectionAddress);
+      console.log("🪙 Coin address:", coinAddress);
+
+      // 🎯 8. OBTENER TOKEN ID DINÁMICO Y CONFIGURAR ECONOMÍA EN CASCADA
+      let playlistTokenId = 0; // Default value
+      if (collectionAddress) {
+        console.log("🎯 Obteniendo tokenId dinámico para la playlist...");
+        playlistTokenId = await getNextPlaylistTokenId(collectionAddress);
+        console.log("✅ TokenId obtenido:", playlistTokenId);
+
+        // 🏗️ CONFIGURAR HERENCIA DE COLECCIONES ORIGINALES
+        console.log("🔗 Configurando herencia de colecciones originales...");
+        const inheritanceSuccess = await setInheritance(
+          revenueShareAddress,
+          playlistTokenId,
+          originalCollections
+        );
+
+        if (!inheritanceSuccess) {
+          throw new Error("Falló la configuración de herencia de colecciones");
+        }
+
+        // ⚖️ CONFIGURAR PORCENTAJE DE CASCADA (70% a artistas originales)
+        console.log("⚖️ Configurando porcentaje de cascada: 70% a artistas...");
+        const cascadeSuccess = await setCascadePercentage(
+          revenueShareAddress,
+          playlistTokenId,
+          70 // 70% a artistas originales
+        );
+
+        if (!cascadeSuccess) {
+          throw new Error("Falló la configuración del porcentaje de cascada");
+        }
+
+        // 💰 CONFIGURAR SPLITS PARA EL CURATOR (30% restante)
+        console.log("💰 Configurando splits finales para curator...");
+        const finalSplitsSuccess = await setMintSplitsForCurator(
+          revenueShareAddress,
+          collectionAddress,
+          playlistTokenId,
+          userWalletAddress,
+          30 // 30% para el curator
+        );
+
+        if (finalSplitsSuccess) {
+          console.log("✅ Splits del curator configurados correctamente");
+        } else {
+          console.warn(
+            "⚠️ Advertencia: No se pudieron configurar splits finales del curator"
+          );
+        }
+
+        console.log("🎉 ¡Economía en cascada completamente configurada!");
+        console.log(`📋 TokenId de la playlist: ${playlistTokenId}`);
+        console.log(
+          `🏦 ${originalCollections.length} colecciones originales heredadas`
+        );
+        console.log("⚖️ 70% → Artistas originales | 30% → Curator");
+      } else {
+        console.warn("⚠️ No se pudo obtener la dirección de la colección");
+      }
+
+      // 💾 9. GUARDAR EN BASE DE DATOS CON INFORMACIÓN DE CASCADING
       console.log("💾 Guardando playlist en base de datos...");
+      console.log("🔍 DATOS A GUARDAR:");
+      console.log("   - address_collection_playlist:", collectionAddress);
+      console.log("   - revenueShareAddress:", revenueShareAddress);
+      console.log("   - original_collections:", originalCollections);
+      console.log("   - playlistTokenId:", playlistTokenId);
+
       toast.loading(tPlaylist("savingPlaylist"), {
         id: MAIN_TOAST_ID,
       });
@@ -487,15 +603,17 @@ export const Playlist: React.FC<PlaylistProps> = ({
         isPublic,
         tags: selectedTags,
         // 🪙 NUEVAS PROPIEDADES DE TOKENIZACIÓN Y CASCADING
-        coin_address: collectionAddress || undefined,
+        address_collection_playlist: collectionAddress || undefined, // ✅ Dirección de colección de playlist
+        revenueShareAddress: revenueShareAddress || undefined, // ✅ Para sistema de TIP
+        coin_address: coinAddress, // ✅ Dirección del coin creado con Zora SDK
         coinSymbol: collectionAddress ? playlistSymbol : undefined,
         isTokenized: !!collectionAddress,
-        // 🏦 INFORMACIÓN DE ECONOMÍA EN CASCADA (TODO: Agregar al esquema de BD)
-        // revenueShareAddress: revenueShareAddress || undefined,
-        // originalCollections: originalCollections,
-        // cascadePercentage: 70, // 70% a artistas originales
-        // curatorPercentage: 30, // 30% al curator
-        // totalOriginalSongs: originalCollections.length,
+        playlistTokenId: collectionAddress ? playlistTokenId : undefined, // ✅ Para sistema de TIP
+        // 🏦 INFORMACIÓN ADICIONAL DE ECONOMÍA EN CASCADA
+        original_collections: originalCollections,
+        cascade_percentage: 70, // 70% a artistas originales
+        curator_percentage: 30, // 30% al curator
+        total_original_songs: originalCollections.length,
       });
 
       if (result.success) {
@@ -515,12 +633,17 @@ export const Playlist: React.FC<PlaylistProps> = ({
           });
           console.log("🎉 Economía en cascada implementada exitosamente:");
           console.log(
-            "- 70% de ingresos → Artistas originales automáticamente"
+            "✅ Herencia configurada:",
+            originalCollections.length,
+            "colecciones originales"
           );
-          console.log("- 30% de ingresos → Curator de la playlist");
           console.log(
-            `- ${originalCollections.length} colecciones originales en herencia`
+            "✅ Cascada configurada: 70% → Artistas originales automáticamente"
           );
+          console.log("✅ Splits configurados: 30% → Curator de la playlist");
+          console.log("✅ RevenueShare address:", revenueShareAddress);
+          console.log("✅ Collection address:", collectionAddress);
+          console.log("🚀 ¡PLAYLIST TOKENIZADA CON DISTRIBUCIÓN AUTOMÁTICA!");
         } else {
           console.warn("⚠️ Tokenización falló, continuando con web2...");
           toast.success(

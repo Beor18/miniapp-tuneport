@@ -39,6 +39,18 @@ export interface PlaylistData {
   tags: string[];
   createdAt: string;
   updatedAt: string;
+  // 🪙 NUEVAS PROPIEDADES PARA TOKENIZACIÓN
+  address_collection_playlist?: string; // Dirección de la colección ERC1155 de la playlist
+  revenueShareAddress?: string; // Dirección del contrato RevenueShare para TIP
+  coin_address?: string; // Dirección de la moneda/token (Zora Protocol - futuro)
+  coinSymbol?: string; // Símbolo del token creado ($SYMBOL)
+  isTokenized?: boolean; // Indica si la playlist fue tokenizada
+  playlistTokenId?: number; // Token ID de la playlist para el sistema de TIP
+  // 🏦 INFORMACIÓN ADICIONAL DE ECONOMÍA EN CASCADA
+  original_collections?: string[]; // Direcciones de colecciones originales para herencia
+  cascade_percentage?: number; // Porcentaje que va a artistas originales (ej: 70)
+  curator_percentage?: number; // Porcentaje que va al curator (ej: 30)
+  total_original_songs?: number; // Número total de canciones originales
 }
 
 interface CreatePlaylistParams {
@@ -49,6 +61,18 @@ interface CreatePlaylistParams {
   isPublic?: boolean;
   coverImage?: string;
   tags?: string[];
+  // 🪙 NUEVAS PROPIEDADES PARA TOKENIZACIÓN
+  address_collection_playlist?: string; // Dirección de la colección ERC1155 de la playlist
+  revenueShareAddress?: string; // Dirección del contrato RevenueShare para TIP
+  coin_address?: string; // Dirección de la moneda/token (Zora Protocol - futuro)
+  coinSymbol?: string; // Símbolo del token creado ($SYMBOL)
+  isTokenized?: boolean; // Indica si la playlist fue tokenizada
+  playlistTokenId?: number; // Token ID de la playlist para el sistema de TIP
+  // 🏦 INFORMACIÓN ADICIONAL DE ECONOMÍA EN CASCADA
+  original_collections?: string[]; // Direcciones de colecciones originales para herencia
+  cascade_percentage?: number; // Porcentaje que va a artistas originales (ej: 70)
+  curator_percentage?: number; // Porcentaje que va al curator (ej: 30)
+  total_original_songs?: number; // Número total de canciones originales
 }
 
 interface UpdatePlaylistParams {

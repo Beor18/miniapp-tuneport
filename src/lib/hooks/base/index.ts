@@ -1,9 +1,3 @@
-// DEPRECATED - usar ERC1155 en su lugar
-/** @deprecated Usa useERC1155Factory en su lugar */
-export { useCreateBaseCollection } from "./useCreateBaseCollection";
-/** @deprecated Usa useERC1155Mint en su lugar */
-export { useBaseMint } from "./useBaseMint";
-
 // Hooks ERC1155 (RECOMENDADOS)
 export { useERC1155Factory } from "./useERC1155Factory";
 export { useCreateERC1155Collection } from "./useCreateERC1155Collection";

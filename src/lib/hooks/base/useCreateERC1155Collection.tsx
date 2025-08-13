@@ -408,7 +408,10 @@ export const useCreateERC1155Collection = (
           // No interrumpimos el flujo si falla el guardado en la BD
         }
 
-        return newCollectionAddress as string;
+        return {
+          collectionAddress: newCollectionAddress as string,
+          coinAddress: coinAddress || undefined,
+        };
       } catch (error: any) {
         console.error("Error creating collection:", error);
 

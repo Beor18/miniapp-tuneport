@@ -1,8 +1,6 @@
 import { useMemo } from "react";
 import { useCreateCandyMachine } from "../solana/useCreateCandyMachine";
 import { useCandyMachineMint } from "../solana/useCandyMachineMint";
-import { useCreateBaseCollection } from "../base/useCreateBaseCollection";
-import { useBaseMint } from "../base/useBaseMint";
 import { useERC1155Factory } from "../base/useERC1155Factory";
 import { toast } from "sonner";
 import { useAddItemsToCandyMachine } from "../solana/useAddItemsToCandyMachine";
@@ -21,8 +19,6 @@ export const useBlockchainOperations = ({
   // Obtenemos hooks específicos de cada blockchain
   const solanaCandyMachine = useCreateCandyMachine();
   const solanaMint = useCandyMachineMint();
-  const baseCollection = useCreateBaseCollection();
-  const baseMint = useBaseMint();
   const erc1155Factory = useERC1155Factory();
   const solanaAddItems = useAddItemsToCandyMachine();
 
@@ -40,11 +36,6 @@ export const useBlockchainOperations = ({
             if (useERC1155) {
               return await erc1155Factory.createCollection(params);
             }
-            // DEPRECATED: useCreateBaseCollection - usar useERC1155: true en su lugar
-            console.warn(
-              "⚠️  useCreateBaseCollection está deprecado. Cambia a useERC1155: true para usar factory contracts"
-            );
-            return await baseCollection.createBaseCollection(params);
           default:
             toast.error("Blockchain no soportada", {
               description: `La blockchain ${blockchain} no está implementada aún`,
@@ -77,11 +68,6 @@ export const useBlockchainOperations = ({
                 params.pricePerToken
               );
             }
-            // DEPRECATED: useBaseMint - usar useERC1155: true en su lugar
-            console.warn(
-              "⚠️  useBaseMint está deprecado. Cambia a useERC1155: true para usar factory contracts dinámicos"
-            );
-            return await baseMint.mint(params);
           default:
             toast.error("Blockchain no soportada", {
               description: `La blockchain ${blockchain} no está implementada aún`,
@@ -138,7 +124,7 @@ export const useBlockchainOperations = ({
           : blockchain === "base"
           ? useERC1155
             ? erc1155Factory.isLoading
-            : baseCollection.loading
+            : false
           : false,
       isMinting:
         blockchain === "solana"
@@ -146,7 +132,7 @@ export const useBlockchainOperations = ({
           : blockchain === "base"
           ? useERC1155
             ? erc1155Factory.isLoading
-            : baseMint.isMinting
+            : false
           : false,
       isCreatingNFTItem:
         blockchain === "solana"
@@ -162,10 +148,7 @@ export const useBlockchainOperations = ({
           candyMachine: solanaCandyMachine,
           mint: solanaMint,
         },
-        base: {
-          collection: baseCollection,
-          mint: baseMint,
-        },
+        base: {},
         erc1155: {
           factory: erc1155Factory,
         },
@@ -176,8 +159,6 @@ export const useBlockchainOperations = ({
     useERC1155,
     solanaCandyMachine,
     solanaMint,
-    baseCollection,
-    baseMint,
     erc1155Factory,
     solanaAddItems,
   ]);

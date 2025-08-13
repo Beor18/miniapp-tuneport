@@ -496,6 +496,216 @@ export const useRevenueShare = (
     [publicClient]
   );
 
+  // 🎯 FUNCIÓN PARA CONFIGURAR HERENCIA DE PLAYLISTS/REMIXES
+  const setInheritance = useCallback(
+    async (
+      revenueShareAddress: string,
+      tokenId: number,
+      sourceCollections: string[]
+    ): Promise<boolean> => {
+      const evmAddress = getEvmWalletAddress();
+      if (!authenticated || !evmAddress) {
+        toast.error("Debes conectar tu wallet");
+        return false;
+      }
+
+      setIsLoading(true);
+
+      try {
+        console.log("🏗️ Configurando herencia para tokenId:", tokenId);
+        console.log("📦 Colecciones fuente:", sourceCollections);
+
+        // Obtener el wallet que pagará el gas
+        const gasPayerWallet = getGasPayerWallet();
+
+        if (!gasPayerWallet) {
+          toast.error("No se pudo configurar la wallet para pagar el gas");
+          return false;
+        }
+
+        // Codificar la función setInheritance
+        const data = encodeFunctionData({
+          abi: RevenueShareABI,
+          functionName: "setInheritance",
+          args: [
+            BigInt(tokenId),
+            sourceCollections.map((addr) => addr as `0x${string}`),
+          ],
+        });
+
+        console.log("Enviando transacción setInheritance...");
+        const txHash = await gasPayerWallet.sendTransaction({
+          to: revenueShareAddress as `0x${string}`,
+          data,
+          value: BigInt(0),
+        });
+
+        // Esperar confirmación
+        await publicClient.waitForTransactionReceipt({
+          hash: txHash,
+        });
+
+        toast.success(
+          `Herencia configurada: ${sourceCollections.length} colecciones originales`
+        );
+        return true;
+      } catch (error: any) {
+        console.error("Error configurando herencia:", error);
+        toast.error("Error al configurar herencia", {
+          description: error.message || "Por favor intenta de nuevo",
+        });
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [authenticated, getEvmWalletAddress, publicClient]
+  );
+
+  // 🎯 FUNCIÓN PARA CONFIGURAR PORCENTAJE DE CASCADA
+  const setCascadePercentage = useCallback(
+    async (
+      revenueShareAddress: string,
+      tokenId: number,
+      percentage: number
+    ): Promise<boolean> => {
+      const evmAddress = getEvmWalletAddress();
+      if (!authenticated || !evmAddress) {
+        toast.error("Debes conectar tu wallet");
+        return false;
+      }
+
+      setIsLoading(true);
+
+      try {
+        console.log("⚙️ Configurando porcentaje de cascada:", percentage, "%");
+
+        // Obtener el wallet que pagará el gas
+        const gasPayerWallet = getGasPayerWallet();
+
+        if (!gasPayerWallet) {
+          toast.error("No se pudo configurar la wallet para pagar el gas");
+          return false;
+        }
+
+        // Convertir porcentaje a basis points (70% = 7000)
+        const basisPoints = BigInt(percentage * 100);
+
+        // Codificar la función setCascadePercentage
+        const data = encodeFunctionData({
+          abi: RevenueShareABI,
+          functionName: "setCascadePercentage",
+          args: [BigInt(tokenId), basisPoints],
+        });
+
+        console.log("Enviando transacción setCascadePercentage...");
+        const txHash = await gasPayerWallet.sendTransaction({
+          to: revenueShareAddress as `0x${string}`,
+          data,
+          value: BigInt(0),
+        });
+
+        // Esperar confirmación
+        await publicClient.waitForTransactionReceipt({
+          hash: txHash,
+        });
+
+        toast.success(
+          `Cascada configurada: ${percentage}% a artistas originales`
+        );
+        return true;
+      } catch (error: any) {
+        console.error("Error configurando cascada:", error);
+        toast.error("Error al configurar porcentaje de cascada", {
+          description: error.message || "Por favor intenta de nuevo",
+        });
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [authenticated, getEvmWalletAddress, publicClient]
+  );
+
+  // 🎯 FUNCIÓN PARA CONFIGURAR SPLITS DE MINT PARA CURATOR
+  const setMintSplitsForCurator = useCallback(
+    async (
+      revenueShareAddress: string,
+      collectionAddress: string,
+      tokenId: number,
+      curatorAddress: string,
+      curatorPercentage: number
+    ): Promise<boolean> => {
+      const evmAddress = getEvmWalletAddress();
+      if (!authenticated || !evmAddress) {
+        toast.error("Debes conectar tu wallet");
+        return false;
+      }
+
+      setIsLoading(true);
+
+      try {
+        console.log(
+          "💰 Configurando splits para curator:",
+          curatorPercentage,
+          "%"
+        );
+
+        // Obtener el wallet que pagará el gas
+        const gasPayerWallet = getGasPayerWallet();
+
+        if (!gasPayerWallet) {
+          toast.error("No se pudo configurar la wallet para pagar el gas");
+          return false;
+        }
+
+        // Crear splits: 100% para el curator del token específico
+        // (La cascada se maneja automáticamente en distributeCascadePayment)
+        const mintShares = [
+          {
+            account: curatorAddress as `0x${string}`,
+            percentage: BigInt(10000), // 100% para el curator en el split específico
+          },
+        ];
+
+        // Codificar la función setMintSplits para token específico
+        const data = encodeFunctionData({
+          abi: RevenueShareABI,
+          functionName: "setMintSplits",
+          args: [
+            collectionAddress as `0x${string}`,
+            BigInt(tokenId),
+            mintShares,
+          ],
+        });
+
+        console.log("Enviando transacción setMintSplits para curator...");
+        const txHash = await gasPayerWallet.sendTransaction({
+          to: revenueShareAddress as `0x${string}`,
+          data,
+          value: BigInt(0),
+        });
+
+        // Esperar confirmación
+        await publicClient.waitForTransactionReceipt({
+          hash: txHash,
+        });
+
+        toast.success(`Splits de curator configurados: ${curatorPercentage}%`);
+        return true;
+      } catch (error: any) {
+        console.error("Error configurando splits de curator:", error);
+        toast.error("Error al configurar splits del curator", {
+          description: error.message || "Por favor intenta de nuevo",
+        });
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [authenticated, getEvmWalletAddress, publicClient]
+  );
+
   // Función para configurar splits de una colección usando la wallet del desarrollador
   const configureCollectionSplits = useCallback(
     async (params: {
@@ -649,5 +859,9 @@ export const useRevenueShare = (
     addManager,
     removeManager,
     isManager,
+    // 🎯 NUEVAS FUNCIONES PARA ECONOMÍA EN CASCADA
+    setInheritance,
+    setCascadePercentage,
+    setMintSplitsForCurator,
   };
 };
