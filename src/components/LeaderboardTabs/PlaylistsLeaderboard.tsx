@@ -2,12 +2,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Music, Play, Gem } from "lucide-react";
+import { Music, Play, Gem, Coins, DollarSign, Zap } from "lucide-react";
 import { Button } from "@/ui/components/ui/button";
 import { usePlayer } from "@Src/contexts/PlayerContext";
 import { useFarcasterMiniApp } from "@Src/components/FarcasterProvider";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useERC1155Factory } from "@Src/lib/hooks/base/useERC1155Factory";
+import { useRevenueShare } from "@Src/lib/contracts/erc1155/useRevenueShare";
+import { DEFAULT_NETWORK } from "@Src/lib/contracts/erc1155/config";
 
 interface PlaylistData {
   _id: string;
@@ -27,6 +30,16 @@ interface PlaylistData {
   coverImage?: string;
   createdAt: string;
   score?: number;
+  // 🪙 CAMPOS DE TOKENIZACIÓN
+  isTokenized?: boolean;
+  address_collection_playlist?: string;
+  revenueShareAddress?: string;
+  coin_address?: string;
+  coinSymbol?: string;
+  playlistTokenId?: number;
+  cascade_percentage?: number;
+  curator_percentage?: number;
+  original_collections?: string[];
 }
 
 interface PlaylistsLeaderboardProps {
@@ -53,11 +66,30 @@ export default function PlaylistsLeaderboard({
     new Set()
   );
 
+  // 🪙 HOOKS PARA PLAYLISTS TOKENIZADAS
+  const { getEvmWalletAddress } = useERC1155Factory(DEFAULT_NETWORK);
+  const { distributeCascadePayment, isLoading: isProcessingTip } =
+    useRevenueShare();
+  const [tippingTokenizedPlaylists, setTippingTokenizedPlaylists] = useState<
+    Set<string>
+  >(new Set());
+
   // Cargar datos pre-fetched al montar el componente
   useEffect(() => {
     if (playlistsData) {
       setPlaylists(playlistsData);
       setError(null);
+
+      // 🔍 DEBUGGING: Ver qué campos tienen las playlists
+      console.log("🔍 PLAYLISTS EN LEADERBOARD:", playlistsData);
+      playlistsData.forEach((playlist, index) => {
+        console.log(`📋 Playlist ${index + 1}: ${playlist.name}`);
+        console.log("   - isTokenized:", playlist.isTokenized);
+        console.log("   - revenueShareAddress:", playlist.revenueShareAddress);
+        console.log("   - playlistTokenId:", playlist.playlistTokenId);
+        console.log("   - cascade_percentage:", playlist.cascade_percentage);
+        console.log("   - Campos disponibles:", Object.keys(playlist));
+      });
     } else {
       setError("No se pudieron cargar las playlists");
     }
@@ -205,6 +237,85 @@ export default function PlaylistsLeaderboard({
     [tipContext, tLeaderboard]
   );
 
+  // 💰 Función para TIP a playlist tokenizada (economía en cascada)
+  const handleTipTokenizedPlaylist = useCallback(
+    async (playlist: PlaylistData, amount: string = "0.001") => {
+      // 🔍 DEBUGGING: Mostrar información de la playlist
+      console.log("🔍 Intentando TIP en playlist:", playlist.name);
+      console.log("   - isTokenized:", playlist.isTokenized);
+      console.log("   - revenueShareAddress:", playlist.revenueShareAddress);
+      console.log("   - playlistTokenId:", playlist.playlistTokenId);
+
+      if (
+        !playlist.isTokenized ||
+        !playlist.revenueShareAddress ||
+        !playlist.address_collection_playlist ||
+        playlist.playlistTokenId === undefined ||
+        playlist.playlistTokenId === null
+      ) {
+        toast.error(
+          "Esta playlist no está tokenizada o le faltan datos de blockchain"
+        );
+        console.warn("❌ Playlist no tokenizada correctamente:", {
+          name: playlist.name,
+          isTokenized: playlist.isTokenized,
+          hasRevenueShare: !!playlist.revenueShareAddress,
+          hasCollectionAddress: !!playlist.address_collection_playlist,
+          tokenId: playlist.playlistTokenId,
+        });
+        return;
+      }
+
+      const userWalletAddress = getEvmWalletAddress();
+      if (!userWalletAddress) {
+        toast.error("Necesitas conectar tu wallet");
+        return;
+      }
+
+      setTippingTokenizedPlaylists((prev) => new Set(prev).add(playlist._id));
+
+      try {
+        toast.loading("Procesando tip con economía en cascada...", {
+          id: `tip-${playlist._id}`,
+        });
+
+        // 🚀 EJECUTAR TRANSACCIÓN REAL
+        const success = await distributeCascadePayment(
+          playlist.revenueShareAddress,
+          playlist.address_collection_playlist,
+          playlist.playlistTokenId,
+          parseFloat(amount)
+        );
+
+        if (success) {
+          toast.success(
+            `🎉 ¡Tip de ${amount} ETH enviado a "${playlist.name}"!`,
+            {
+              id: `tip-${playlist._id}`,
+              description: `${
+                playlist.cascade_percentage || 70
+              }% → Artistas originales | ${
+                playlist.curator_percentage || 30
+              }% → @${playlist.userId.nickname}`,
+            }
+          );
+        } else {
+          toast.error("Error procesando el tip", { id: `tip-${playlist._id}` });
+        }
+      } catch (error) {
+        console.error("Error en tip tokenizado:", error);
+        toast.error("Error procesando el tip", { id: `tip-${playlist._id}` });
+      } finally {
+        setTippingTokenizedPlaylists((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(playlist._id);
+          return newSet;
+        });
+      }
+    },
+    [getEvmWalletAddress, distributeCascadePayment]
+  );
+
   // Función para obtener estilo del ranking position
   const getRankingStyle = (position: number) => {
     if (position === 1)
@@ -339,10 +450,18 @@ export default function PlaylistsLeaderboard({
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1 md:gap-2 mb-1">
+                  <div className="flex items-center gap-1 md:gap-2 mb-1 flex-wrap">
                     <h3 className="text-white font-semibold text-sm md:text-base truncate">
                       {playlist.name}
                     </h3>
+
+                    {/* 🪙 BADGE PARA PLAYLISTS TOKENIZADAS */}
+                    {playlist.isTokenized === true && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
+                        <Coins className="w-3 h-3 mr-1" />
+                        TOKENIZED
+                      </span>
+                    )}
 
                     {playlist.tags.length > 0 && (
                       <span className="inline-flex items-center px-1 md:px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
@@ -357,14 +476,6 @@ export default function PlaylistsLeaderboard({
                         {tLeaderboard("by")} @{playlist.userId.nickname}
                       </p>
                     </Link>
-                    {playlist.userId.verified && (
-                      <span
-                        className="inline-flex items-center px-1 md:px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                        title={tLeaderboard("verified")}
-                      >
-                        ✓
-                      </span>
-                    )}
                   </div>
 
                   <div className="flex items-center gap-4 text-xs text-zinc-400">
@@ -372,6 +483,15 @@ export default function PlaylistsLeaderboard({
                       <Music className="w-3 h-3" />
                       {playlist.nfts.length} {tLeaderboard("tracks")}
                     </span>
+
+                    {/* 📊 INFORMACIÓN DE DISTRIBUCIÓN PARA PLAYLISTS TOKENIZADAS */}
+                    {playlist.isTokenized === true &&
+                      playlist.cascade_percentage && (
+                        <span className="flex items-center gap-1 text-blue-300">
+                          <Zap className="w-3 h-3" />
+                          {playlist.cascade_percentage}% → Artists
+                        </span>
+                      )}
                   </div>
                 </div>
 
@@ -397,23 +517,48 @@ export default function PlaylistsLeaderboard({
                         <Play className="w-3 h-3" />
                       </Button>
 
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleSupportPlaylist(playlist)}
-                        disabled={
-                          supportingPlaylists.has(playlist._id) ||
-                          !tipContext?.sendToken
-                        }
-                        title={tLeaderboard("tip")}
-                        className="text-xs border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50 transition-all duration-300 px-2 disabled:opacity-50"
-                      >
-                        {supportingPlaylists.has(playlist._id) ? (
-                          <>⏳ {tLeaderboard("sending")}</>
-                        ) : (
-                          <>💎 {tLeaderboard("tips")}</>
-                        )}
-                      </Button>
+                      {/* 💰 BOTÓN PARA PLAYLISTS TOKENIZADAS (Economía en cascada) */}
+                      {playlist.isTokenized === true &&
+                      playlist.revenueShareAddress &&
+                      playlist.playlistTokenId !== undefined &&
+                      playlist.playlistTokenId !== null ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleTipTokenizedPlaylist(playlist)}
+                          disabled={tippingTokenizedPlaylists.has(playlist._id)}
+                          title="Tip con economía en cascada (70% artistas, 30% curator)"
+                          className="text-xs border-yellow-500/30 bg-yellow-500/10 text-yellow-300 hover:bg-yellow-500/20 hover:border-yellow-400/50 transition-all duration-300 px-2 disabled:opacity-50"
+                        >
+                          {tippingTokenizedPlaylists.has(playlist._id) ? (
+                            <>⏳ Tipping...</>
+                          ) : (
+                            <>
+                              <DollarSign className="w-3 h-3 mr-1" />
+                              TIP
+                            </>
+                          )}
+                        </Button>
+                      ) : (
+                        /* 💎 BOTÓN PARA PLAYLISTS NORMALES (Farcaster) */
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSupportPlaylist(playlist)}
+                          disabled={
+                            supportingPlaylists.has(playlist._id) ||
+                            !tipContext?.sendToken
+                          }
+                          title={tLeaderboard("tip")}
+                          className="text-xs border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50 transition-all duration-300 px-2 disabled:opacity-50"
+                        >
+                          {supportingPlaylists.has(playlist._id) ? (
+                            <>⏳ {tLeaderboard("sending")}</>
+                          ) : (
+                            <>💎 {tLeaderboard("tips")}</>
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>

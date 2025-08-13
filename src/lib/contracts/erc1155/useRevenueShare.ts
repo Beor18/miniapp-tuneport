@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useSmartWallets } from "@privy-io/react-auth/smart-wallets";
 import { useAppKitAccount, useWallets } from "@Src/lib/privy";
-import { encodeFunctionData, decodeEventLog } from "viem";
+import { encodeFunctionData, decodeEventLog, parseEther } from "viem";
 import { RevenueShareFactoryABI } from "./RevenueShareFactoryABI";
 import { RevenueShareABI } from "./RevenueShareABI";
 import { CONTRACT_ADDRESSES, DEFAULT_NETWORK } from "./config";
@@ -71,7 +71,7 @@ const getGasPayerWallet = () => {
 export const useRevenueShare = (
   network: Network = DEFAULT_NETWORK as Network
 ) => {
-  const { authenticated } = usePrivy();
+  const { authenticated, user } = usePrivy();
   const { client } = useSmartWallets();
   const { address: userWalletAddress } = useAppKitAccount();
   const { wallets } = useWallets();
@@ -79,6 +79,67 @@ export const useRevenueShare = (
   const [revenueShareAddress, setRevenueShareAddress] = useState<string | null>(
     null
   );
+
+  // ✅ Funciones para obtener embedded wallets (copiadas de useERC1155Mint)
+  const getEmbeddedWalletClient = useCallback(async () => {
+    const embeddedWallet = wallets.find(
+      (wallet: any) => wallet.walletClientType === "privy"
+    );
+
+    if (!embeddedWallet) {
+      console.error("No se encontró embedded wallet de Privy");
+      return null;
+    }
+
+    const ethereumProvider = await embeddedWallet.getEthereumProvider();
+
+    if (!ethereumProvider) {
+      console.error("No se pudo obtener el provider de Ethereum");
+      return null;
+    }
+
+    console.log("✅ Embedded wallet obtenido:", embeddedWallet);
+    return ethereumProvider;
+  }, [wallets]);
+
+  const getEmbeddedWalletClientMetamask = useCallback(async () => {
+    const embeddedWallet = wallets.find(
+      (wallet: any) => wallet.walletClientType === "metamask"
+    );
+
+    if (!embeddedWallet) {
+      console.error("No se encontró embedded wallet de Metamask");
+      return null;
+    }
+
+    const ethereumProvider = await embeddedWallet.getEthereumProvider();
+
+    if (!ethereumProvider) {
+      console.error("No se pudo obtener el provider de Ethereum");
+      return null;
+    }
+
+    try {
+      // Solicitar permisos de cuenta primero (requerido para MetaMask)
+      const accounts = await ethereumProvider.request({
+        method: "eth_requestAccounts",
+      });
+
+      if (!accounts || accounts.length === 0) {
+        console.error("❌ No se obtuvieron cuentas autorizadas de MetaMask");
+        return null;
+      }
+
+      // Retornar tanto el provider como la cuenta autorizada
+      return {
+        provider: ethereumProvider,
+        authorizedAccount: accounts[0],
+      };
+    } catch (error) {
+      console.error("❌ Error al solicitar permisos de MetaMask:", error);
+      return null;
+    }
+  }, [wallets]);
 
   // Obtener la dirección EVM válida (igual que en MusicNewForm)
   const getEvmWalletAddress = useCallback((): string | null => {
@@ -846,6 +907,257 @@ export const useRevenueShare = (
     [authenticated, getEvmWalletAddress, publicClient]
   );
 
+  // 💰 Función para TIP en 2 pasos: 1) Usuario transfiere ETH, 2) Desarrollador ejecuta distribución
+  const distributeCascadePayment = useCallback(
+    async (
+      revenueShareAddress: string,
+      collectionAddress: string,
+      tokenId: number,
+      amountInEth: number
+    ): Promise<boolean> => {
+      const evmAddress = getEvmWalletAddress();
+      if (!authenticated || !evmAddress) {
+        toast.error("Debes conectar tu wallet");
+        return false;
+      }
+
+      setIsLoading(true);
+
+      try {
+        // Usuario envía ETH y ejecuta distribución en una sola transacción
+        const amountInWei = parseEther(amountInEth.toString());
+
+        console.log("🪙 Procesando tip con economía en cascada...");
+        console.log("  - Revenue Share:", revenueShareAddress);
+        console.log("  - Collection Address:", collectionAddress);
+        console.log("  - Cantidad ETH:", amountInEth);
+        console.log("  - Token ID:", tokenId);
+        console.log("  - User Wallet:", evmAddress);
+
+        // 🔍 DIAGNÓSTICO: Verificar configuraciones del contrato antes de enviar ETH
+        try {
+          console.log("🔍 Verificando configuraciones del contrato...");
+
+          // Verificar si hay mint splits configurados para este token
+          const mintSplitsABI = [
+            {
+              name: "getMintSplits",
+              type: "function",
+              inputs: [
+                { name: "collection", type: "address" },
+                { name: "tokenId", type: "uint256" },
+              ],
+              outputs: [
+                {
+                  components: [
+                    { name: "account", type: "address" },
+                    { name: "percentage", type: "uint96" },
+                  ],
+                  internalType: "struct IRevenueShare.Share[]",
+                  name: "",
+                  type: "tuple[]",
+                },
+              ],
+              stateMutability: "view",
+            },
+          ];
+
+          const mintSplits: any = await publicClient.readContract({
+            address: revenueShareAddress as `0x${string}`,
+            abi: mintSplitsABI,
+            functionName: "getMintSplits",
+            args: [collectionAddress as `0x${string}`, BigInt(tokenId)],
+          });
+
+          console.log("💰 Mint splits configurados:", mintSplits);
+          console.log("💰 Número de splits:", mintSplits?.length);
+
+          // Mostrar cada split detalladamente
+          if (mintSplits && Array.isArray(mintSplits)) {
+            mintSplits.forEach((split, index) => {
+              console.log(`   Split ${index + 1}:`, {
+                account: split.account,
+                percentage: split.percentage?.toString(),
+                percentageDecimal: Number(split.percentage) / 100, // basis points a %
+              });
+            });
+          }
+
+          if (!mintSplits || mintSplits?.length === 0) {
+            toast.error("❌ No hay splits configurados para este token");
+            return false;
+          }
+
+          // Verificar que los porcentajes sumen 10000 (100%)
+          const totalPercentage = mintSplits.reduce((sum: any, split: any) => {
+            return sum + Number(split.percentage);
+          }, 0);
+
+          console.log("📊 Total percentage (basis points):", totalPercentage);
+          console.log("📊 Total percentage (%):", totalPercentage / 100);
+
+          if (totalPercentage !== 10000) {
+            console.warn(
+              "⚠️ Los porcentajes no suman 100%:",
+              totalPercentage / 100,
+              "%"
+            );
+          }
+
+          // Verificar inheritance (opcional, pero informativo)
+          try {
+            const inheritanceABI = [
+              {
+                name: "getInheritedCollections",
+                type: "function",
+                inputs: [
+                  { name: "collection", type: "address" },
+                  { name: "tokenId", type: "uint256" },
+                ],
+                outputs: [{ name: "", type: "address[]" }],
+                stateMutability: "view",
+              },
+            ];
+
+            const inheritedCollections = await publicClient.readContract({
+              address: revenueShareAddress as `0x${string}`,
+              abi: inheritanceABI,
+              functionName: "getInheritedCollections",
+              args: [collectionAddress as `0x${string}`, BigInt(tokenId)],
+            });
+
+            console.log("🔗 Colecciones heredadas:", inheritedCollections);
+          } catch (inheritanceError) {
+            console.warn(
+              "⚠️ No se pudo verificar inheritance:",
+              inheritanceError
+            );
+          }
+        } catch (diagError) {
+          console.error("❌ Error en diagnóstico:", diagError);
+          toast.error("Error verificando configuración del contrato");
+          return false;
+        }
+
+        // Obtener embedded wallet según tipo (igual que en mintTokenDeveloperPaysGas)
+        let embeddedProvider = null;
+        let fromAddress = evmAddress; // Dirección por defecto
+
+        if (user?.wallet?.walletClientType === "metamask") {
+          console.log("Usando MetaMask");
+          const metamaskResult = await getEmbeddedWalletClientMetamask();
+          if (
+            metamaskResult &&
+            typeof metamaskResult === "object" &&
+            "provider" in metamaskResult
+          ) {
+            embeddedProvider = metamaskResult.provider;
+            fromAddress = metamaskResult.authorizedAccount; // Usar cuenta autorizada
+          }
+        } else {
+          console.log("Usando Privy");
+          embeddedProvider = await getEmbeddedWalletClient();
+        }
+
+        if (!embeddedProvider) {
+          toast.error("No se pudo obtener embedded wallet");
+          return false;
+        }
+
+        // USAR distributeMintPayment en lugar de distributeCascadePayment
+        // Esta función es más simple y maneja mejor las transferencias
+        const distributeCascadeData = encodeFunctionData({
+          abi: RevenueShareABI,
+          functionName: "distributeMintPayment",
+          args: [
+            collectionAddress as `0x${string}`, // collection address (dirección de la colección NFT)
+            BigInt(tokenId),
+          ],
+        });
+
+        console.log(
+          "Enviando ETH y ejecutando distributeMintPayment en una sola transacción..."
+        );
+
+        // 🧪 SIMULAR LA TRANSACCIÓN ANTES DE ENVIARLA
+        try {
+          console.log("🧪 Simulando transacción...");
+          const simulation = await publicClient.simulateContract({
+            address: revenueShareAddress as `0x${string}`,
+            abi: RevenueShareABI,
+            functionName: "distributeMintPayment",
+            args: [collectionAddress as `0x${string}`, BigInt(tokenId)],
+            account: fromAddress as `0x${string}`,
+            value: amountInWei,
+          });
+          console.log("✅ Simulación exitosa:", simulation);
+        } catch (simulationError: any) {
+          console.error("❌ Error en simulación:", simulationError);
+
+          // Intentar obtener más información del error
+          if (simulationError.message) {
+            console.error("Detalles del error:", simulationError.message);
+          }
+          if (simulationError.data) {
+            console.error("Data del error:", simulationError.data);
+          }
+          if (simulationError.cause) {
+            console.error("Causa del error:", simulationError.cause);
+          }
+
+          // Continuar con la transacción real para ver si proporciona más información
+          toast.error("Simulación falló, pero intentando transacción real");
+        }
+
+        // Transferir ETH y ejecutar distribución en una sola transacción
+        const transferTxHash = await embeddedProvider.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              to: revenueShareAddress,
+              data: distributeCascadeData,
+              value: `0x${amountInWei.toString(16)}`,
+              from: fromAddress,
+            },
+          ],
+        });
+
+        console.log("⏳ Esperando confirmación de transacción...");
+        await publicClient.waitForTransactionReceipt({
+          hash: transferTxHash,
+        });
+
+        console.log("✅ Tip con economía en cascada completado exitosamente");
+        toast.success("🎉 Tip procesado exitosamente", {
+          description:
+            "ETH distribuido automáticamente a todos los beneficiarios",
+        });
+
+        return true;
+      } catch (error: any) {
+        console.error("Error en proceso de tip:", error);
+
+        if (error.code === "ACTION_REJECTED") {
+          toast.error("Transacción rechazada por el usuario");
+        } else {
+          toast.error("Error procesando el tip", {
+            description: error.message || "Por favor, intenta de nuevo",
+          });
+        }
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [
+      authenticated,
+      getEvmWalletAddress,
+      getEmbeddedWalletClient,
+      getEmbeddedWalletClientMetamask,
+      publicClient,
+    ]
+  );
+
   return {
     createRevenueShare,
     configureCollectionSplits,
@@ -863,5 +1175,6 @@ export const useRevenueShare = (
     setInheritance,
     setCascadePercentage,
     setMintSplitsForCurator,
+    distributeCascadePayment,
   };
 };
