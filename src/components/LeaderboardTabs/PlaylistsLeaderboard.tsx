@@ -449,8 +449,8 @@ export default function PlaylistsLeaderboard({
                   )}
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1 md:gap-2 mb-1 flex-wrap">
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-center gap-1 md:gap-2 flex-wrap">
                     <h3 className="text-white font-semibold text-sm md:text-base truncate">
                       {playlist.name}
                     </h3>
@@ -459,18 +459,17 @@ export default function PlaylistsLeaderboard({
                     {playlist.isTokenized === true && (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
                         <Coins className="w-3 h-3 mr-1" />
-                        TOKENIZED
                       </span>
                     )}
 
                     {playlist.tags.length > 0 && (
-                      <span className="inline-flex items-center px-1 md:px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
                         {playlist.tags[0]}
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2">
                     <Link href={`/${locale}/u/${playlist.userId.nickname}`}>
                       <p className="text-zinc-300 text-xs md:text-sm truncate">
                         {tLeaderboard("by")} @{playlist.userId.nickname}
@@ -485,81 +484,79 @@ export default function PlaylistsLeaderboard({
                     </span>
 
                     {/* 📊 INFORMACIÓN DE DISTRIBUCIÓN PARA PLAYLISTS TOKENIZADAS */}
-                    {playlist.isTokenized === true &&
+                    {/* {playlist.isTokenized === true &&
                       playlist.cascade_percentage && (
                         <span className="flex items-center gap-1 text-blue-300">
                           <Zap className="w-3 h-3" />
                           {playlist.cascade_percentage}% → Artists
                         </span>
-                      )}
+                      )} */}
                   </div>
                 </div>
 
-                <div className="flex-shrink-0 text-right ml-auto pr-1">
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="text-right">
-                      <div className="text-white font-bold text-sm md:text-base">
-                        {Math.round(playlist.score || 0)}
-                      </div>
-                      <div className="text-zinc-400 text-xs">
-                        {tLeaderboard("score")}
-                      </div>
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  <div className="text-right">
+                    <div className="text-white font-bold text-sm md:text-base">
+                      {Math.round(playlist.score || 0)}
                     </div>
+                    <div className="text-zinc-400 text-xs">
+                      {tLeaderboard("score")}
+                    </div>
+                  </div>
 
-                    <div className="flex gap-1">
+                  <div className="flex gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handlePlayPlaylist(playlist)}
+                      title={tLeaderboard("play")}
+                      className="text-xs border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20 hover:border-green-400/50 transition-all duration-300 px-2.5 py-1.5"
+                    >
+                      <Play className="w-3 h-3" />
+                    </Button>
+
+                    {/* 💰 BOTÓN PARA PLAYLISTS TOKENIZADAS (Economía en cascada) */}
+                    {playlist.isTokenized === true &&
+                    playlist.revenueShareAddress &&
+                    playlist.playlistTokenId !== undefined &&
+                    playlist.playlistTokenId !== null ? (
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handlePlayPlaylist(playlist)}
-                        title={tLeaderboard("play")}
-                        className="text-xs border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20 hover:border-green-400/50 transition-all duration-300 px-2"
+                        onClick={() => handleTipTokenizedPlaylist(playlist)}
+                        disabled={tippingTokenizedPlaylists.has(playlist._id)}
+                        title="Tip con economía en cascada (70% artistas, 30% curator)"
+                        className="text-xs border-yellow-500/30 bg-yellow-500/10 text-yellow-300 hover:bg-yellow-500/20 hover:border-yellow-400/50 transition-all duration-300 px-2.5 py-1.5 disabled:opacity-50"
                       >
-                        <Play className="w-3 h-3" />
+                        {tippingTokenizedPlaylists.has(playlist._id) ? (
+                          <span className="animate-spin">⏳</span>
+                        ) : (
+                          <span className="flex items-center gap-1">
+                            <DollarSign className="w-3 h-3" />
+                            TIP
+                          </span>
+                        )}
                       </Button>
-
-                      {/* 💰 BOTÓN PARA PLAYLISTS TOKENIZADAS (Economía en cascada) */}
-                      {playlist.isTokenized === true &&
-                      playlist.revenueShareAddress &&
-                      playlist.playlistTokenId !== undefined &&
-                      playlist.playlistTokenId !== null ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleTipTokenizedPlaylist(playlist)}
-                          disabled={tippingTokenizedPlaylists.has(playlist._id)}
-                          title="Tip con economía en cascada (70% artistas, 30% curator)"
-                          className="text-xs border-yellow-500/30 bg-yellow-500/10 text-yellow-300 hover:bg-yellow-500/20 hover:border-yellow-400/50 transition-all duration-300 px-2 disabled:opacity-50"
-                        >
-                          {tippingTokenizedPlaylists.has(playlist._id) ? (
-                            <>⏳ Tipping...</>
-                          ) : (
-                            <>
-                              <DollarSign className="w-3 h-3 mr-1" />
-                              TIP
-                            </>
-                          )}
-                        </Button>
-                      ) : (
-                        /* 💎 BOTÓN PARA PLAYLISTS NORMALES (Farcaster) */
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleSupportPlaylist(playlist)}
-                          disabled={
-                            supportingPlaylists.has(playlist._id) ||
-                            !tipContext?.sendToken
-                          }
-                          title={tLeaderboard("tip")}
-                          className="text-xs border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50 transition-all duration-300 px-2 disabled:opacity-50"
-                        >
-                          {supportingPlaylists.has(playlist._id) ? (
-                            <>⏳ {tLeaderboard("sending")}</>
-                          ) : (
-                            <>💎 {tLeaderboard("tips")}</>
-                          )}
-                        </Button>
-                      )}
-                    </div>
+                    ) : (
+                      /* 💎 BOTÓN PARA PLAYLISTS NORMALES (Farcaster) */
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleSupportPlaylist(playlist)}
+                        disabled={
+                          supportingPlaylists.has(playlist._id) ||
+                          !tipContext?.sendToken
+                        }
+                        title={tLeaderboard("tip")}
+                        className="text-xs border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50 transition-all duration-300 px-2.5 py-1.5 disabled:opacity-50"
+                      >
+                        {supportingPlaylists.has(playlist._id) ? (
+                          <span className="animate-spin">⏳</span>
+                        ) : (
+                          <Gem className="w-3 h-3" />
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
