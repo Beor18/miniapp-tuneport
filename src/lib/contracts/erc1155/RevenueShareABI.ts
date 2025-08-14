@@ -1,5 +1,10 @@
 export const RevenueShareABI = [
   {
+    inputs: [],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  {
     inputs: [
       {
         internalType: "address",
@@ -22,8 +27,10 @@ export const RevenueShareABI = [
         type: "string",
       },
     ],
+    name: "initialize",
+    outputs: [],
     stateMutability: "nonpayable",
-    type: "constructor",
+    type: "function",
   },
   {
     inputs: [],
@@ -1186,6 +1193,19 @@ export const RevenueShareABI = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "version",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "pure",
     type: "function",
   },
 ] as const;

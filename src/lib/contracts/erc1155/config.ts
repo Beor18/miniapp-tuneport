@@ -2,8 +2,8 @@
 export const CONTRACT_ADDRESSES = {
   // Base Sepolia (Testnet) - Contratos Upgradeables
   sepolia: {
-    factory: "0xAD6474aB644B97A4B82C2128921c32aF69392B15", // MusicNFTFactoryUpgradeable
-    revenueShareFactory: "0x60CD9B009799636f59367E4C06b5Ad95Ce1E218F", // RevenueShareFactoryUpgradeable
+    factory: "0x5a171FCAAf58C2fB7d406Fce9c749e9Ba4374552", // MusicNFTFactoryUpgradeable
+    revenueShareFactory: "0x5eF651C344bAc58c9e1A7Baf91f446d8F0B26D9E", // RevenueShareFactoryUpgradeable
   },
   // Base Mainnet (Producción) - Pendiente
   mainnet: {

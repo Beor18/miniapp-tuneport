@@ -198,7 +198,7 @@ export const useRevenueShare = (
           abi: RevenueShareFactoryABI,
           functionName: "createRevenueShare",
           args: [
-            params.artist as `0x${string}`,
+            params.artist as `0x${string}`, // artista como owner (correcto)
             params.name,
             params.description,
           ],
@@ -263,6 +263,41 @@ export const useRevenueShare = (
           );
           toast.error("No se pudo obtener la dirección del contrato");
           return null;
+        }
+
+        // 🔍 DEBUGGEAR: El contrato debería haber dado MANAGER_ROLE a gasPayerWallet automáticamente
+        try {
+          const MANAGER_ROLE =
+            "0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08";
+
+          const hasManagerRole = await publicClient.readContract({
+            address: newRevenueShareAddress as `0x${string}`,
+            abi: RevenueShareABI,
+            functionName: "hasRole",
+            args: [MANAGER_ROLE, gasPayerWallet.account.address],
+          });
+
+          console.log(
+            "🔍 DEBUG: gasPayerWallet tiene MANAGER_ROLE automático:",
+            hasManagerRole
+          );
+
+          if (!hasManagerRole) {
+            console.log(
+              "❌ ERROR: gasPayerWallet debería tener MANAGER_ROLE automáticamente!"
+            );
+            console.log(
+              "   Factory msg.sender:",
+              gasPayerWallet.account.address
+            );
+            console.log("   Contrato creado:", newRevenueShareAddress);
+          } else {
+            console.log(
+              "✅ PERFECTO: gasPayerWallet tiene MANAGER_ROLE automático"
+            );
+          }
+        } catch (debugError) {
+          console.error("❌ Error debuggeando MANAGER_ROLE:", debugError);
         }
 
         return newRevenueShareAddress as string;
@@ -712,6 +747,60 @@ export const useRevenueShare = (
           "%"
         );
 
+        // 🔍 DIAGNÓSTICO: Verificar permisos y estado antes de la transacción
+        try {
+          console.log("🔍 Verificando permisos y configuración...");
+          console.log("   📍 RevenueShare:", revenueShareAddress);
+          console.log("   📍 Collection:", collectionAddress);
+          console.log("   📍 TokenId:", tokenId);
+          console.log("   📍 Curator:", curatorAddress);
+          console.log("   📍 User (gas payer):", evmAddress);
+
+          // Verificar si el usuario es manager o owner del contrato
+          try {
+            const isManagerResult = await publicClient.readContract({
+              address: revenueShareAddress as `0x${string}`,
+              abi: RevenueShareABI,
+              functionName: "isManager",
+              args: [evmAddress as `0x${string}`],
+            });
+            console.log("   👤 Usuario es manager:", isManagerResult);
+
+            // Verificar si es owner
+            try {
+              const ownerAddress = await publicClient.readContract({
+                address: revenueShareAddress as `0x${string}`,
+                abi: RevenueShareABI,
+                functionName: "owner",
+              });
+              console.log("   👑 Owner del contrato:", ownerAddress);
+              console.log(
+                "   👤 Usuario es owner:",
+                ownerAddress.toLowerCase() === evmAddress.toLowerCase()
+              );
+            } catch (ownerError) {
+              console.log("   ⚠️ No se pudo verificar owner");
+            }
+          } catch (managerError) {
+            console.log("   ⚠️ No se pudo verificar si es manager");
+          }
+
+          // Verificar splits existentes para este token
+          try {
+            const existingSplits = await publicClient.readContract({
+              address: revenueShareAddress as `0x${string}`,
+              abi: RevenueShareABI,
+              functionName: "getMintSplits",
+              args: [collectionAddress as `0x${string}`, BigInt(tokenId)],
+            });
+            console.log("   📊 Splits existentes:", existingSplits);
+          } catch (splitsError) {
+            console.log("   📊 No hay splits configurados (primera vez)");
+          }
+        } catch (diagError) {
+          console.error("⚠️ Error en diagnóstico (continuando):", diagError);
+        }
+
         // Obtener el wallet que pagará el gas
         const gasPayerWallet = getGasPayerWallet();
 
@@ -720,12 +809,66 @@ export const useRevenueShare = (
           return false;
         }
 
-        // Crear splits: 100% para el curator del token específico
-        // (La cascada se maneja automáticamente en distributeCascadePayment)
+        // 🔍 VERIFICAR QUE GASPAYERWALLET TENGA PERMISOS
+        const gasPayerAddress = gasPayerWallet.account.address;
+        console.log("   🔑 GasPayerWallet address:", gasPayerAddress);
+
+        try {
+          const ownerAddress = await publicClient.readContract({
+            address: revenueShareAddress as `0x${string}`,
+            abi: RevenueShareABI,
+            functionName: "owner",
+          });
+          console.log("   👑 Contract owner:", ownerAddress);
+          console.log(
+            "   🔍 GasPayer es owner:",
+            ownerAddress.toLowerCase() === gasPayerAddress.toLowerCase()
+          );
+
+          if (ownerAddress.toLowerCase() !== gasPayerAddress.toLowerCase()) {
+            // Verificar si gasPayerWallet tiene MANAGER_ROLE
+            const MANAGER_ROLE =
+              "0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08";
+
+            const hasManagerRole = await publicClient.readContract({
+              address: revenueShareAddress as `0x${string}`,
+              abi: RevenueShareABI,
+              functionName: "hasRole",
+              args: [MANAGER_ROLE, gasPayerAddress],
+            });
+
+            console.log(
+              "   🔍 GasPayerWallet tiene MANAGER_ROLE:",
+              hasManagerRole
+            );
+
+            if (!hasManagerRole) {
+              console.log(
+                "❌ GasPayerWallet NO tiene MANAGER_ROLE - saltando configuración de splits"
+              );
+              toast.error(
+                "No se pudieron configurar los splits - usar el owner para configurar manualmente"
+              );
+              return false;
+            }
+
+            console.log(
+              "✅ GasPayerWallet tiene MANAGER_ROLE - usando gasPayerWallet"
+            );
+          }
+        } catch (ownerError) {
+          console.error("❌ No se pudo verificar owner del contrato");
+          return false;
+        }
+
+        // Si gasPayerWallet ES el owner, usar el flujo original
+        // 🔧 SPLITS DE MINT: Debe totalizar 100% (10000) - representa la distribución de la parte NO-cascade
+        // La cascada (70%) se maneja automáticamente en distributeCascadePayment
+        // Los splits (100%) se aplicarán solo al 30% restante después del cascade
         const mintShares = [
           {
             account: curatorAddress as `0x${string}`,
-            percentage: BigInt(10000), // 100% para el curator en el split específico
+            percentage: BigInt(10000), // 100% del remanente después del cascade
           },
         ];
 
@@ -907,7 +1050,8 @@ export const useRevenueShare = (
     [authenticated, getEvmWalletAddress, publicClient]
   );
 
-  // 💰 Función para TIP en 2 pasos: 1) Usuario transfiere ETH, 2) Desarrollador ejecuta distribución
+  // 💰 Función para TIP con economía en cascada mejorada
+  // ✅ El contrato upgradeable resuelve automáticamente owners de colecciones
   const distributeCascadePayment = useCallback(
     async (
       revenueShareAddress: string,
@@ -1064,49 +1208,492 @@ export const useRevenueShare = (
           return false;
         }
 
-        // USAR distributeMintPayment en lugar de distributeCascadePayment
-        // Esta función es más simple y maneja mejor las transferencias
+        // PREPARAR datos de la transacción
         const distributeCascadeData = encodeFunctionData({
           abi: RevenueShareABI,
-          functionName: "distributeMintPayment",
+          functionName: "distributeCascadePayment",
           args: [
             collectionAddress as `0x${string}`, // collection address (dirección de la colección NFT)
             BigInt(tokenId),
           ],
         });
 
+        // 💰 VERIFICAR BALANCE ANTES DE LA TRANSACCIÓN
+        let gasEstimate: bigint;
+        try {
+          const balance = await publicClient.getBalance({
+            address: fromAddress as `0x${string}`,
+          });
+
+          console.log("💰 Balance actual:", balance.toString(), "wei");
+          console.log("💰 Balance en ETH:", Number(balance) / 1e18);
+          console.log("💰 Monto requerido:", amountInWei.toString(), "wei");
+          console.log("💰 Monto en ETH:", amountInEth);
+
+          // 🔍 DIAGNÓSTICO DETALLADO ANTES DE ESTIMAR GAS
+          console.log(
+            "🔍 Verificando configuraciones del contrato antes de gas estimate..."
+          );
+
+          // 1. Verificar mint splits
+          try {
+            const mintSplitsABI = [
+              {
+                name: "getMintSplits",
+                type: "function",
+                inputs: [
+                  { name: "collection", type: "address" },
+                  { name: "tokenId", type: "uint256" },
+                ],
+                outputs: [
+                  {
+                    components: [
+                      { name: "account", type: "address" },
+                      { name: "percentage", type: "uint96" },
+                    ],
+                    internalType: "struct IRevenueShare.Share[]",
+                    name: "",
+                    type: "tuple[]",
+                  },
+                ],
+                stateMutability: "view",
+              },
+            ];
+
+            const mintSplits: any = await publicClient.readContract({
+              address: revenueShareAddress as `0x${string}`,
+              abi: mintSplitsABI,
+              functionName: "getMintSplits",
+              args: [collectionAddress as `0x${string}`, BigInt(tokenId)],
+            });
+
+            console.log("💰 Mint splits:", mintSplits);
+            if (!mintSplits || mintSplits.length === 0) {
+              console.error(
+                "❌ No hay mint splits configurados para este token"
+              );
+              throw new Error("No mint splits configured");
+            }
+
+            // Verificar que los porcentajes sumen 10000 o que al menos haya un split válido
+            const totalPercentage = mintSplits.reduce(
+              (sum: number, split: any) => {
+                return sum + Number(split.percentage);
+              },
+              0
+            );
+            console.log("📊 Total de porcentajes de splits:", totalPercentage);
+
+            if (totalPercentage === 0) {
+              console.error("❌ Los porcentajes de splits suman 0");
+              throw new Error("Invalid split percentages");
+            }
+          } catch (splitsError) {
+            console.error("❌ Error verificando mint splits:", splitsError);
+            throw new Error(`Mint splits verification failed: ${splitsError}`);
+          }
+
+          // 2. Verificar herencia/cascada
+          try {
+            const inheritanceABI = [
+              {
+                name: "getInheritedSources",
+                type: "function",
+                inputs: [{ name: "tokenId", type: "uint256" }],
+                outputs: [{ name: "", type: "address[]" }],
+                stateMutability: "view",
+              },
+              {
+                name: "getCascadePercentage",
+                type: "function",
+                inputs: [{ name: "tokenId", type: "uint256" }],
+                outputs: [{ name: "", type: "uint96" }],
+                stateMutability: "view",
+              },
+            ];
+
+            const inheritedSources = await publicClient.readContract({
+              address: revenueShareAddress as `0x${string}`,
+              abi: inheritanceABI,
+              functionName: "getInheritedSources",
+              args: [BigInt(tokenId)],
+            });
+
+            const cascadePercentage = await publicClient.readContract({
+              address: revenueShareAddress as `0x${string}`,
+              abi: inheritanceABI,
+              functionName: "getCascadePercentage",
+              args: [BigInt(tokenId)],
+            });
+
+            console.log("🔗 Fuentes heredadas:", inheritedSources);
+            console.log("⚖️ Porcentaje de cascada:", cascadePercentage);
+
+            // ✅ El contrato upgradeable ahora resuelve automáticamente los owners
+            // Ya no necesitamos verificar si las direcciones pueden recibir ETH
+            console.log(
+              "✅ El contrato resolverá automáticamente los owners de las colecciones"
+            );
+
+            // 🧪 PROBAR DIRECTAMENTE SI PODEMOS ENVIAR ETH AL ARTISTA
+            const artistAddress = "0x8AdB648bB68c1Ea15Ec5d510Da8D374A6Cb9b447";
+            console.log(
+              "🧪 Probando envío directo de ETH al artista:",
+              artistAddress
+            );
+
+            try {
+              await publicClient.call({
+                to: artistAddress as `0x${string}`,
+                value: BigInt(1), // 1 wei para probar
+                data: "0x",
+                account: fromAddress as `0x${string}`,
+              });
+              console.log("✅ El artista PUEDE recibir ETH directamente");
+            } catch (directError) {
+              console.error(
+                "❌ El artista NO puede recibir ETH directamente:",
+                directError
+              );
+              toast.error("Problema detectado", {
+                description: `La dirección del artista ${artistAddress} no puede recibir ETH. Podría ser un Smart Contract Wallet sin función receive().`,
+              });
+            }
+
+            // 🧪 PROBAR TAMBIÉN EL CURADOR (aquí podría estar el problema real)
+            console.log("📊 Verificando mint splits del curador...");
+            const mintSplits = await publicClient.readContract({
+              address: revenueShareAddress as `0x${string}`,
+              abi: RevenueShareABI,
+              functionName: "getMintSplits",
+              args: [collectionAddress as `0x${string}`, BigInt(tokenId)],
+            });
+
+            if (
+              mintSplits &&
+              Array.isArray(mintSplits) &&
+              mintSplits.length > 0
+            ) {
+              const curadorAddress = mintSplits[0].account;
+              console.log(
+                "🧪 Probando envío directo de ETH al curador:",
+                curadorAddress
+              );
+
+              try {
+                await publicClient.call({
+                  to: curadorAddress as `0x${string}`,
+                  value: BigInt(1),
+                  data: "0x",
+                  account: fromAddress as `0x${string}`,
+                });
+                console.log("✅ El curador PUEDE recibir ETH directamente");
+              } catch (curadorError) {
+                console.error(
+                  "❌ 🚨 CURADOR NO puede recibir ETH:",
+                  curadorError
+                );
+                toast.error("🚨 PROBLEMA ENCONTRADO", {
+                  description: `El curador ${curadorAddress} NO puede recibir ETH. Este es el problema real.`,
+                });
+              }
+            }
+
+            if (inheritedSources && Array.isArray(inheritedSources)) {
+              console.log(
+                `🎨 ${inheritedSources.length} fuentes heredadas configuradas`
+              );
+
+              // 🧪 PROBAR LA RESOLUCIÓN DE OWNERS MANUALMENTE
+              for (let i = 0; i < inheritedSources.length; i++) {
+                const source = inheritedSources[i];
+                console.log(`   ${i + 1}. ${source}`);
+
+                try {
+                  // Intentar obtener owner() del contrato de colección
+                  const ownerResult = await publicClient.readContract({
+                    address: source as `0x${string}`,
+                    abi: [
+                      {
+                        name: "owner",
+                        type: "function",
+                        inputs: [],
+                        outputs: [{ name: "", type: "address" }],
+                        stateMutability: "view",
+                      },
+                    ],
+                    functionName: "owner",
+                  });
+                  console.log(`      ✅ owner(): ${ownerResult}`);
+
+                  // 🔍 VERIFICAR SI EL OWNER PUEDE RECIBIR ETH
+                  try {
+                    const ownerCode = await publicClient.getBytecode({
+                      address: ownerResult as `0x${string}`,
+                    });
+
+                    if (!ownerCode || ownerCode === "0x") {
+                      console.log(`      ✅ Owner es EOA (puede recibir ETH)`);
+                    } else {
+                      console.log(
+                        `      ⚠️ Owner es un contrato - verificando si puede recibir ETH...`
+                      );
+
+                      // Probar si el contrato owner puede recibir ETH
+                      try {
+                        await publicClient.call({
+                          to: ownerResult as `0x${string}`,
+                          value: BigInt(1), // 1 wei para probar
+                          data: "0x",
+                          account: fromAddress as `0x${string}`,
+                        });
+                        console.log(
+                          `      ✅ Owner (contrato) puede recibir ETH`
+                        );
+                      } catch (receiveError) {
+                        console.error(
+                          `      ❌ Owner (contrato) NO puede recibir ETH:`,
+                          receiveError
+                        );
+                        console.error(
+                          `      🚨 PROBLEMA: El owner resuelto ${ownerResult} no puede recibir ETH`
+                        );
+                      }
+                    }
+                  } catch (ownerCheckError) {
+                    console.error(
+                      `      ❌ Error verificando owner:`,
+                      ownerCheckError
+                    );
+                  }
+                } catch (ownerError) {
+                  console.log(`      ❌ owner() no disponible`);
+
+                  // Intentar getArtist()
+                  try {
+                    const artistResult = await publicClient.readContract({
+                      address: source as `0x${string}`,
+                      abi: [
+                        {
+                          name: "getArtist",
+                          type: "function",
+                          inputs: [],
+                          outputs: [{ name: "", type: "address" }],
+                          stateMutability: "view",
+                        },
+                      ],
+                      functionName: "getArtist",
+                    });
+                    console.log(`      ✅ getArtist(): ${artistResult}`);
+                  } catch (artistError) {
+                    console.log(`      ❌ getArtist() no disponible`);
+                    console.log(
+                      `      ⚠️ No se puede resolver owner de ${source}`
+                    );
+                  }
+                }
+              }
+            }
+          } catch (inheritanceError) {
+            console.error(
+              "⚠️ Error verificando herencia (no crítico):",
+              inheritanceError
+            );
+          }
+
+          // Estimar gas para la transacción
+          gasEstimate = await publicClient.estimateGas({
+            account: fromAddress as `0x${string}`,
+            to: revenueShareAddress as `0x${string}`,
+            data: distributeCascadeData,
+            value: amountInWei,
+          });
+
+          const gasPrice = await publicClient.getGasPrice();
+          const estimatedGasCost = gasEstimate * gasPrice;
+          const totalRequired = amountInWei + estimatedGasCost;
+
+          console.log("⛽ Gas estimado:", gasEstimate.toString());
+          console.log("⛽ Precio del gas:", gasPrice.toString());
+          console.log(
+            "⛽ Costo estimado del gas:",
+            Number(estimatedGasCost) / 1e18,
+            "ETH"
+          );
+          console.log(
+            "💸 Total requerido:",
+            Number(totalRequired) / 1e18,
+            "ETH"
+          );
+
+          if (balance < totalRequired) {
+            const shortfall = Number(totalRequired - balance) / 1e18;
+            toast.error("Fondos insuficientes", {
+              description: `Necesitas ${shortfall.toFixed(
+                6
+              )} ETH adicionales para esta transacción (incluyendo gas)`,
+            });
+            return false;
+          }
+        } catch (balanceError) {
+          console.error("Error verificando balance:", balanceError);
+
+          // Si falla el gas estimate, intentemos diagnosticar el problema
+          console.log("🔍 Diagnosticando problema con la transacción...");
+
+          // Verificar que el contrato existe y es la versión correcta
+          try {
+            const code = await publicClient.getBytecode({
+              address: revenueShareAddress as `0x${string}`,
+            });
+            if (!code || code === "0x") {
+              toast.error(
+                "El contrato RevenueShare no existe en esta dirección"
+              );
+              return false;
+            }
+            console.log("✅ Contrato RevenueShare existe");
+
+            // 🔍 Verificar si es la versión upgradeable
+            try {
+              const version = await publicClient.readContract({
+                address: revenueShareAddress as `0x${string}`,
+                abi: [
+                  {
+                    name: "version",
+                    type: "function",
+                    inputs: [],
+                    outputs: [{ name: "", type: "string" }],
+                    stateMutability: "pure",
+                  },
+                ],
+                functionName: "version",
+              });
+              console.log("✅ Versión del contrato:", version);
+              console.log("✅ Contrato upgradeable confirmado");
+
+              // 🧪 VERIFICAR SI EL CONTRATO TIENE LA NUEVA LÓGICA DE FALLBACK
+              // Intentemos hacer una transacción con menos ETH para ver si da más información
+              console.log(
+                "🧪 Probando distributeCascadePayment con 1 wei para diagnosticar..."
+              );
+
+              try {
+                const diagnosisSimulation = await publicClient.simulateContract(
+                  {
+                    address: revenueShareAddress as `0x${string}`,
+                    abi: RevenueShareABI,
+                    functionName: "distributeCascadePayment",
+                    args: [collectionAddress as `0x${string}`, BigInt(tokenId)],
+                    account: fromAddress as `0x${string}`,
+                    value: BigInt(1), // Solo 1 wei para diagnóstico
+                  }
+                );
+                console.log(
+                  "✅ Simulación con 1 wei exitosa - el problema podría ser el monto"
+                );
+
+                // 🧮 CALCULAR EXACTAMENTE LO QUE HARÁ EL CONTRATO
+                const totalAmount = BigInt("1000000000000000"); // 0.001 ETH
+                const cascadePercent = BigInt(7000); // 70%
+                const sourcesLength = BigInt(2);
+
+                const cascadeAmount =
+                  (totalAmount * cascadePercent) / BigInt(10000);
+                const perSource = cascadeAmount / sourcesLength;
+                const remainingAmount = totalAmount - cascadeAmount;
+
+                console.log("🧮 CÁLCULOS DEL CONTRATO:");
+                console.log(
+                  "   📊 Total amount:",
+                  totalAmount.toString(),
+                  "wei"
+                );
+                console.log(
+                  "   📊 Cascade (70%):",
+                  cascadeAmount.toString(),
+                  "wei"
+                );
+                console.log("   📊 Per source:", perSource.toString(), "wei");
+                console.log(
+                  "   📊 Remaining:",
+                  remainingAmount.toString(),
+                  "wei"
+                );
+                console.log(
+                  "   📊 Para curador (100%):",
+                  remainingAmount.toString(),
+                  "wei"
+                );
+              } catch (diagError: any) {
+                console.error(
+                  "❌ Simulación con 1 wei también falla:",
+                  diagError
+                );
+
+                // Verificar si el error da más detalles
+                if (diagError.message?.includes("TransferFailed")) {
+                  console.error(
+                    "🚨 TransferFailed confirmado - el problema está en las transferencias ETH"
+                  );
+                } else {
+                  console.error("🔍 Error diferente:", diagError.message);
+                }
+              }
+            } catch (versionError) {
+              console.error(
+                "❌ No se pudo obtener versión - posiblemente versión antigua del contrato"
+              );
+              toast.warning(
+                "Advertencia: Parece ser una versión antigua del contrato"
+              );
+            }
+          } catch (codeError) {
+            console.error(
+              "Error verificando bytecode del contrato:",
+              codeError
+            );
+          }
+
+          // Continuar con un gas límite por defecto en lugar de fallar
+          gasEstimate = BigInt(200000); // Gas por defecto razonable
+          console.log(
+            "⚠️ Usando gas estimado por defecto:",
+            gasEstimate.toString()
+          );
+
+          toast.warning(
+            "No se pudo estimar gas exacto, usando valor por defecto"
+          );
+          // No retornamos false, continuamos con la transacción
+        }
+
         console.log(
-          "Enviando ETH y ejecutando distributeMintPayment en una sola transacción..."
+          "Enviando ETH y ejecutando distributeCascadePayment con resolución automática de owners..."
         );
 
-        // 🧪 SIMULAR LA TRANSACCIÓN ANTES DE ENVIARLA
+        // ✅ Con el contrato mejorado, la simulación debería ser más confiable
         try {
           console.log("🧪 Simulando transacción...");
           const simulation = await publicClient.simulateContract({
             address: revenueShareAddress as `0x${string}`,
             abi: RevenueShareABI,
-            functionName: "distributeMintPayment",
+            functionName: "distributeCascadePayment",
             args: [collectionAddress as `0x${string}`, BigInt(tokenId)],
             account: fromAddress as `0x${string}`,
             value: amountInWei,
           });
-          console.log("✅ Simulación exitosa:", simulation);
+          console.log(
+            "✅ Simulación exitosa - contrato resolverá owners automáticamente"
+          );
         } catch (simulationError: any) {
           console.error("❌ Error en simulación:", simulationError);
 
-          // Intentar obtener más información del error
-          if (simulationError.message) {
-            console.error("Detalles del error:", simulationError.message);
-          }
-          if (simulationError.data) {
-            console.error("Data del error:", simulationError.data);
-          }
-          if (simulationError.cause) {
-            console.error("Causa del error:", simulationError.cause);
-          }
-
-          // Continuar con la transacción real para ver si proporciona más información
-          toast.error("Simulación falló, pero intentando transacción real");
+          // Con el contrato mejorado, los errores de simulación son más significativos
+          toast.error("Error en la simulación de la transacción", {
+            description: "Verifica la configuración de splits y herencia",
+          });
+          throw simulationError; // No continuar si la simulación falla
         }
 
         // Transferir ETH y ejecutar distribución en una sola transacción
@@ -1118,6 +1705,7 @@ export const useRevenueShare = (
               data: distributeCascadeData,
               value: `0x${amountInWei.toString(16)}`,
               from: fromAddress,
+              gas: `0x${gasEstimate.toString(16)}`, // Usar el gas estimado
             },
           ],
         });
@@ -1130,7 +1718,7 @@ export const useRevenueShare = (
         console.log("✅ Tip con economía en cascada completado exitosamente");
         toast.success("🎉 Tip procesado exitosamente", {
           description:
-            "ETH distribuido automáticamente a todos los beneficiarios",
+            "ETH distribuido automáticamente - owners de colecciones resueltos automáticamente",
         });
 
         return true;
@@ -1155,6 +1743,7 @@ export const useRevenueShare = (
       getEmbeddedWalletClient,
       getEmbeddedWalletClientMetamask,
       publicClient,
+      user?.wallet?.walletClientType,
     ]
   );
 
