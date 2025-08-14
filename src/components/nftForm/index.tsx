@@ -153,14 +153,14 @@ export default function NftForm({
       }
 
       // Usar la dirección seleccionada/ingresada por el usuario
-      const paymentAddress = mintPaymentAddress.trim();
+      // const paymentAddress = mintPaymentAddress.trim();
 
-      if (!paymentAddress) {
-        toast.error(tNft("addressRequired"), {
-          description: tNft("pleaseSelectCollaboratorOrEnterAddress"),
-        });
-        return;
-      }
+      // if (!paymentAddress) {
+      //   toast.error(tNft("addressRequired"), {
+      //     description: tNft("pleaseSelectCollaboratorOrEnterAddress"),
+      //   });
+      //   return;
+      // }
 
       // if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(paymentAddress)) {
       //   toast.error(tNft("invalidAddress"), {
@@ -184,7 +184,7 @@ export default function NftForm({
           coverImage,
           trackFile,
           attributes: filteredAttributes,
-          artist_address_mint: paymentAddress,
+          //artist_address_mint: paymentAddress,
           currency: album?.currency,
           royaltyReceivers: [],
           copies: copies,
@@ -200,7 +200,7 @@ export default function NftForm({
           price: price,
           currency: album?.mintCurrency,
           attributes: filteredAttributes,
-          artist_address_mint: paymentAddress,
+          //artist_address_mint: paymentAddress,
         });
       }
       toast.success(tNft("trackAdded"), {
@@ -359,7 +359,7 @@ export default function NftForm({
                       {tNft("pricePerNft")} {album?.mintCurrency || "ETH"}
                     </p>
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <Label
                         htmlFor="mintPaymentAddress"
@@ -380,7 +380,7 @@ export default function NftForm({
                       </TooltipProvider>
                     </div>
 
-                    {/* Si hay colaboradores - Select */}
+                  
                     {album?.collaborators &&
                       Array.isArray(album.collaborators) &&
                       album.collaborators.length > 0 && (
@@ -418,7 +418,7 @@ export default function NftForm({
                         </Select>
                       )}
 
-                    {/* Si NO hay colaboradores - Input manual */}
+                   
                     {(!album?.collaborators ||
                       !Array.isArray(album.collaborators) ||
                       album.collaborators.length === 0) && (
@@ -438,7 +438,7 @@ export default function NftForm({
                         ? tNft("selectCollaboratorForPayment")
                         : tNft("enterWalletAddressForPayment")}
                     </p>
-                  </div>
+                  </div> */}
 
                   <div className="space-y-2">
                     <Label
