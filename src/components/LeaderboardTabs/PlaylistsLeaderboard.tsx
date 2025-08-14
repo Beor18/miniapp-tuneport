@@ -24,6 +24,9 @@ interface PlaylistData {
     address?: string; // Dirección de wallet del creador
     fid?: number; // FID de Farcaster del creador
   };
+  collectionId: {
+    artist_name: string;
+  };
   nfts: Array<any>;
   totalDuration: number;
   tags: string[];
@@ -108,7 +111,7 @@ export default function PlaylistsLeaderboard({
         _id: nft._id,
         name: nft.name,
         artist_name:
-          playlist.userId.nickname ||
+          nft.collectionId?.artist_name ||
           nft.artist?.name ||
           nft.artist_address_mint ||
           "Unknown Artist",
