@@ -16,6 +16,7 @@ export const useBaseWallet = () => {
     const evmWallet = wallets.find(
       (wallet: any) =>
         wallet.walletClientType === "privy" ||
+        wallet.walletClientType === "coinbase_wallet" ||
         wallet.walletClientType === "metamask" ||
         wallet.walletClientType === "walletconnect"
     );
