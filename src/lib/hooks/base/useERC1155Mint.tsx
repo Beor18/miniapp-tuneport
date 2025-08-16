@@ -529,7 +529,10 @@ export const useERC1155Mint = () => {
           let embeddedProvider = null;
           let fromAddress = evmAddress; // Dirección por defecto
 
-          if (user?.wallet?.walletClientType === "metamask") {
+          if (
+            user?.wallet?.walletClientType === "metamask" ||
+            user?.wallet?.walletClientType === "coinbase_wallet"
+          ) {
             console.log("Metamask");
             const metamaskResult = await getEmbeddedWalletClientMetamask();
             if (
@@ -776,7 +779,10 @@ export const useERC1155Mint = () => {
           let embeddedProvider = null;
           let fromAddressERC20 = evmAddress; // Dirección por defecto
 
-          if (user?.wallet?.walletClientType === "metamask") {
+          if (
+            user?.wallet?.walletClientType === "metamask" ||
+            user?.wallet?.walletClientType === "coinbase_wallet"
+          ) {
             console.log("Metamask");
             const metamaskResult = await getEmbeddedWalletClientMetamask();
             if (

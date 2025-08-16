@@ -67,7 +67,10 @@ export const useBaseWallet = () => {
     console.log("🔧 Wallet object:", evmWallet);
 
     // Para wallets de Privy, usar su provider nativo
-    if (evmWallet.walletClientType === "privy") {
+    if (
+      evmWallet.walletClientType === "privy" ||
+      evmWallet.walletClientType === "coinbase_wallet"
+    ) {
       console.log("🔗 Using Privy wallet provider");
       try {
         const provider = await evmWallet.getEthereumProvider();
