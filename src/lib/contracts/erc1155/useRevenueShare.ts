@@ -104,7 +104,9 @@ export const useRevenueShare = (
 
   const getEmbeddedWalletClientMetamask = useCallback(async () => {
     const embeddedWallet = wallets.find(
-      (wallet: any) => wallet.walletClientType === "metamask"
+      (wallet: any) =>
+        wallet.walletClientType === "metamask" ||
+        wallet.walletClientType === "coinbase_wallet"
     );
 
     if (!embeddedWallet) {
@@ -147,6 +149,7 @@ export const useRevenueShare = (
       (wallet: any) =>
         wallet.walletClientType === "privy" ||
         wallet.walletClientType === "metamask" ||
+        wallet.walletClientType === "coinbase_wallet" ||
         wallet.walletClientType === "walletconnect"
     );
     return evmWallet?.address || userWalletAddress || null;

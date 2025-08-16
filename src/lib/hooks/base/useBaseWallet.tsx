@@ -30,6 +30,7 @@ export const useBaseWallet = () => {
       (wallet: any) =>
         wallet.walletClientType === "privy" ||
         wallet.walletClientType === "metamask" ||
+        wallet.walletClientType === "coinbase_wallet" ||
         wallet.walletClientType === "walletconnect"
     );
 
@@ -48,6 +49,7 @@ export const useBaseWallet = () => {
       (wallet: any) =>
         wallet.walletClientType === "privy" ||
         wallet.walletClientType === "metamask" ||
+        wallet.walletClientType === "coinbase_wallet" ||
         wallet.walletClientType === "walletconnect"
     );
 

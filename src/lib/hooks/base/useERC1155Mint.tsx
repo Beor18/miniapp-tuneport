@@ -48,7 +48,9 @@ export const useERC1155Mint = () => {
 
   const getEmbeddedWalletClientMetamask = useCallback(async () => {
     const embeddedWallet = wallets.find(
-      (wallet: any) => wallet.walletClientType === "metamask"
+      (wallet: any) =>
+        wallet.walletClientType === "metamask" ||
+        wallet.walletClientType === "coinbase_wallet"
     );
 
     if (!embeddedWallet) {

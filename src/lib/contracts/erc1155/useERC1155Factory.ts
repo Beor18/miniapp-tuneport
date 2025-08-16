@@ -205,6 +205,7 @@ export const useERC1155Factory = (
       (wallet: any) =>
         wallet.walletClientType === "privy" ||
         wallet.walletClientType === "metamask" ||
+        wallet.walletClientType === "coinbase_wallet" ||
         wallet.walletClientType === "walletconnect"
     );
     const evmAddress = evmWallet?.address || userWalletAddress || null;

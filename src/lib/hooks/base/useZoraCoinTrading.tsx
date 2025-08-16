@@ -51,6 +51,7 @@ export const useZoraCoinTrading = () => {
       (wallet: any) =>
         wallet.walletClientType === "privy" ||
         wallet.walletClientType === "metamask" ||
+        wallet.walletClientType === "coinbase_wallet" ||
         wallet.walletClientType === "walletconnect"
     );
     return evmWallet?.address || null;

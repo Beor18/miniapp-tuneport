@@ -137,6 +137,7 @@ export default function MusicNewForm({
       (wallet: any) =>
         wallet.walletClientType === "privy" ||
         wallet.walletClientType === "metamask" ||
+        wallet.walletClientType === "coinbase_wallet" ||
         wallet.walletClientType === "walletconnect"
     );
 
