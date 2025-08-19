@@ -13,6 +13,12 @@ interface FarcasterContextType {
   context: any;
   walletContext: any;
   tipContext: any;
+  userInfo: {
+    fid?: number;
+    username?: string;
+    displayName?: string;
+    pfpUrl?: string;
+  } | null;
 }
 
 const FarcasterContext = createContext<FarcasterContextType>({
@@ -20,6 +26,7 @@ const FarcasterContext = createContext<FarcasterContextType>({
   context: null,
   walletContext: null,
   tipContext: null,
+  userInfo: null,
 });
 
 export function FarcasterProvider({ children }: { children: ReactNode }) {
@@ -27,6 +34,8 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   const [context, setContext] = useState<any>(null);
   const [walletContext, setWalletContext] = useState<any>(null);
   const [tipContext, setTipContext] = useState<any>(null);
+  const [userInfo, setUserInfo] =
+    useState<FarcasterContextType["userInfo"]>(null);
 
   useEffect(() => {
     // Cargar SDK de Farcaster Mini Apps
@@ -45,10 +54,22 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         setWalletContext(appWalletContext);
         setContext(appContext);
         setTipContext(actionContext);
+
+        // Extraer información del usuario del contexto
+        if (appContext?.user) {
+          setUserInfo({
+            fid: appContext.user.fid,
+            username: appContext.user.username,
+            displayName: appContext.user.displayName,
+            pfpUrl: appContext.user.pfpUrl,
+          });
+        }
+
         setIsSDKLoaded(true);
 
         console.log("Farcaster SDK loaded successfully:", appContext);
         console.log("Wallet context:", appWalletContext);
+        console.log("User info:", appContext?.user);
       } catch (error) {
         console.error("Error loading Farcaster SDK:", error);
         // Para desarrollo, marcar como listo de todas formas
@@ -61,7 +82,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
 
   return (
     <FarcasterContext.Provider
-      value={{ isSDKLoaded, context, walletContext, tipContext }}
+      value={{ isSDKLoaded, context, walletContext, tipContext, userInfo }}
     >
       {children}
     </FarcasterContext.Provider>

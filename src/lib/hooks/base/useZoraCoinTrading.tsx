@@ -129,7 +129,8 @@ export const useZoraCoinTrading = () => {
     async (tradeParameters: TradeParameters): Promise<TradeResult> => {
       const evmAddress = getEvmWalletAddress();
 
-      if (!authenticated || !evmAddress) {
+      // Eliminar la verificación de authenticated - solo verificar que hay una wallet
+      if (!evmAddress) {
         throw new Error("Please connect your wallet first");
       }
 
@@ -244,13 +245,7 @@ export const useZoraCoinTrading = () => {
         setIsTrading(false);
       }
     },
-    [
-      authenticated,
-      getEvmWalletAddress,
-      getUserWalletClient,
-      publicClientMainnet,
-      isMainnet,
-    ]
+    [getEvmWalletAddress, getUserWalletClient, publicClientMainnet, isMainnet]
   );
 
   // Función para comprar tokens

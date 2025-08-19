@@ -9,6 +9,7 @@ import {
 import { Button } from "@Src/ui/components/ui/button";
 import { Input } from "@Src/ui/components/ui/input";
 import { Badge } from "@Src/ui/components/ui/badge";
+import { useFarcasterMiniApp } from "./FarcasterProvider";
 import {
   useZoraCoinTrading,
   type CoinTradingData,
@@ -40,7 +41,9 @@ export default function AlbumCoinWidget({
 }: AlbumCoinWidgetProps) {
   const { coinData, isTrading, getCoinData, buyCoin, sellCoin } =
     useZoraCoinTrading();
-  const [buyAmount, setBuyAmount] = useState("1");
+  const { userInfo } = useFarcasterMiniApp();
+
+  const [buyAmount, setBuyAmount] = useState("0.001"); // Valor más realista por defecto
   const [sellAmount, setSellAmount] = useState("1");
   const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy");
 
@@ -67,7 +70,7 @@ export default function AlbumCoinWidget({
     if (amount > 0) {
       const result = await buyCoin(coinAddress, amount);
       if (result.status === "success") {
-        setBuyAmount("1");
+        setBuyAmount("0.001");
         // Refresh data
         getCoinData(coinAddress);
       }
@@ -115,6 +118,15 @@ export default function AlbumCoinWidget({
               >
                 Album Coin
               </Badge>
+              {/* Mostrar usuario de Farcaster si está disponible */}
+              {userInfo && (
+                <Badge
+                  variant="secondary"
+                  className="bg-purple-500/20 text-purple-300 text-xs"
+                >
+                  @{userInfo.username}
+                </Badge>
+              )}
               <a
                 href={`https://zora.co/collect/base:${coinAddress}`}
                 target="_blank"
@@ -214,7 +226,9 @@ export default function AlbumCoinWidget({
                   type="number"
                   value={buyAmount}
                   onChange={(e) => setBuyAmount(e.target.value)}
-                  placeholder="1"
+                  placeholder="0.001"
+                  step="0.001"
+                  min="0.0001"
                   className="bg-zinc-800 border-zinc-700 text-zinc-100"
                 />
               </div>
@@ -282,6 +296,11 @@ export default function AlbumCoinWidget({
             💡 <strong>Album Tokens</strong> let you directly support and invest
             in this music. Token holders get exclusive perks and participate in
             the album&apos;s success.
+            {userInfo && (
+              <span className="block mt-1">
+                Hello {userInfo.displayName || userInfo.username}! 👋
+              </span>
+            )}
           </p>
         </div>
       </CardContent>

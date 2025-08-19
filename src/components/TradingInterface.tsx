@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useZoraCoinTrading } from "@/lib/hooks/base/useZoraCoinTrading";
+import { useFarcasterMiniApp } from "./FarcasterProvider";
 import { Button } from "@Src/ui/components/ui/button";
 import { Input } from "@Src/ui/components/ui/input";
 import {
@@ -20,7 +21,10 @@ import {
   Globe,
   TestTube,
   AlertTriangle,
+  User,
+  Wallet,
 } from "lucide-react";
+import { Badge } from "@Src/ui/components/ui/badge";
 
 interface TradingInterfaceProps {
   coinAddress?: string;
@@ -45,10 +49,13 @@ export function TradingInterface({
     tradeTokens,
   } = useZoraCoinTrading();
 
+  // Aprovechar contexto de Farcaster para personalizar la experiencia
+  const { userInfo } = useFarcasterMiniApp();
+
   const [coinAddress, setCoinAddress] = useState(
-    "0xe4d2a1f49ab87eebc53a3d9d706449e8fe066566"
+    initialCoinAddress || "0xe4d2a1f49ab87eebc53a3d9d706449e8fe066566"
   );
-  const [buyAmount, setBuyAmount] = useState("0.01");
+  const [buyAmount, setBuyAmount] = useState("0.001"); // Valor más realista
   const [sellAmount, setSellAmount] = useState("100");
   const [buySlippage, setBuySlippage] = useState("5");
   const [sellSlippage, setSellSlippage] = useState("15");
@@ -70,7 +77,7 @@ export function TradingInterface({
     const slippage = parseFloat(buySlippage) / 100; // Convert percentage to decimal
     if (amount > 0) {
       await buyCoin(
-        "0xe4d2a1f49ab87eebc53a3d9d706449e8fe066566",
+        coinAddress, // Usar la dirección correcta del coin
         amount,
         slippage
       );
@@ -85,7 +92,7 @@ export function TradingInterface({
     const slippage = parseFloat(sellSlippage) / 100; // Convert percentage to decimal
     if (amount > 0) {
       await sellCoin(
-        "0xe4d2a1f49ab87eebc53a3d9d706449e8fe066566",
+        coinAddress, // Usar la dirección correcta del coin
         amount,
         slippage
       );
@@ -152,6 +159,41 @@ export function TradingInterface({
   return (
     <div className="w-full max-w-full overflow-hidden">
       <div className="space-y-4 p-3">
+        {/* Bienvenida personalizada si hay usuario de Farcaster */}
+        {userInfo && (
+          <div className="bg-purple-900/20 border border-purple-700/30 rounded-lg p-3 mb-4">
+            <div className="flex items-center space-x-3">
+              {userInfo.pfpUrl ? (
+                <img
+                  src={userInfo.pfpUrl}
+                  alt={userInfo.displayName || userInfo.username}
+                  className="w-8 h-8 rounded-full object-cover border-2 border-purple-400/30"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-purple-600/50 flex items-center justify-center border-2 border-purple-400/30">
+                  <User className="h-4 w-4 text-purple-200" />
+                </div>
+              )}
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-purple-100">
+                    ¡Hola, {userInfo.displayName || userInfo.username}! 👋
+                  </span>
+                  <Badge
+                    variant="secondary"
+                    className="bg-purple-500/20 text-purple-300 text-xs"
+                  >
+                    Farcaster
+                  </Badge>
+                </div>
+                <p className="text-xs text-purple-300">
+                  Purchase tokens without additional registration
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Network Indicator - Mobile Optimized */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -251,12 +293,13 @@ export function TradingInterface({
                 <Input
                   type="number"
                   step="0.001"
-                  min="0"
+                  min="0.0001"
                   value={buyAmount}
                   onChange={(e) => setBuyAmount(e.target.value)}
-                  placeholder="0.01"
+                  placeholder="0.001"
                   className="h-11 w-full bg-neutral-800/50 border-neutral-700 text-white placeholder:text-neutral-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
                 />
+                <p className="text-xs text-neutral-500">Minimum: 0.0001 ETH</p>
               </div>
 
               {/* Advanced Settings for Buy */}
@@ -371,16 +414,14 @@ export function TradingInterface({
             </div>
             <div className="flex items-center gap-2">
               <p className="text-xs text-neutral-500 font-mono truncate flex-1 min-w-0">
-                0xe4d2a1f49ab87eebc53a3d9d706449e8fe066566
+                {coinAddress}
               </p>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
                   if (typeof window !== "undefined" && navigator.clipboard) {
-                    navigator.clipboard.writeText(
-                      "0xe4d2a1f49ab87eebc53a3d9d706449e8fe066566"
-                    );
+                    navigator.clipboard.writeText(coinAddress);
                   }
                 }}
                 className="text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 h-7 px-2 flex-shrink-0"
