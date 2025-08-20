@@ -5,6 +5,7 @@ import { useUserQuality } from "@Src/lib/hooks/useUserQuality";
 import { useTranslations, useLocale } from "next-intl";
 import { Users } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useFarcasterMiniApp } from "@Src/components/FarcasterProvider";
 import { toast } from "sonner";
 import { Button } from "@/ui/components/ui/button";
@@ -378,9 +379,16 @@ export default function ArtistsLeaderboard({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1 md:gap-2 mb-1">
                       <div className="flex items-center gap-1">
-                        <img
-                          src={user.pfp}
-                          alt={user.nickname}
+                        <Image
+                          src={
+                            user.pfp ||
+                            `https://avatar.iran.liara.run/username?username=${
+                              user.nickname || user.displayName || "Artist"
+                            }`
+                          }
+                          alt={user.nickname || user.displayName || "Artist"}
+                          width={24}
+                          height={24}
                           className="w-6 h-6 rounded-full"
                         />
                       </div>

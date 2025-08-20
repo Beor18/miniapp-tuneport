@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     let realUserFids: number[] = [];
     let realUserNickname: string[] = [];
     let diagnostics: any = {};
+    let localArtists: any[] = []; // Artistas sin Farcaster de nuestra BD
 
     try {
       const fidsResponse = await fetch(
@@ -32,9 +33,49 @@ export async function GET(request: NextRequest) {
         realUserFids = fidsData.fids || [];
         diagnostics = fidsData.diagnostics || {};
         realUserNickname = fidsData.users.map((user: any) => user) || [];
+
+        // 🎨 OBTENER ARTISTAS SIN FARCASTER usando endpoint getUser separado
+        try {
+          const allUsersResponse = await fetch(
+            `${process.env.API_ELEI}/api/users/getUser`,
+            {
+              cache: "no-store",
+            }
+          );
+
+          if (allUsersResponse.ok) {
+            const allUsers = await allUsersResponse.json();
+
+            // Filtrar artistas que NO tienen FID de Farcaster
+            localArtists = allUsers.filter((user: any) => {
+              const hasNoFarcaster = !user.farcaster_fid;
+              const isArtist = user.type === "artist";
+
+              return hasNoFarcaster && isArtist;
+            });
+
+            console.log(
+              `🎨 De ${allUsers.length} usuarios totales, encontrados ${localArtists.length} artistas sin Farcaster`
+            );
+          } else {
+            console.warn(
+              "⚠️ Error obteniendo todos los usuarios:",
+              allUsersResponse.status
+            );
+          }
+        } catch (getAllUsersError) {
+          console.error(
+            "❌ Error fetching all users for local artists:",
+            getAllUsersError
+          );
+        }
+
         console.log(
           `✅ Obtenidos ${realUserFids.length} FIDs reales de la BD:`,
           realUserFids.slice(0, 5)
+        );
+        console.log(
+          `🎨 Extraídos ${localArtists.length} artistas locales sin Farcaster`
         );
 
         if (diagnostics.totalUsers || diagnostics.usersWithAnyFarcasterData) {
@@ -59,52 +100,52 @@ export async function GET(request: NextRequest) {
     const nicknamesToUse = realUserNickname;
 
     console.log(
-      `🎯 Usando SOLO usuarios reales: ${fidsToUse.length} FIDs de la BD`
+      `🎯 Usando usuarios reales: ${fidsToUse.length} FIDs de Farcaster + ${localArtists.length} artistas locales`
     );
 
-    // Si no hay usuarios reales, retornar error específico
-    if (fidsToUse.length === 0) {
+    // Si no hay usuarios reales ni artistas locales, retornar error específico
+    if (fidsToUse.length === 0 && localArtists.length === 0) {
       return NextResponse.json(
         {
-          error: "No hay usuarios de Farcaster registrados",
-          message:
-            "Registra tu cuenta de Farcaster para aparecer en el leaderboard",
+          error: "No hay artistas registrados",
+          message: "Aún no hay artistas registrados en el leaderboard",
         },
         { status: 404 }
       );
     }
 
-    // Construir URL con FIDs codificados correctamente
-    const fidsParam = fidsToUse.join("%2C%20"); // URL encoded comma-space
-    const url = `https://api.neynar.com/v2/farcaster/user/bulk/?fids=${fidsParam}`;
+    // 🎭 PROCESAR USUARIOS DE FARCASTER (si existen)
+    let farcasterUsers: any[] = [];
 
-    // Obtener datos de usuarios de Farcaster usando Neynar API
-    const neynarResponse = await fetch(url, {
-      method: "GET",
-      headers: {
-        "x-api-key": neynarApiKey,
-        "x-neynar-experimental": "false",
-      },
-    });
+    if (fidsToUse.length > 0) {
+      // Construir URL con FIDs codificados correctamente
+      const fidsParam = fidsToUse.join("%2C%20"); // URL encoded comma-space
+      const url = `https://api.neynar.com/v2/farcaster/user/bulk/?fids=${fidsParam}`;
 
-    if (!neynarResponse.ok) {
-      throw new Error(
-        `Error fetching Farcaster users: ${neynarResponse.status}`
-      );
+      // Obtener datos de usuarios de Farcaster usando Neynar API
+      const neynarResponse = await fetch(url, {
+        method: "GET",
+        headers: {
+          "x-api-key": neynarApiKey,
+          "x-neynar-experimental": "false",
+        },
+      });
+
+      if (neynarResponse.ok) {
+        const farcasterData = await neynarResponse.json();
+        farcasterUsers = farcasterData.users || [];
+        console.log(
+          `✅ Obtenidos ${farcasterUsers.length} usuarios de Farcaster`
+        );
+      } else {
+        console.warn(
+          `⚠️ Error fetching Farcaster users: ${neynarResponse.status}`
+        );
+      }
     }
 
-    const farcasterData = await neynarResponse.json();
-    const users = farcasterData.users;
-
-    if (!users || users.length === 0) {
-      return NextResponse.json(
-        { error: "No se encontraron usuarios de Farcaster" },
-        { status: 404 }
-      );
-    }
-
-    // Extraer direcciones verificadas de usuarios de Farcaster
-    const usersWithAddresses = users
+    // 🔗 PROCESAR USUARIOS DE FARCASTER CON DIRECCIONES VERIFICADAS
+    const farcasterUsersWithAddresses = farcasterUsers
       .filter(
         (user: any) =>
           user.verified_addresses?.eth_addresses?.length > 0 ||
@@ -122,19 +163,54 @@ export async function GET(request: NextRequest) {
           address,
         };
       })
-      .filter((user: any) => user.address) // Solo usuarios con dirección válida
-      .slice(0, limit);
+      .filter((user: any) => user.address); // Solo usuarios con dirección válida
 
-    if (usersWithAddresses.length === 0) {
+    console.log(
+      `🔗 Usuarios de Farcaster con direcciones: ${farcasterUsersWithAddresses.length}`
+    );
+
+    // 🎨 PROCESAR ARTISTAS LOCALES (sin Farcaster)
+    const localArtistsFormatted = localArtists
+      .filter((artist: any) => artist.address) // Solo artistas con dirección válida
+      .map((artist: any) => {
+        const formatted = {
+          // Formatear como usuario estándar para el leaderboard
+          address: artist.address,
+          nickname: artist.nickname,
+          displayName: artist.name || artist.nickname,
+          fid: null, // No tiene FID de Farcaster
+          pfp: artist.picture,
+          verified: artist.verified || false,
+          powerBadge: false, // No aplica para usuarios locales
+          followerCount: artist.followers?.length || 0,
+          neynarScore: 0, // No aplica para usuarios locales
+          type: "local_artist",
+          localFollowing: artist.followers?.length || 0, // Following interno de la plataforma
+        };
+
+        console.log(
+          `🎨 Artista local formateado: ${formatted.nickname} (${formatted.followerCount} followers)`
+        );
+        return formatted;
+      });
+
+    console.log(
+      `🎨 Artistas locales formateados: ${localArtistsFormatted.length}`
+    );
+
+    // 🔀 COMBINAR AMBAS LISTAS
+    const allUsers = [...farcasterUsersWithAddresses, ...localArtistsFormatted];
+
+    if (allUsers.length === 0) {
       return NextResponse.json(
-        { error: "No se encontraron direcciones verificadas" },
+        { error: "No se encontraron artistas con datos válidos" },
         { status: 404 }
       );
     }
 
     console.log("nicknamesToUse: ", nicknamesToUse);
 
-    // Crear mapa de address -> nickname desde la BD
+    // Crear mapa de FID -> nickname desde la BD
     const dbNicknameMap = new Map<string, string>();
     nicknamesToUse.forEach((userData: any) => {
       if (userData.fid && userData.nickname) {
@@ -142,31 +218,74 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Preparar datos para el leaderboard
-    const leaderboardData = usersWithAddresses.map((user: any) => {
-      // Buscar nickname de la BD primero, luego fallback a Farcaster
-      const dbNickname = dbNicknameMap.get(user.fid);
+    // 📊 PREPARAR DATOS PARA EL LEADERBOARD (combinando Farcaster + artistas locales)
+    const leaderboardData = allUsers
+      .map((user: any) => {
+        // Para usuarios de Farcaster
+        if (user.fid) {
+          // Buscar nickname de la BD primero, luego fallback a Farcaster
+          const dbNickname = dbNicknameMap.get(user.fid);
 
-      return {
-        address: user.address,
-        nickname: dbNickname || user.username || "Unknown", // Nickname de BD o fallback a Farcaster
-        nicknameVerified: user.username, // Username verificado de Farcaster
-        displayName:
-          user.display_name || dbNickname || user.username || "Unknown",
-        fid: user.fid,
-        pfp: user.pfp_url,
-        verified: !!user.verified_addresses?.eth_addresses?.length,
-        powerBadge: user.power_badge || false,
-        followerCount: user.follower_count || 0,
-        neynarScore: user.experimental?.neynar_user_score || 0,
-        type: user.type,
-      };
-    });
+          return {
+            address: user.address,
+            nickname: dbNickname || user.username || "Unknown",
+            nicknameVerified: user.username, // Username verificado de Farcaster
+            displayName:
+              user.display_name || dbNickname || user.username || "Unknown",
+            fid: user.fid,
+            pfp: user.pfp_url,
+            verified: !!user.verified_addresses?.eth_addresses?.length,
+            powerBadge: user.power_badge || false,
+            followerCount: user.follower_count || 0,
+            neynarScore: user.experimental?.neynar_user_score || 0,
+            type: user.type || "farcaster_user",
+            localFollowing: 0, // Los usuarios de Farcaster no tienen following local específico
+          };
+        } else {
+          // Para artistas locales (sin Farcaster)
+          return {
+            address: user.address,
+            nickname: user.nickname || "Unknown",
+            nicknameVerified: null, // No tienen username verificado de Farcaster
+            displayName: user.displayName || user.nickname || "Unknown",
+            fid: null,
+            pfp: user.pfp,
+            verified: user.verified,
+            powerBadge: false,
+            followerCount: user.followerCount,
+            neynarScore: 0,
+            type: "local_artist",
+            localFollowing: user.localFollowing, // Following interno de la plataforma
+          };
+        }
+      })
+      // 🔄 ORDENAR: Primero por following local (para artistas locales), luego por follower count
+      .sort((a, b) => {
+        // Si ambos son artistas locales, ordenar por following local
+        if (a.type === "local_artist" && b.type === "local_artist") {
+          return b.localFollowing - a.localFollowing;
+        }
+        // Si uno es local y otro de Farcaster, priorizar el que tenga más seguidores total
+        if (a.type === "local_artist" && b.type !== "local_artist") {
+          return b.followerCount - a.localFollowing;
+        }
+        if (a.type !== "local_artist" && b.type === "local_artist") {
+          return b.localFollowing - a.followerCount;
+        }
+        // Si ambos son de Farcaster, ordenar por follower count
+        return b.followerCount - a.followerCount;
+      })
+      .slice(0, limit);
 
     return NextResponse.json({
       success: true,
       users: leaderboardData,
-      addresses: usersWithAddresses.map((u: any) => u.address),
+      addresses: leaderboardData.map((u: any) => u.address),
+      stats: {
+        farcasterUsers: farcasterUsersWithAddresses.length,
+        localArtists: localArtistsFormatted.length,
+        totalUsers: leaderboardData.length,
+      },
     });
   } catch (error) {
     console.error("Error creating Farcaster quality leaderboard:", error);
