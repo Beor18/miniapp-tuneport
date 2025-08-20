@@ -9,7 +9,7 @@ async function getFarcasterUsers() {
     const fullUrl = `${baseUrl}/api/farcaster/user-quality-leaderboard`;
 
     const response = await fetch(fullUrl, {
-      cache: "no-cache",
+      cache: "no-store",
     });
 
     if (!response.ok) {

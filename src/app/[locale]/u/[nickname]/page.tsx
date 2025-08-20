@@ -51,7 +51,7 @@ async function getUserByNickname(nickname: string): Promise<any> {
         headers: {
           "Content-Type": "application/json",
         },
-        cache: "no-cache",
+        cache: "no-store",
       }
     );
 
@@ -81,7 +81,7 @@ async function getAlbumsByArtist(address: string): Promise<any> {
         headers: {
           "Content-Type": "application/json",
         },
-        cache: "no-cache",
+        cache: "no-store",
         //next: { tags: ["user-albums"] },
       }
     );
