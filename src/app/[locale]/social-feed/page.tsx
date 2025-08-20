@@ -4,7 +4,7 @@ import LeaderboardTabs from "@Src/components/LeaderboardTabs";
 // Función para obtener usuarios de Farcaster
 async function getFarcasterUsers() {
   try {
-    const baseUrl = "http://localhost:3000";
+    const baseUrl = "https://miniapp.tuneport.xyz";
 
     const fullUrl = `${baseUrl}/api/farcaster/user-quality-leaderboard`;
 
