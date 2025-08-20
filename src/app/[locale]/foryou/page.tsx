@@ -4,19 +4,19 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "For you | Tuneport",
   description:
-    "Ayudamos a los artistas a desatar el potencial ilimitado. Estamos listos para transformar la música digital como NFT, cada nota abre un mundo de posibilidades.",
+    "Where every second of music becomes value. Platform music in web3",
   openGraph: {
-    images: ["https://app.tuneport.xyz/preview.png"],
+    images: ["https://miniapp.tuneport.xyz/preview.png"],
   },
   twitter: {
     card: "summary_large_image",
     title: "Tuneport",
     description:
-      "Ayudamos a los artistas a desatar el potencial ilimitado. Estamos listos para transformar la música digital como NFT, cada nota abre un mundo de posibilidades.",
+      "Where every second of music becomes value. Platform music in web3",
     siteId: "1467726470533754880",
     creator: "Tuneport",
     creatorId: "1467726470533754880",
-    images: ["https://app.tuneport.xyz/preview.png"],
+    images: ["https://miniapp.tuneport.xyz/preview.png"],
   },
 };
 
