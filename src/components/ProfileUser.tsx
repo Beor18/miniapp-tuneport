@@ -194,10 +194,7 @@ const ProfileUser: React.FC<ProfileUserProps> = ({ userData, albums }) => {
       <ProfileFanUser
         profileFans={{
           ...userData,
-          picture:
-            farcasterConnected && farcasterData?.pfp
-              ? farcasterData.pfp
-              : userData.picture,
+          picture: farcasterData?.pfp ? farcasterData.pfp : userData.picture,
           _id: userData._id,
           name: userData.name,
 
@@ -265,10 +262,7 @@ const ProfileUser: React.FC<ProfileUserProps> = ({ userData, albums }) => {
     <ProfileArtistUser
       profile={{
         ...userData,
-        picture:
-          farcasterConnected && farcasterData?.pfp
-            ? farcasterData.pfp
-            : userData.picture,
+        picture: farcasterData?.pfp ? farcasterData.pfp : userData.picture,
       }}
       albums={formattedAlbums}
       nfts={[]} // Los artistas no necesitan NFTs de colección
