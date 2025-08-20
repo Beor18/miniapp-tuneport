@@ -378,11 +378,9 @@ export default function ProfileArtistUser({
             <div className="w-24 h-24 sm:w-32 sm:h-32 border-2 border-white rounded-full overflow-hidden">
               <img
                 src={
-                  farcasterPfp && isOwnProfile
-                    ? farcasterPfp
-                    : profile.picture ||
-                      profile.farcaster_pfp ||
-                      `https://avatar.iran.liara.run/username?username=${profile.name}`
+                  profile.picture ||
+                  profile.farcaster_pfp ||
+                  `https://avatar.iran.liara.run/username?username=${profile.name}`
                 }
                 alt={profile.name}
                 className="w-full h-full object-cover"
