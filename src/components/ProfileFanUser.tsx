@@ -30,8 +30,10 @@ import { updateProfile } from "@Src/app/actions/updateProfile.actions";
 import { followUser, getUserByAddress } from "@Src/app/actions/follows.actions";
 import { ProfileEditModal } from "@Src/components/ProfileEditModal";
 import PlaylistCarousel from "./PlaylistCarousel";
+import OptimizedWalletAssets from "./OptimizedWalletAssets";
 import { useTranslations } from "next-intl";
 import { useAppKitAccount } from "@Src/lib/privy";
+import { useOptimizedUserNFTs } from "@Src/lib/hooks/useOptimizedUserNFTs";
 import Link from "next/link";
 
 interface NFT {
@@ -142,7 +144,23 @@ export default function ProfileFanUser({
   const tCommon = useTranslations("common");
 
   // 🆕 FARCASTER: Obtener datos de Farcaster del usuario actual
-  const { farcasterConnected, farcasterData } = useAppKitAccount();
+  const { farcasterConnected, farcasterData, evmWalletAddress } =
+    useAppKitAccount();
+
+  // 🚀 NFTs optimizados con nuevas funciones v1.0.1
+  const {
+    nfts: optimizedNFTs,
+    loading: nftsLoading,
+    error: nftsError,
+    totalCount: nftsTotalCount,
+    usingNewFunctions,
+    refetch: refetchNFTs,
+  } = useOptimizedUserNFTs(evmWalletAddress || undefined);
+
+  // 🚨 DEBUG: Verificar qué address se está usando
+  console.log(
+    `👤 ProfileFanUser - fetching NFTs for evmWalletAddress: ${evmWalletAddress}`
+  );
 
   const initialFollowersCount = profileFans.followers
     ? profileFans.followers?.length
@@ -462,82 +480,16 @@ export default function ProfileFanUser({
         </div>
       </div>
 
-      {/* Collected NFTs Section - Convertido a Carrusel */}
+      {/* Optimized Collected NFTs Section */}
       <div className="px-4 sm:px-6 lg:px-8 mt-12">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold text-zinc-100 uppercase">
-            COLLECTED
-          </h3>
-          {/* Botones de navegación del carrusel */}
-          {!isLoadingNFTs && nfts.length > 0 && (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                aria-label="Scroll left"
-                onClick={() => scroll("left", collectedScrollRef)}
-                className="bg-zinc-900/80 border border-zinc-800 rounded-full p-1 w-9 h-9 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all shadow-md"
-                style={{ boxShadow: "0 2px 8px 0 rgba(0,0,0,0.12)" }}
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                type="button"
-                aria-label="Scroll right"
-                onClick={() => scroll("right", collectedScrollRef)}
-                className="bg-zinc-900/80 border border-zinc-800 rounded-full p-1 w-9 h-9 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all shadow-md"
-                style={{ boxShadow: "0 2px 8px 0 rgba(0,0,0,0.12)" }}
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          )}
-        </div>
-
-        {nfts.length === 0 && !isLoadingNFTs ? (
-          <div className="flex flex-col items-center justify-center p-8 bg-zinc-900/50 rounded-lg">
-            <PackageX className="w-12 h-12 text-zinc-600 mb-3" />
-            <p className="text-zinc-400 text-center">
-              {tCommon("noNftsFound")}
-            </p>
-            <p className="text-zinc-500 text-center text-sm mt-1">
-              {tCommon("nftsWillAppearHere")}
-            </p>
-          </div>
-        ) : (
-          <div className="relative">
-            <div
-              ref={collectedScrollRef}
-              className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 mb-4 scroll-smooth"
-              style={{
-                scrollbarWidth: "none",
-                msOverflowStyle: "none",
-                WebkitOverflowScrolling: "touch",
-              }}
-            >
-              {isLoadingNFTs
-                ? // Mostrar skeletons mientras carga
-                  Array(getSkeletonCount())
-                    .fill(0)
-                    .map((_, index) => (
-                      <div
-                        key={`skeleton-${index}`}
-                        className="w-40 sm:w-48 flex-shrink-0 first:ml-0"
-                      >
-                        <NFTCardSkeleton />
-                      </div>
-                    ))
-                : // Mostrar NFTs reales
-                  nfts.map((nft) => (
-                    <div
-                      key={nft.id}
-                      className="w-40 sm:w-48 flex-shrink-0 first:ml-0"
-                    >
-                      <NFTCard nft={nft} tCommon={tCommon} />
-                    </div>
-                  ))}
-            </div>
-          </div>
-        )}
+        <OptimizedWalletAssets
+          nfts={optimizedNFTs}
+          loading={nftsLoading}
+          error={nftsError}
+          totalCount={nftsTotalCount}
+          usingNewFunctions={usingNewFunctions}
+          onRefresh={refetchNFTs}
+        />
       </div>
 
       {/* Playlists Section */}

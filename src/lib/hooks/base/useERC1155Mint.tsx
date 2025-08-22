@@ -212,6 +212,7 @@ export const useERC1155Mint = () => {
           artist: evmAddress,
           price: params.price || 0,
           currency: params.currency || "ETH",
+          community: "tuneport",
         };
 
         // 5. Subir metadatos a IPFS

@@ -5,8 +5,6 @@ import { useAppKitAccount } from "@Src/lib/privy";
 import ProfileFanUser from "@Src/components/ProfileFanUser";
 import ProfileArtistUser from "@Src/components/ProfileArtistUser";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
-import { getUserNFTs } from "@Src/app/actions/nfts.actions";
 
 interface User {
   name: string;
@@ -65,46 +63,10 @@ interface Album {
   updatedAt: string;
 }
 
-interface NFT {
-  id: string;
-  name: string;
-  artist: string;
-  image: string;
-  contractAddress?: string;
-  balance?: number;
-  metadata?: any;
-  description?: string;
-  external_url?: string;
-  collection_type?: string;
-  music_genre?: string;
-  record_label?: string;
-  mint_currency?: string;
-  slug?: string;
-  network?: string;
-  symbol?: string;
-  collaborators?: Array<{
-    name: string;
-    address: string;
-    mintPercentage: number;
-    royaltyPercentage: number;
-  }>;
-  attributes?: Array<{
-    trait_type: string;
-    value: string;
-  }>;
-  start_mint_date?: string;
-  release_date?: string;
-  max_items?: number;
-  address_creator_collection?: string;
-}
-
 interface ProfileUserProps {
   userData: any;
   albums: Album[];
 }
-
-// Dirección del contrato ERC1155
-const CONTRACT_ADDRESS = "0x01A4348B8f0bA8a55C3534153E4FB47331E93895";
 
 const ProfileUser: React.FC<ProfileUserProps> = ({ userData, albums }) => {
   const { nickname } = useParams<{ nickname: string }>();
@@ -112,71 +74,10 @@ const ProfileUser: React.FC<ProfileUserProps> = ({ userData, albums }) => {
     useAppKitAccount();
   const tUser = useTranslations("user");
 
-  const [userNFTs, setUserNFTs] = useState<NFT[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [nftsLoaded, setNftsLoaded] = useState(false); // Flag para evitar cargar múltiples veces
-
   // Determinar si es perfil propio
   const isOwnProfile =
     userData.address_solana?.toLowerCase() ===
       address?.toString().toLowerCase() && userData.nickname === nickname;
-
-  // Cargar NFTs usando server action
-  useEffect(() => {
-    const fetchNFTs = async () => {
-      // Evitar fetch múltiples si ya se cargaron los NFTs para esta dirección
-      if (!evmWalletAddress || nftsLoaded) return;
-
-      console.log("🔄 Starting NFT fetch for:", evmWalletAddress);
-      setLoading(true);
-
-      try {
-        const { nfts } = await getUserNFTs(evmWalletAddress, CONTRACT_ADDRESS);
-
-        console.log("✅ NFTs loaded:", nfts);
-        // Convertir a formato esperado
-        const convertedNFTs: NFT[] = nfts.map((nft) => ({
-          id: nft.id,
-          name: nft.name,
-          artist: nft.artist,
-          image: nft.image,
-          contractAddress: nft.contractAddress,
-          balance: nft.balance,
-          metadata: nft.metadata,
-          description: nft.description,
-          external_url: nft.external_url,
-          collection_type: nft.collection_type,
-          music_genre: nft.music_genre,
-          record_label: nft.record_label,
-          mint_currency: nft.mint_currency,
-          slug: nft.slug,
-          network: nft.network,
-          symbol: nft.symbol,
-          collaborators: nft.collaborators,
-          attributes: nft.attributes,
-          start_mint_date: nft.start_mint_date,
-          release_date: nft.release_date,
-          max_items: nft.max_items,
-          address_creator_collection: nft.address_creator_collection,
-        }));
-
-        setUserNFTs(convertedNFTs);
-        setNftsLoaded(true); // Marcar como cargados
-      } catch (error) {
-        console.error("Error cargando NFTs:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNFTs();
-  }, [evmWalletAddress, nftsLoaded]);
-
-  // Reset cuando cambia la dirección de wallet
-  useEffect(() => {
-    setNftsLoaded(false);
-    setUserNFTs([]);
-  }, [evmWalletAddress]);
 
   if (!userData) {
     return <div>{tUser("userNotFound")}</div>;
@@ -212,7 +113,7 @@ const ProfileUser: React.FC<ProfileUserProps> = ({ userData, albums }) => {
         nfts={[]}
         isOwnProfile={isOwnProfile}
         publicKey={address?.toString()}
-        isLoadingNFTs={loading}
+        isLoadingNFTs={false}
       />
     );
   }

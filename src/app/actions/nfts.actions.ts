@@ -51,16 +51,17 @@ const publicClient = createPublicClient({
 });
 
 export async function getUserNFTs(
-  userAddress: string,
-  contractAddress: string
+  userAddress: string
 ): Promise<{ nfts: UserNFT[]; error?: string }> {
   try {
-    if (!userAddress || !contractAddress) {
+    if (!userAddress) {
       return { nfts: [] };
     }
 
-    // Verificar cache primero
-    const cacheKey = `${userAddress.toLowerCase()}_${contractAddress.toLowerCase()}`;
+    console.log(`🔍 Getting NFTs for user: ${userAddress}`);
+
+    // Verificar cache primero - simplificado, solo por usuario
+    const cacheKey = userAddress.toLowerCase();
     const cached = userNFTsCache.get(cacheKey);
 
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
@@ -74,23 +75,30 @@ export async function getUserNFTs(
     console.log(`🔍 Cache miss for ${userAddress} - fetching fresh data...`);
 
     // 🚀 MÉTODO 1: Alchemy API (más eficiente - obtiene todos los NFTs de una vez)
+    // ✅ HABILITADO PARA COLECCIONES LEGACY
     try {
       const alchemyApiKey = process.env.ALCHEMY_API_KEY;
       if (alchemyApiKey) {
-        console.log("🔍 Trying Alchemy API for wallet NFTs...");
+        console.log(
+          `🔍 Trying Alchemy API for wallet NFTs for user: ${userAddress}`
+        );
 
         const alchemyUrl = `https://base-sepolia.g.alchemy.com/nft/v3/${alchemyApiKey}/getNFTsForOwner?owner=${userAddress}&withMetadata=true`;
 
         const alchemyResponse = await fetch(alchemyUrl, {
-          next: { revalidate: 300 }, // Cache 5 minutos (más agresivo)
-          headers: {
-            "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-          },
+          next: { revalidate: 300 },
         });
 
         if (alchemyResponse.ok) {
           const data = await alchemyResponse.json();
-          console.log("✅ Alchemy API response:", data);
+          console.log(`✅ Alchemy API response for ${userAddress}:`, {
+            totalNFTs: data.ownedNfts?.length || 0,
+            firstFewNFTs: data.ownedNfts?.slice(0, 3)?.map((nft: any) => ({
+              tokenId: nft.tokenId,
+              contract: nft.contract?.address,
+              name: nft.name || nft.metadata?.name,
+            })),
+          });
 
           // Proceso de los NFTs con fetch al tokenUri (con cache mejorado)
           const nftPromises =
@@ -108,10 +116,9 @@ export async function getUserNFTs(
                     console.log(`🔍 Fetching metadata from: ${metadataUrl}`);
 
                     const metadataResponse = await fetch(metadataUrl, {
-                      next: { revalidate: 1800 }, // Cache metadatos 30 minutos (más agresivo)
+                      cache: "no-store", // 🚨 DESHABILITAR CACHE TEMPORALMENTE
                       headers: {
-                        "Cache-Control":
-                          "public, s-maxage=1800, stale-while-revalidate=3600",
+                        "Cache-Control": "no-cache",
                       },
                     });
 
@@ -136,45 +143,49 @@ export async function getUserNFTs(
                 }
 
                 // Filtrar solo NFTs de community "tuneport"
-                if (!fullMetadata || fullMetadata.community !== "tuneport") {
-                  console.log(
-                    `⚠️ Skipping token ${nft.tokenId} - not tuneport community`
-                  );
-                  return null;
-                }
+                // if (!fullMetadata || fullMetadata.community !== "tuneport") {
+                //   console.log(
+                //     `⚠️ Skipping token ${nft.tokenId} - not tuneport community`
+                //   );
+                //   return null;
+                // }
 
                 // Construir el objeto NFT con los metadatos completos
                 return {
                   id: nft.tokenId,
-                  name: fullMetadata.name || `Token #${nft.tokenId}`,
+                  name:
+                    fullMetadata?.name || nft.name || `Token #${nft.tokenId}`,
                   artist:
-                    fullMetadata.collaborators?.[0]?.name ||
-                    fullMetadata.artist_name ||
+                    fullMetadata?.collaborators?.[0]?.name ||
+                    fullMetadata?.artist_name ||
+                    fullMetadata?.artist ||
                     "Artista Desconocido",
                   image:
-                    fullMetadata.image_cover ||
-                    fullMetadata.image ||
-                    `https://via.placeholder.com/300x300?text=Token+${nft.tokenId}`,
-                  contractAddress,
+                    fullMetadata?.image_cover ||
+                    fullMetadata?.image ||
+                    nft.image?.cachedUrl ||
+                    nft.image?.originalUrl ||
+                    `/logo-white.svg`,
+                  contractAddress: nft.contract?.address || "unknown",
                   balance: parseInt(nft.balance || "1"),
                   metadata: fullMetadata,
                   // Información adicional de tuneport
-                  description: fullMetadata.description,
-                  external_url: fullMetadata.external_url,
-                  collection_type: fullMetadata.collection_type,
-                  music_genre: fullMetadata.music_genre,
-                  record_label: fullMetadata.record_label,
-                  mint_currency: fullMetadata.mint_currency,
-                  slug: fullMetadata.slug,
-                  network: fullMetadata.network,
-                  symbol: fullMetadata.symbol,
-                  collaborators: fullMetadata.collaborators,
-                  attributes: fullMetadata.attributes,
-                  start_mint_date: fullMetadata.start_mint_date,
-                  release_date: fullMetadata.release_date,
-                  max_items: fullMetadata.max_items,
+                  description: fullMetadata?.description,
+                  external_url: fullMetadata?.external_url,
+                  collection_type: fullMetadata?.collection_type,
+                  music_genre: fullMetadata?.music_genre,
+                  record_label: fullMetadata?.record_label,
+                  mint_currency: fullMetadata?.mint_currency,
+                  slug: fullMetadata?.slug,
+                  network: fullMetadata?.network,
+                  symbol: fullMetadata?.symbol,
+                  collaborators: fullMetadata?.collaborators,
+                  attributes: fullMetadata?.attributes,
+                  start_mint_date: fullMetadata?.start_mint_date,
+                  release_date: fullMetadata?.release_date,
+                  max_items: fullMetadata?.max_items,
                   address_creator_collection:
-                    fullMetadata.address_creator_collection,
+                    fullMetadata?.address_creator_collection,
                 };
               } catch (error) {
                 console.warn(`Error processing NFT ${nft.tokenId}:`, error);
@@ -197,7 +208,7 @@ export async function getUserNFTs(
           });
 
           console.log(
-            `✅ Alchemy found ${nfts.length} tuneport NFTs for user ${userAddress} - cached for 10 minutes`
+            `✅ Alchemy found ${nfts.length} NFTs for user ${userAddress} - cached for 10 minutes`
           );
           return { nfts };
         } else {
@@ -213,148 +224,9 @@ export async function getUserNFTs(
       );
     }
 
-    // 🔄 MÉTODO 2: Fallback - Llamadas directas al contrato (método actual)
-    console.log("🔄 Using contract calls fallback...");
-
-    const knownTokenIds = [0, 1, 2, 3]; // IDs conocidos
-    const nfts: UserNFT[] = [];
-
-    const tokenPromises = knownTokenIds.map(async (tokenId) => {
-      try {
-        // 1. Verificar balance via contrato
-        const balance = await publicClient.readContract({
-          address: contractAddress as `0x${string}`,
-          abi: MusicCollectionABI,
-          functionName: "balanceOf",
-          args: [userAddress as `0x${string}`, BigInt(tokenId)],
-        });
-
-        console.log(`Token ${tokenId} balance:`, balance);
-
-        if (Number(balance) === 0) return null;
-
-        // 2. Obtener URI
-        const uri = await publicClient.readContract({
-          address: contractAddress as `0x${string}`,
-          abi: MusicCollectionABI,
-          functionName: "uri",
-          args: [BigInt(tokenId)],
-        });
-
-        console.log(`Token ${tokenId} URI:`, uri);
-
-        // 3. Fetch metadatos desde URI
-        let metadata: any = {};
-        if (uri) {
-          try {
-            let metadataUrl = uri.startsWith("ipfs://")
-              ? uri.replace("ipfs://", "https://ipfs.io/ipfs/")
-              : uri;
-
-            // Limpiar URI si viene con caracteres extra
-            if (metadataUrl.match(/\d+$/)) {
-              metadataUrl = metadataUrl.replace(/\d+$/, "");
-            }
-
-            console.log(`Token ${tokenId} metadata URL fixed:`, metadataUrl);
-
-            const response = await fetch(metadataUrl, {
-              next: { revalidate: 1800 }, // Cache metadatos 30 minutos
-              headers: {
-                "Cache-Control":
-                  "public, s-maxage=1800, stale-while-revalidate=3600",
-              },
-            });
-
-            if (response.ok) {
-              metadata = await response.json();
-              console.log(`Token ${tokenId} metadata:`, metadata);
-
-              // Filtrar solo NFTs de community "tuneport" también en fallback
-              if (metadata.community !== "tuneport") {
-                console.log(
-                  `⚠️ Skipping token ${tokenId} - not tuneport community (fallback)`
-                );
-                return null;
-              }
-            } else {
-              console.warn(
-                `Failed to fetch metadata for token ${tokenId}, status:`,
-                response.status
-              );
-            }
-          } catch (metaError) {
-            console.warn(
-              `Error fetching metadata for token ${tokenId}:`,
-              metaError
-            );
-          }
-        }
-
-        // 4. Construir NFT object con información completa
-        const nft: UserNFT = {
-          id: tokenId.toString(),
-          name: metadata.name || `Token #${tokenId}`,
-          artist:
-            metadata?.collaborators?.[0]?.name ||
-            metadata?.artist_name ||
-            metadata?.artist ||
-            "Artista Desconocido",
-          image:
-            metadata.image_cover || metadata.image
-              ? (metadata.image_cover || metadata.image).startsWith("ipfs://")
-                ? (metadata.image_cover || metadata.image).replace(
-                    "ipfs://",
-                    "https://ipfs.io/ipfs/"
-                  )
-                : metadata.image_cover || metadata.image
-              : `https://via.placeholder.com/300x300?text=Token+${tokenId}`,
-          contractAddress,
-          balance: Number(balance),
-          metadata,
-          // Información adicional de tuneport
-          description: metadata.description,
-          external_url: metadata.external_url,
-          collection_type: metadata.collection_type,
-          music_genre: metadata.music_genre,
-          record_label: metadata.record_label,
-          mint_currency: metadata.mint_currency,
-          slug: metadata.slug,
-          network: metadata.network,
-          symbol: metadata.symbol,
-          collaborators: metadata.collaborators,
-          attributes: metadata.attributes,
-          start_mint_date: metadata.start_mint_date,
-          release_date: metadata.release_date,
-          max_items: metadata.max_items,
-          address_creator_collection: metadata.address_creator_collection,
-        };
-
-        return nft;
-      } catch (error) {
-        console.warn(`Error processing token ${tokenId}:`, error);
-        return null;
-      }
-    });
-
-    // Ejecutar todas las promesas en paralelo
-    const results = await Promise.all(tokenPromises);
-
-    // Filtrar resultados válidos
-    results.forEach((nft) => {
-      if (nft) nfts.push(nft);
-    });
-
-    // Guardar en cache también para el fallback
-    userNFTsCache.set(cacheKey, {
-      nfts,
-      timestamp: Date.now(),
-    });
-
-    console.log(
-      `✅ Contract fallback found ${nfts.length} tuneport NFTs for user ${userAddress} - cached for 10 minutes`
-    );
-    return { nfts };
+    // 🔄 MÉTODO 2: Fallback - Si Alchemy falla, no hay NFTs
+    console.log("📭 No NFTs found with Alchemy API");
+    return { nfts: [] };
   } catch (error) {
     console.error("Error in getUserNFTs server action:", error);
     return {

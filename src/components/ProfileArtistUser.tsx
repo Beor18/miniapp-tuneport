@@ -45,9 +45,11 @@ import { usePrivy } from "@privy-io/react-auth";
 import { useWallets } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
 import WalletAssets from "./WalletAssets";
+import OptimizedWalletAssets from "./OptimizedWalletAssets";
 import PlaylistCarousel from "./PlaylistCarousel";
 import { useTranslations } from "next-intl";
 import { useFarcaster } from "@Src/lib/hooks/useFarcaster";
+import { useOptimizedUserNFTs } from "@Src/lib/hooks/useOptimizedUserNFTs";
 
 interface Album {
   id: string;
@@ -177,6 +179,21 @@ export default function ProfileArtistUser({
   // Obtener la dirección de wallet principal
   const [activeWallet, setActiveWallet] = useState<any>(null);
   const [address, setAddress] = useState<string | null>(null);
+
+  // 🚀 NFTs optimizados con nuevas funciones v1.0.1
+  const {
+    nfts: optimizedNFTs,
+    loading: nftsLoading,
+    error: nftsError,
+    totalCount: nftsTotalCount,
+    usingNewFunctions,
+    refetch: refetchNFTs,
+  } = useOptimizedUserNFTs(profile.address || undefined);
+
+  // 🚨 DEBUG: Verificar qué address se está usando
+  console.log(
+    `🎨 ProfileArtistUser - fetching NFTs for address: ${profile.address}`
+  );
 
   // Agregar estado para el álbum seleccionado
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
@@ -524,37 +541,19 @@ export default function ProfileArtistUser({
         </div>
       </div>
 
-      {/* Wallet Assets */}
-      {isOwnProfile && authenticated && (
-        <div className="px-4 sm:px-6 lg:px-8 mt-8">
-          {/* Wallet Address - Solo visible para el propietario del perfil */}
-          {/* {profile.address && (
-            <div className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 bg-zinc-800/60 backdrop-blur-sm rounded-md border border-zinc-700/50 hover:bg-zinc-800 transition-all">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-zinc-400">
-                  Your address:
-                </span>
-                <span className="text-sm font-mono text-zinc-200">
-                  {truncateAddress(profile.address)}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 rounded-full hover:bg-zinc-700"
-                onClick={() => copyToClipboard(profile.address)}
-              >
-                {copied ? (
-                  <Check className="h-3.5 w-3.5 text-emerald-400" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5 text-zinc-400" />
-                )}
-              </Button>
-            </div>
-          )} */}
-          <WalletAssets />
-        </div>
-      )}
+      {/* Optimized NFT Collection */}
+      {/* {isOwnProfile && authenticated && ( */}
+      <div className="px-4 sm:px-6 lg:px-8 mt-8">
+        <OptimizedWalletAssets
+          nfts={optimizedNFTs}
+          loading={nftsLoading}
+          error={nftsError}
+          totalCount={nftsTotalCount}
+          usingNewFunctions={usingNewFunctions}
+          onRefresh={refetchNFTs}
+        />
+      </div>
+      {/* )} */}
 
       {/* Albums Section - Convertido a Carrusel */}
       <div className="px-4 sm:px-6 lg:px-8 mt-6">
