@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@Src/ui/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@Src/ui/components/ui/radio-group";
+
 import { Switch } from "@Src/ui/components/ui/switch";
 import { Badge } from "@Src/ui/components/ui/badge";
 import {
@@ -42,8 +42,6 @@ import {
   CalendarIcon,
   ImageIcon,
   CloudUploadIcon,
-  Disc3,
-  Users2,
   MusicIcon,
   Zap,
   Users,
@@ -138,7 +136,7 @@ export default function BaseAlbumNewForm({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [musicGenre, setMusicGenre] = useState("");
-  const [collectionType, setCollectionType] = useState("");
+  const [collectionType, setCollectionType] = useState("SINGLE");
 
   // PASO 4: Configurar DAI
   const [enableDAI, setEnableDAI] = useState(false);
@@ -325,7 +323,7 @@ export default function BaseAlbumNewForm({
     setStartDate("");
     setEndDate("");
     setMusicGenre("");
-    setCollectionType("");
+    setCollectionType("SINGLE");
     setIsCreated(false);
     setActiveTab("collection");
 
@@ -499,32 +497,13 @@ export default function BaseAlbumNewForm({
 
   // Función para obtener el título dinámico
   const getDialogTitle = () => {
-    switch (collectionType) {
-      case "ALBUM":
-        return tAlbum("createMusicAlbum");
-      case "SINGLE":
-        return tAlbum("createSingleTrack");
-      case "DROP":
-        return tAlbum("createCollaborativeProject");
-      default:
-        return tAlbum("createMusicProject");
-    }
+    return tAlbum("createSingleTrack");
   };
 
   // Función para obtener el texto del botón
   const getButtonText = () => {
     if (isCreating) return tCommon("creating");
-
-    switch (collectionType) {
-      case "ALBUM":
-        return tAlbum("createAlbum");
-      case "SINGLE":
-        return tAlbum("createSingle");
-      case "DROP":
-        return tAlbum("createProject");
-      default:
-        return tAlbum("createProject");
-    }
+    return tAlbum("createSingle");
   };
 
   return (
@@ -683,6 +662,8 @@ export default function BaseAlbumNewForm({
                       </CardContent>
                     </Card>
 
+                    {/* 
+                    REMOVED: Project Type Selection - Always SINGLE for hackathon simplicity 
                     <div className="space-y-6">
                       <div className="flex flex-col gap-2">
                         <Label
@@ -695,105 +676,37 @@ export default function BaseAlbumNewForm({
                           {tForms("chooseProjectType")}
                         </p>
                       </div>
-                      <RadioGroup
-                        value={collectionType}
-                        onValueChange={(value) => setCollectionType(value)}
-                        className="space-y-3"
-                      >
-                        <Card className="bg-gradient-to-br from-zinc-800/80 to-zinc-900/90 border-zinc-700 hover:bg-zinc-800/70 hover:shadow-md hover:shadow-orange-900/5 transition-all">
-                          <CardHeader className="pb-2">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem
-                                value="ALBUM"
-                                id="collectionType-album"
-                                className="border-blue-500 text-white data-[state=checked]:bg-blue-600 data-[state=checked]:text-white"
-                              />
-                              <CardTitle>
-                                <Label
-                                  htmlFor="collectionType-album"
-                                  className="text-lg cursor-pointer text-zinc-100 flex items-center"
-                                >
-                                  <Disc3 className="mr-2 h-5 w-5 text-blue-400" />
-                                  {tAlbum("albumType")}
-                                </Label>
-                              </CardTitle>
+                      <Card className="bg-gradient-to-br from-blue-800/80 to-blue-900/90 border-blue-600 shadow-md shadow-blue-900/20">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center space-x-2">
+                            <div className="h-4 w-4 rounded-full bg-blue-600 flex items-center justify-center">
+                              <div className="h-2 w-2 rounded-full bg-white"></div>
                             </div>
-                          </CardHeader>
-                          <CardContent>
-                            <CardDescription className="text-zinc-400">
-                              <p className="font-medium">
-                                {tAlbum("albumDescription")}
-                              </p>
-                            </CardDescription>
-                          </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-br from-zinc-800/80 to-zinc-900/90 border-zinc-700 hover:bg-zinc-800/70 hover:shadow-md hover:shadow-orange-900/5 transition-all">
-                          <CardHeader className="pb-2">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem
-                                value="DROP"
-                                id="collectionType-drop"
-                                className="border-blue-500 text-white data-[state=checked]:bg-blue-600 data-[state=checked]:text-white"
-                              />
-                              <CardTitle>
-                                <Label
-                                  htmlFor="collectionType-drop"
-                                  className="text-lg cursor-pointer text-zinc-100 flex items-center"
-                                >
-                                  <Users2 className="mr-2 h-5 w-5 text-blue-400" />
-                                  {tAlbum("dropCollaborative")}
-                                </Label>
-                              </CardTitle>
-                            </div>
-                          </CardHeader>
-                          <CardContent>
-                            <CardDescription className="text-zinc-400">
-                              <p className="font-medium">
-                                {tAlbum("dropCollaborativeDescription")}
-                              </p>
-                            </CardDescription>
-                          </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-br from-zinc-800/80 to-zinc-900/90 border-zinc-700 hover:bg-zinc-800/70 hover:shadow-md hover:shadow-orange-900/5 transition-all">
-                          <CardHeader className="pb-2">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem
-                                value="SINGLE"
-                                id="collectionType-single"
-                                className="border-blue-500 text-white data-[state=checked]:bg-blue-600 data-[state=checked]:text-white"
-                              />
-                              <CardTitle>
-                                <Label
-                                  htmlFor="collectionType-single"
-                                  className="text-lg cursor-pointer text-zinc-100 flex items-center"
-                                >
-                                  <MusicIcon className="mr-2 h-5 w-5 text-blue-400" />
-                                  {tAlbum("single")}
-                                </Label>
-                              </CardTitle>
-                            </div>
-                          </CardHeader>
-                          <CardContent>
-                            <CardDescription className="text-zinc-400">
-                              <p className="font-medium">
-                                {tAlbum("singleDescription")}
-                              </p>
-                            </CardDescription>
-                          </CardContent>
-                        </Card>
-                      </RadioGroup>
+                            <CardTitle>
+                              <div className="text-lg text-zinc-100 flex items-center">
+                                <MusicIcon className="mr-2 h-5 w-5 text-blue-400" />
+                                {tAlbum("single")}
+                              </div>
+                            </CardTitle>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <CardDescription className="text-zinc-300">
+                            <p className="font-medium">
+                              {tAlbum("singleDescription")}
+                            </p>
+                          </CardDescription>
+                        </CardContent>
+                      </Card>
                     </div>
+                    */}
 
-                    {collectionType !== "" && (
+                    {/* Always show form since collectionType is always SINGLE */}
+                    {true && (
                       <div className="space-y-4">
                         <div>
                           <Label className="text-sm font-medium text-zinc-200">
-                            {collectionType === "ALBUM" && tForms("albumName")}
-                            {collectionType === "SINGLE" &&
-                              tForms("singleName")}
-                            {collectionType === "DROP" && tForms("projectName")}
+                            {tForms("singleName")}
                           </Label>
                           <Input
                             id="name"
@@ -1446,7 +1359,7 @@ export default function BaseAlbumNewForm({
                 isUploadingImage ||
                 getTotalMintPercentage() !== 100 ||
                 getTotalRoyaltyPercentage() !== 100 ||
-                !collectionType
+                false // collectionType is always SINGLE
               }
               className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 hover:shadow-lg text-white disabled:opacity-50 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-500 transition-all font-medium"
             >
