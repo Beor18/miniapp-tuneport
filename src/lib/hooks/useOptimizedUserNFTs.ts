@@ -30,31 +30,35 @@ interface OptimizedNFTData {
 /**
  * Hook para obtener TODOS los NFTs que posee un usuario en TODAS las colecciones
  *
- * @param userAddress - Dirección del usuario a consultar (puede ser cualquier dirección)
+ * @param userAddresses - Dirección(es) del usuario a consultar (puede ser string único o array de strings)
  *
  * Funcionalidad:
  * - Obtiene dinámicamente TODAS las colecciones del factory v1.0.1
  * - Para cada colección, consulta si el usuario tiene NFTs usando getUserNFTsInfo()
  * - Detecta automáticamente colecciones v1.0.1 vs legacy
  * - Combina resultados de todas las colecciones donde el usuario tiene NFTs
+ * - Soporte para múltiples direcciones (útil con Privy que maneja múltiples wallets)
  *
  * Casos de uso:
- * - Fan consulta sus NFTs comprados
- * - Artista ve NFTs que minteó en sus colecciones
+ * - Fan consulta sus NFTs comprados en múltiples wallets
+ * - Artista ve NFTs que minteó en sus colecciones desde diferentes wallets
  * - Cualquier usuario puede ver NFTs públicos de cualquier dirección
- * - Admins pueden auditar tenencia de NFTs
+ * - Admins pueden auditar tenencia de NFTs agregada
  *
  * @example
- * // Consultar NFTs de cualquier usuario
+ * // Consultar NFTs de una dirección
  * const { nfts, loading, usingNewFunctions } = useOptimizedUserNFTs("0x123...");
  *
- * // Resultado: Todos los NFTs que posee esa dirección en todas las colecciones
- * // - Collection A: 3 NFTs
+ * // Consultar NFTs de múltiples direcciones (Privy)
+ * const { nfts, loading, usingNewFunctions } = useOptimizedUserNFTs(["0x123...", "0x456..."]);
+ *
+ * // Resultado: Todos los NFTs que poseen esas direcciones en todas las colecciones
+ * // - Collection A: 3 NFTs (wallet 1) + 1 NFT (wallet 2)
  * // - Collection B: 0 NFTs (no aparece)
- * // - Collection C: 2 NFTs
- * // Total: 5 NFTs combinados
+ * // - Collection C: 2 NFTs (wallet 1)
+ * // Total: 6 NFTs combinados de ambas wallets
  */
-export function useOptimizedUserNFTs(userAddress?: string) {
+export function useOptimizedUserNFTs(userAddresses?: string | string[]) {
   const [data, setData] = useState<OptimizedNFTData>({
     nfts: [],
     loading: true,
@@ -79,7 +83,14 @@ export function useOptimizedUserNFTs(userAddress?: string) {
   } = useFactoryCollections();
 
   const fetchUserNFTs = useCallback(async () => {
-    if (!userAddress) {
+    // Normalizar entrada: convertir string único a array
+    const addressesToQuery = userAddresses
+      ? Array.isArray(userAddresses)
+        ? userAddresses.filter(Boolean) // Remover addresses vacías
+        : [userAddresses]
+      : [];
+
+    if (addressesToQuery.length === 0) {
       setData({
         nfts: [],
         loading: false,
@@ -90,11 +101,14 @@ export function useOptimizedUserNFTs(userAddress?: string) {
       return;
     }
 
-    console.log(`🔍 fetchUserNFTs called for user: ${userAddress}`);
+    console.log(
+      `🔍 fetchUserNFTs called for ${addressesToQuery.length} addresses:`,
+      addressesToQuery
+    );
     setData((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      console.log("🔍 Fetching NFTs for user:", userAddress);
+      console.log("🔍 Fetching NFTs for addresses:", addressesToQuery);
 
       // ⏳ Esperar a que se carguen las colecciones del factory
       if (factoryLoading) {
@@ -158,7 +172,7 @@ export function useOptimizedUserNFTs(userAddress?: string) {
           // }
 
           console.log(
-            `🔍 Will check ${v1CollectionsToTest.length} collections for user ${userAddress}:`,
+            `🔍 Will check ${v1CollectionsToTest.length} collections for ${addressesToQuery.length} addresses:`,
             v1CollectionsToTest
           );
 
@@ -169,80 +183,89 @@ export function useOptimizedUserNFTs(userAddress?: string) {
 
           let allNFTs: EnhancedUserNFT[] = [];
 
-          // Si hay colecciones v1.0.1, verificar NFTs del usuario en TODAS las colecciones
+          // Si hay colecciones v1.0.1, verificar NFTs de TODAS las direcciones en TODAS las colecciones
           if (v1CollectionsToTest.length > 0) {
             console.log(
-              `🔍 Checking user ${userAddress} NFTs in ${v1CollectionsToTest.length} collections...`
+              `🔍 Checking ${addressesToQuery.length} addresses NFTs in ${v1CollectionsToTest.length} collections...`
             );
-            for (const contractAddress of v1CollectionsToTest) {
-              try {
-                // 🔍 Primero verificar si el contrato tiene las nuevas funciones
-                console.log(
-                  `🔍 Checking v1.0.1 compatibility for ${contractAddress}...`
-                );
 
-                // Test rápido: verificar versión del contrato para determinar compatibilidad
+            for (const userAddress of addressesToQuery) {
+              console.log(`🔍 Processing address: ${userAddress}`);
+
+              for (const contractAddress of v1CollectionsToTest) {
                 try {
-                  const contractVersion = await publicClient.readContract({
-                    address: contractAddress as `0x${string}`,
-                    abi: [
-                      {
-                        inputs: [],
-                        name: "version",
-                        outputs: [
-                          { internalType: "string", name: "", type: "string" },
-                        ],
-                        stateMutability: "pure",
-                        type: "function",
-                      },
-                    ],
-                    functionName: "version",
-                  });
-
+                  // 🔍 Primero verificar si el contrato tiene las nuevas funciones
                   console.log(
-                    `📝 Contract ${contractAddress} version: ${contractVersion}`
+                    `🔍 Checking v1.0.1 compatibility for ${contractAddress}...`
                   );
 
-                  // Solo usar nuevas funciones si es versión 1.0.1
-                  if (contractVersion === "1.0.1") {
+                  // Test rápido: verificar versión del contrato para determinar compatibilidad
+                  try {
+                    const contractVersion = await publicClient.readContract({
+                      address: contractAddress as `0x${string}`,
+                      abi: [
+                        {
+                          inputs: [],
+                          name: "version",
+                          outputs: [
+                            {
+                              internalType: "string",
+                              name: "",
+                              type: "string",
+                            },
+                          ],
+                          stateMutability: "pure",
+                          type: "function",
+                        },
+                      ],
+                      functionName: "version",
+                    });
+
                     console.log(
-                      `✅ Contract ${contractAddress} is v1.0.1, using new functions`
+                      `📝 Contract ${contractAddress} version: ${contractVersion}`
                     );
 
-                    // getUserNFTsInfo busca TODOS los NFTs que este usuario posee en esta colección
-                    const userNFTs = await getEnhancedUserNFTs(
-                      contractAddress,
-                      userAddress
-                    );
-                    allNFTs = [...allNFTs, ...userNFTs];
+                    // Solo usar nuevas funciones si es versión 1.0.1
+                    if (contractVersion === "1.0.1") {
+                      console.log(
+                        `✅ Contract ${contractAddress} is v1.0.1, using new functions for ${userAddress}`
+                      );
+
+                      // getUserNFTsInfo busca TODOS los NFTs que este usuario posee en esta colección
+                      const userNFTs = await getEnhancedUserNFTs(
+                        contractAddress,
+                        userAddress
+                      );
+                      allNFTs = [...allNFTs, ...userNFTs];
+                      console.log(
+                        `✅ Address ${userAddress} has ${userNFTs.length} NFTs in collection ${contractAddress}`
+                      );
+                    } else {
+                      console.log(
+                        `📦 Contract ${contractAddress} is legacy (${contractVersion}), will use fallback method`
+                      );
+                      // Agregar a legacy para el fallback
+                      throw new Error(`Legacy version ${contractVersion}`);
+                    }
+                  } catch (compatibilityError) {
                     console.log(
-                      `✅ User ${userAddress} has ${userNFTs.length} NFTs in collection ${contractAddress}`
+                      `⚠️ Contract ${contractAddress} is legacy (pre-v1.0.1) or error, skipping new functions:`,
+                      compatibilityError
                     );
-                  } else {
                     console.log(
-                      `📦 Contract ${contractAddress} is legacy (${contractVersion}), will use fallback method`
+                      `   Compatibility error:`,
+                      compatibilityError instanceof Error
+                        ? compatibilityError.message
+                        : compatibilityError
                     );
-                    // Agregar a legacy para el fallback
-                    throw new Error(`Legacy version ${contractVersion}`);
+                    // No agregar a allNFTs, se manejará en el fallback
                   }
-                } catch (compatibilityError) {
-                  console.log(
-                    `⚠️ Contract ${contractAddress} is legacy (pre-v1.0.1) or error, skipping new functions:`,
-                    compatibilityError
+                } catch (error) {
+                  console.warn(
+                    `⚠️ Error checking contract ${contractAddress}:`,
+                    error
                   );
-                  console.log(
-                    `   Compatibility error:`,
-                    compatibilityError instanceof Error
-                      ? compatibilityError.message
-                      : compatibilityError
-                  );
-                  // No agregar a allNFTs, se manejará en el fallback
                 }
-              } catch (error) {
-                console.warn(
-                  `⚠️ Error checking contract ${contractAddress}:`,
-                  error
-                );
               }
             }
 
@@ -282,7 +305,7 @@ export function useOptimizedUserNFTs(userAddress?: string) {
       // 4. Fallback a contract calls directos si Alchemy falla
 
       console.log(
-        `🔄 Using fallback for user ${userAddress} with factory ${factoryAddress}`
+        `🔄 Using fallback for ${addressesToQuery.length} addresses with factory ${factoryAddress}`
       );
       // - Alchemy API para detectar todos los NFTs del usuario
       // - Múltiples direcciones de contratos
@@ -290,23 +313,40 @@ export function useOptimizedUserNFTs(userAddress?: string) {
       // - Filtrado por community "tuneport"
 
       try {
-        // Simplificado: solo pasar userAddress, Alchemy API maneja todo automáticamente
-        const { nfts: serverNFTs, error: serverError } = await getUserNFTs(
-          userAddress
-        );
+        let allServerNFTs: any[] = [];
 
-        if (serverError) {
-          console.warn("⚠️ Server actions error:", serverError);
-          throw new Error(serverError);
+        // Procesar cada dirección por separado en el fallback
+        for (const userAddress of addressesToQuery) {
+          console.log(`🔄 Processing fallback for address: ${userAddress}`);
+
+          // Simplificado: solo pasar userAddress, Alchemy API maneja todo automáticamente
+          const { nfts: serverNFTs, error: serverError } = await getUserNFTs(
+            userAddress
+          );
+
+          if (serverError) {
+            console.warn(
+              `⚠️ Server actions error for ${userAddress}:`,
+              serverError
+            );
+            continue; // Continuar con la siguiente dirección en lugar de hacer throw
+          }
+
+          if (serverNFTs && serverNFTs.length > 0) {
+            console.log(
+              `✅ Server actions found ${serverNFTs.length} NFTs for address ${userAddress}`
+            );
+            allServerNFTs = [...allServerNFTs, ...serverNFTs];
+          }
         }
 
-        if (serverNFTs && serverNFTs.length > 0) {
+        if (allServerNFTs.length > 0) {
           console.log(
-            `✅ Server actions found ${serverNFTs.length} total NFTs via automatic detection`
+            `✅ Server actions found ${allServerNFTs.length} total NFTs via automatic detection for all addresses`
           );
 
           // Convertir a formato EnhancedUserNFT
-          const enhancedNFTs: EnhancedUserNFT[] = serverNFTs.map((nft) => ({
+          const enhancedNFTs: EnhancedUserNFT[] = allServerNFTs.map((nft) => ({
             tokenId: nft.id,
             balance: nft.balance || 1,
             totalSupply: 0, // No disponible en server actions legacy
@@ -371,7 +411,7 @@ export function useOptimizedUserNFTs(userAddress?: string) {
       }));
     }
   }, [
-    userAddress,
+    userAddresses,
     getEnhancedUserNFTs,
     factoryLoading,
     factoryError,

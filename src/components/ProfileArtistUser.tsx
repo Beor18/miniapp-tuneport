@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@Src/ui/components/ui/button";
 import { Separator } from "@Src/ui/components/ui/separator";
@@ -180,7 +180,33 @@ export default function ProfileArtistUser({
   const [activeWallet, setActiveWallet] = useState<any>(null);
   const [address, setAddress] = useState<string | null>(null);
 
-  // 🚀 NFTs optimizados con nuevas funciones v1.0.1
+  // 🚀 NFTs optimizados con nuevas funciones v1.0.1 - SOPORTE MÚLTIPLES WALLETS PRIVY
+  // Crear array de direcciones: primero profile.address, luego todas las wallets de Privy si es perfil propio
+  const addressesToFetch = React.useMemo(() => {
+    const addresses: string[] = [];
+
+    // Siempre incluir la dirección del perfil si existe
+    if (profile.address) {
+      addresses.push(profile.address);
+    }
+
+    // Si es el perfil propio y hay wallets conectadas, agregar todas las direcciones de Privy
+    if (isOwnProfile && authenticated && wallets.length > 0) {
+      const privyAddresses = wallets
+        .map((wallet) => wallet.address)
+        .filter(Boolean);
+
+      // Agregar solo las direcciones que no están ya incluidas
+      for (const privyAddress of privyAddresses) {
+        if (!addresses.includes(privyAddress)) {
+          addresses.push(privyAddress);
+        }
+      }
+    }
+
+    return addresses.length > 0 ? addresses : undefined;
+  }, [profile.address, isOwnProfile, authenticated, wallets]);
+
   const {
     nfts: optimizedNFTs,
     loading: nftsLoading,
@@ -188,11 +214,12 @@ export default function ProfileArtistUser({
     totalCount: nftsTotalCount,
     usingNewFunctions,
     refetch: refetchNFTs,
-  } = useOptimizedUserNFTs(profile.address || undefined);
+  } = useOptimizedUserNFTs(addressesToFetch);
 
-  // 🚨 DEBUG: Verificar qué address se está usando
+  // 🚨 DEBUG: Verificar qué addresses se están usando
   console.log(
-    `🎨 ProfileArtistUser - fetching NFTs for address: ${profile.address}`
+    `🎨 ProfileArtistUser - fetching NFTs for addresses:`,
+    addressesToFetch
   );
 
   // Agregar estado para el álbum seleccionado
