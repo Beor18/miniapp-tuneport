@@ -9,13 +9,13 @@ import {
 } from "@Src/lib/contracts/erc1155/config";
 import { useFactoryCollections } from "./useFactoryCollections";
 import { createPublicClient, http } from "viem";
-import { baseSepolia } from "viem/chains";
+import { base } from "viem/chains";
 
 // Cliente público para verificaciones directas
 const publicClient = createPublicClient({
-  chain: baseSepolia,
+  chain: base,
   transport: http(
-    "https://api.developer.coinbase.com/rpc/v1/base-sepolia/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
+    "https://api.developer.coinbase.com/rpc/v1/base/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
   ),
 });
 

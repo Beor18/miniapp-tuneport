@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 import { createPublicClient, http, createWalletClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { baseSepolia } from "viem/chains";
+import { base } from "viem/chains";
 
 export type Network = "sepolia" | "mainnet";
 
@@ -35,6 +35,70 @@ export interface ManagerInfo {
   createdAt: number;
 }
 
+// Función para verificar balance y estimar gas
+const checkBalanceAndEstimateGas = async (
+  publicClient: any,
+  gasPayerAddress: string,
+  transactionParams: {
+    to: string;
+    data: string;
+    value?: bigint;
+  }
+): Promise<{
+  hasEnoughFunds: boolean;
+  currentBalance: bigint;
+  estimatedGasCost: bigint;
+  shortfall?: number;
+  gasEstimate: bigint;
+}> => {
+  // Verificar balance actual
+  const currentBalance = await publicClient.getBalance({
+    address: gasPayerAddress as `0x${string}`,
+  });
+
+  console.log("💰 Balance actual:", Number(currentBalance) / 1e18, "ETH");
+
+  // Estimar gas requerido
+  const gasEstimate = await publicClient.estimateGas({
+    account: gasPayerAddress as `0x${string}`,
+    to: transactionParams.to as `0x${string}`,
+    data: transactionParams.data,
+    value: transactionParams.value || BigInt(0),
+  });
+
+  // Obtener precio del gas actual
+  const gasPrice = await publicClient.getGasPrice();
+
+  // Calcular costo total estimado (asegurar que todos sean bigint)
+  const estimatedGasCost = BigInt(gasEstimate) * BigInt(gasPrice);
+  const valueAmount = transactionParams.value
+    ? BigInt(transactionParams.value)
+    : BigInt(0);
+  const totalRequired = estimatedGasCost + valueAmount;
+
+  console.log("⛽ Gas estimado:", gasEstimate.toString());
+  console.log("⛽ Precio del gas:", gasPrice.toString(), "wei");
+  console.log(
+    "💸 Costo estimado del gas:",
+    Number(estimatedGasCost) / 1e18,
+    "ETH"
+  );
+  console.log("💸 Total requerido:", Number(totalRequired) / 1e18, "ETH");
+
+  const hasEnoughFunds = currentBalance >= totalRequired;
+  const shortfall = hasEnoughFunds
+    ? undefined
+    : Number(totalRequired - currentBalance) / 1e18;
+
+  return {
+    hasEnoughFunds,
+    currentBalance,
+    estimatedGasCost,
+    shortfall,
+    gasEstimate,
+  };
+};
+
 // Función para obtener el cliente wallet que pagará el gas
 const getGasPayerWallet = (): any => {
   const privateKey = process.env.NEXT_PUBLIC_GAS_PAYER_PRIVATE_KEY;
@@ -55,9 +119,9 @@ const getGasPayerWallet = (): any => {
 
     const walletClient = createWalletClient({
       account,
-      chain: baseSepolia,
+      chain: base,
       transport: http(
-        "https://api.developer.coinbase.com/rpc/v1/base-sepolia/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
+        "https://api.developer.coinbase.com/rpc/v1/base/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
       ),
     });
 
@@ -159,9 +223,9 @@ export const useRevenueShare = (
   const factoryAddress = CONTRACT_ADDRESSES[network]?.revenueShareFactory;
 
   const publicClient = createPublicClient({
-    chain: baseSepolia,
+    chain: base,
     transport: http(
-      "https://api.developer.coinbase.com/rpc/v1/base-sepolia/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
+      "https://api.developer.coinbase.com/rpc/v1/base/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
     ),
   });
 
@@ -206,6 +270,67 @@ export const useRevenueShare = (
             params.description,
           ],
         });
+
+        // 💰 VERIFICAR BALANCE Y ESTIMAR COSTOS ANTES DE LA TRANSACCIÓN
+        console.log("🔍 Verificando balance y estimando costos...");
+
+        try {
+          const balanceCheck = await checkBalanceAndEstimateGas(
+            publicClient,
+            gasPayerAddress,
+            {
+              to: factoryAddress,
+              data,
+              value: BigInt(0),
+            }
+          );
+
+          if (!balanceCheck.hasEnoughFunds) {
+            const errorMessage = `Fondos insuficientes para crear RevenueShare. 
+              Balance actual: ${(
+                Number(balanceCheck.currentBalance) / 1e18
+              ).toFixed(6)} ETH
+              Gas estimado necesario: ${(
+                Number(balanceCheck.estimatedGasCost) / 1e18
+              ).toFixed(6)} ETH
+              Faltan: ${balanceCheck.shortfall!.toFixed(6)} ETH
+              
+              Por favor, transfiere al menos ${balanceCheck.shortfall!.toFixed(
+                6
+              )} ETH a la cuenta: ${gasPayerAddress}`;
+
+            console.error("❌", errorMessage);
+            toast.error("Fondos insuficientes", {
+              description: `Necesitas ${balanceCheck.shortfall!.toFixed(
+                6
+              )} ETH adicionales para crear el contrato. Cuenta: ${gasPayerAddress}`,
+            });
+
+            throw new Error(errorMessage);
+          }
+
+          toast.info(
+            `Estimado del gas: ${(
+              Number(balanceCheck.estimatedGasCost) / 1e18
+            ).toFixed(6)} ETH`
+          );
+        } catch (estimationError: any) {
+          console.error("❌ Error estimando costos:", estimationError);
+
+          // Si el error es de fondos insuficientes, no continuar
+          if (
+            estimationError.message?.includes("insufficient funds") ||
+            estimationError.message?.includes("Fondos insuficientes")
+          ) {
+            throw estimationError;
+          }
+
+          // Para otros errores de estimación, continuar con advertencia
+          console.warn("⚠️ No se pudo estimar gas exacto, continuando...");
+          toast.warning(
+            "No se pudo estimar gas exacto, procediendo con precaución"
+          );
+        }
 
         console.log("Sending transaction to create RevenueShare");
 
@@ -1037,6 +1162,35 @@ export const useRevenueShare = (
           args: [params.collectionAddress as `0x${string}`, mintShares],
         });
 
+        // 💰 VERIFICAR BALANCE ANTES DE CONFIGURAR SPLITS
+        try {
+          const balanceCheck = await checkBalanceAndEstimateGas(
+            publicClient,
+            gasPayerWallet.account.address,
+            {
+              to: params.revenueShareAddress,
+              data: mintSplitsData,
+              value: BigInt(0),
+            }
+          );
+
+          if (!balanceCheck.hasEnoughFunds) {
+            toast.error("Fondos insuficientes para configurar splits", {
+              description: `Necesitas ${balanceCheck.shortfall!.toFixed(
+                6
+              )} ETH adicionales`,
+            });
+            throw new Error(
+              `Fondos insuficientes: faltan ${balanceCheck.shortfall} ETH`
+            );
+          }
+        } catch (balanceError: any) {
+          if (balanceError.message?.includes("Fondos insuficientes")) {
+            throw balanceError;
+          }
+          console.warn("⚠️ No se pudo verificar balance, continuando...");
+        }
+
         console.log("Enviando transacción setCollectionMintSplits...");
         const splitsTxHash = await gasPayerWallet.sendTransaction({
           to: params.revenueShareAddress as `0x${string}`,
@@ -1085,6 +1239,37 @@ export const useRevenueShare = (
           functionName: "setCollectionResaleRoyalties",
           args: [params.collectionAddress as `0x${string}`, royaltiesShares],
         });
+
+        // 💰 VERIFICAR BALANCE ANTES DE CONFIGURAR ROYALTIES
+        try {
+          const balanceCheck = await checkBalanceAndEstimateGas(
+            publicClient,
+            gasPayerWallet.account.address,
+            {
+              to: params.revenueShareAddress,
+              data: royaltiesData,
+              value: BigInt(0),
+            }
+          );
+
+          if (!balanceCheck.hasEnoughFunds) {
+            toast.error("Fondos insuficientes para configurar royalties", {
+              description: `Necesitas ${balanceCheck.shortfall!.toFixed(
+                6
+              )} ETH adicionales`,
+            });
+            throw new Error(
+              `Fondos insuficientes: faltan ${balanceCheck.shortfall} ETH`
+            );
+          }
+        } catch (balanceError: any) {
+          if (balanceError.message?.includes("Fondos insuficientes")) {
+            throw balanceError;
+          }
+          console.warn(
+            "⚠️ No se pudo verificar balance para royalties, continuando..."
+          );
+        }
 
         console.log("Enviando transacción setCollectionResaleRoyalties...");
         const royaltiesTxHash = await gasPayerWallet.sendTransaction({
@@ -1812,6 +1997,31 @@ export const useRevenueShare = (
     ]
   );
 
+  // 💰 Función para verificar balance de la wallet de gas de forma independiente
+  const checkGasPayerBalance = useCallback(async (): Promise<{
+    balance: number;
+    address: string;
+  } | null> => {
+    try {
+      const gasPayerWallet = getGasPayerWallet();
+      if (!gasPayerWallet) {
+        return null;
+      }
+
+      const balance = await publicClient.getBalance({
+        address: gasPayerWallet.account.address as `0x${string}`,
+      });
+
+      return {
+        balance: Number(balance) / 1e18,
+        address: gasPayerWallet.account.address,
+      };
+    } catch (error) {
+      console.error("Error verificando balance del gas payer:", error);
+      return null;
+    }
+  }, [publicClient]);
+
   return {
     createRevenueShare,
     configureCollectionSplits,
@@ -1830,5 +2040,7 @@ export const useRevenueShare = (
     setCascadePercentage,
     setMintSplitsForCurator,
     distributeCascadePayment,
+    // 💰 NUEVA FUNCIÓN PARA VERIFICAR BALANCE
+    checkGasPayerBalance,
   };
 };

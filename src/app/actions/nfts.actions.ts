@@ -1,7 +1,7 @@
 "use server";
 
 import { createPublicClient, http } from "viem";
-import { baseSepolia } from "viem/chains";
+import { base } from "viem/chains";
 import { MusicCollectionABI } from "@Src/lib/contracts/erc1155/MusicCollectionABI";
 
 interface UserNFT {
@@ -44,9 +44,9 @@ const CACHE_DURATION = 10 * 60 * 1000; // 10 minutos en ms
 
 // Cliente público para blockchain calls (fallback)
 const publicClient = createPublicClient({
-  chain: baseSepolia,
+  chain: base,
   transport: http(
-    "https://api.developer.coinbase.com/rpc/v1/base-sepolia/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
+    "https://api.developer.coinbase.com/rpc/v1/base/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
   ),
 });
 

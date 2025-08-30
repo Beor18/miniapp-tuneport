@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { createPublicClient, http } from "viem";
-import { baseSepolia } from "viem/chains";
+import { base } from "viem/chains";
 import { MusicCollectionABI } from "./MusicCollectionABI";
 import {
   TokenInfo,
@@ -13,9 +13,9 @@ import {
 
 // Cliente público para consultas blockchain
 const publicClient = createPublicClient({
-  chain: baseSepolia,
+  chain: base,
   transport: http(
-    "https://api.developer.coinbase.com/rpc/v1/base-sepolia/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
+    "https://api.developer.coinbase.com/rpc/v1/base/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
   ),
 });
 

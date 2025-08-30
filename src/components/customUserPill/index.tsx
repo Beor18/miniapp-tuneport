@@ -66,7 +66,8 @@ export function CustomUserPill({
   const isMainnet =
     hostname === "app.tuneport.xyz" ||
     hostname === "tuneport.xyz" ||
-    hostname === "miniapp.tuneport.xyz";
+    hostname === "miniapp.tuneport.xyz" ||
+    hostname === "localhost";
 
   // Determinar la cadena correcta según el entorno
   const getChain = () => {
@@ -86,7 +87,7 @@ export function CustomUserPill({
 
   const handleFund = () => {
     fundWallet(address, {
-      chain: getChain(),
+      chain: base,
       amount: "0.01",
     });
   };

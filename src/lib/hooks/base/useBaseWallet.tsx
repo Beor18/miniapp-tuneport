@@ -123,9 +123,9 @@ export const useBaseWallet = () => {
       // Crear un cliente wallet con esa cuenta
       const walletClient = createWalletClient({
         account,
-        chain: baseSepolia,
+        chain: base,
         transport: http(
-          "https://api.developer.coinbase.com/rpc/v1/base-sepolia/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
+          "https://api.developer.coinbase.com/rpc/v1/base/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
         ),
       });
 
@@ -138,9 +138,9 @@ export const useBaseWallet = () => {
 
   // Cliente público para lecturas
   const publicClient = createPublicClient({
-    chain: baseSepolia,
+    chain: base,
     transport: http(
-      "https://api.developer.coinbase.com/rpc/v1/base-sepolia/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
+      "https://api.developer.coinbase.com/rpc/v1/base/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
     ),
   });
 

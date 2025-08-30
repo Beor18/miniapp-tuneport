@@ -164,7 +164,8 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   const isMainnet =
     hostname === "app.tuneport.xyz" ||
     hostname === "tuneport.xyz" ||
-    hostname === "miniapp.tuneport.xyz";
+    hostname === "miniapp.tuneport.xyz" ||
+    hostname === "localhost";
   const isTestnet = hostname === "testnet.tuneport.xyz";
 
   // Determinar el texto del entorno

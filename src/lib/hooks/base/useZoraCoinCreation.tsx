@@ -44,7 +44,8 @@ export const useZoraCoinCreation = () => {
   const isMainnet =
     hostname === "app.tuneport.xyz" ||
     hostname === "tuneport.xyz" ||
-    hostname === "miniapp.tuneport.xyz";
+    hostname === "miniapp.tuneport.xyz" ||
+    hostname === "localhost";
   const isTestnet = hostname === "testnet.tuneport.xyz";
 
   // Determinar la network basada en el hostname
@@ -56,7 +57,7 @@ export const useZoraCoinCreation = () => {
 
   // Determinar la chain según la network detectada
   const getChain = (targetNetwork: Network) => {
-    return targetNetwork === "sepolia" ? baseSepolia : base;
+    return targetNetwork === "sepolia" ? base : base;
   };
 
   // Obtener la configuración RPC correcta para cada red
@@ -65,7 +66,7 @@ export const useZoraCoinCreation = () => {
       return {
         // Para Base Sepolia - usar RPC público
         publicRpc:
-          "https://api.developer.coinbase.com/rpc/v1/base-sepolia/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj",
+          "https://api.developer.coinbase.com/rpc/v1/base/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj",
       };
     } else {
       return {

@@ -81,7 +81,8 @@ export default function Providers({ children }: { children: ReactNode }) {
   const isMainnet =
     hostname === "app.tuneport.xyz" ||
     hostname === "tuneport.xyz" ||
-    hostname === "miniapp.tuneport.xyz";
+    hostname === "miniapp.tuneport.xyz" ||
+    hostname === "localhost";
   const isTestnet = hostname === "testnet.tuneport.xyz";
 
   // Configurar cadenas según el entorno

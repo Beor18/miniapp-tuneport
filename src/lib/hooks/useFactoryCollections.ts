@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createPublicClient, http } from "viem";
-import { baseSepolia } from "viem/chains";
+import { base } from "viem/chains";
 import {
   CONTRACT_ADDRESSES,
   DEFAULT_NETWORK,
@@ -35,9 +35,9 @@ const FACTORY_ABI = [
 
 // Cliente público para llamadas al blockchain
 const publicClient = createPublicClient({
-  chain: baseSepolia,
+  chain: base,
   transport: http(
-    "https://api.developer.coinbase.com/rpc/v1/base-sepolia/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
+    "https://api.developer.coinbase.com/rpc/v1/base/aNh4GkSHTvoOtsTHdpCxLJnuzfmqX8dj"
   ),
 });
 
@@ -165,4 +165,3 @@ export function useFactoryCollections() {
     getArtistCollections,
   };
 }
-
