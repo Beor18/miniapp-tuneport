@@ -83,7 +83,7 @@ export async function getUserNFTs(
           `🔍 Trying Alchemy API for wallet NFTs for user: ${userAddress}`
         );
 
-        const alchemyUrl = `https://base-sepolia.g.alchemy.com/nft/v3/${alchemyApiKey}/getNFTsForOwner?owner=${userAddress}&withMetadata=true`;
+        const alchemyUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${alchemyApiKey}/getNFTsForOwner?owner=${userAddress}&withMetadata=true`;
 
         const alchemyResponse = await fetch(alchemyUrl, {
           next: { revalidate: 300 },
