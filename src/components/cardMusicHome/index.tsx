@@ -50,7 +50,8 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
   const [isTradingModalOpen, setIsTradingModalOpen] = useState(false);
 
   // Hook para traducciones
-  const t = useTranslations("farcaster");
+  const tCommon = useTranslations("common");
+  const tMusic = useTranslations("music");
 
   // Hooks para minting
   const { mint, isMinting } = useCandyMachineMint();
@@ -476,6 +477,48 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
       processMint(selectedSongForMint, amount);
     }
   };
+
+  // Si no hay datos, mostrar pantalla de estado vacío
+  if (!enrichedNftData || enrichedNftData.length === 0) {
+    return (
+      <div className="h-full w-full sm:h-[870px] sm:w-full md:w-[540px] md:h-[960px] lg:w-[540px] lg:h-[960px] overflow-hidden font-sans mx-auto flex flex-col">
+        <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-[#18181b] via-[#1a1a1d] to-[#18181b]">
+          <Card className="w-full max-w-md border-none bg-gradient-to-br from-[#18181b] via-[#1a1a1d] to-[#18181b] p-8 shadow-2xl">
+            <div className="flex flex-col items-center text-center space-y-6">
+              {/* Icono principal con colores de la plataforma */}
+              <div className="w-24 h-24 bg-gradient-to-br from-yellow-500/20 via-purple-500/20 to-cyan-400/20 rounded-full flex items-center justify-center border border-purple-500/30 shadow-lg shadow-purple-500/25 animate-pulse">
+                <Music className="w-12 h-12 text-purple-400" />
+              </div>
+
+              {/* Título */}
+              <div className="space-y-3">
+                <h2 className="text-3xl font-black text-white bg-gradient-to-r from-yellow-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent">
+                  {tCommon("noMusicAvailable")}
+                </h2>
+                <p className="text-zinc-300 text-base leading-relaxed max-w-sm">
+                  {tCommon("noMusicDescription")}
+                </p>
+              </div>
+
+              {/* Información adicional con gradiente viral */}
+              <div className="mt-4 p-4 bg-gradient-to-r from-yellow-500/10 via-purple-500/10 to-cyan-400/10 rounded-xl border border-purple-500/30 backdrop-blur-sm">
+                <p className="text-sm text-zinc-400 text-center">
+                  {tCommon("createShareMonetize")} 🎵⚡
+                </p>
+              </div>
+
+              {/* Partículas decorativas */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-10 left-1/4 w-2 h-2 bg-yellow-400 rounded-full opacity-70 animate-pulse"></div>
+                <div className="absolute top-20 right-1/3 w-1 h-1 bg-purple-400 rounded-full opacity-80 animate-ping"></div>
+                <div className="absolute bottom-20 right-1/4 w-1.5 h-1.5 bg-cyan-400 rounded-full opacity-60 animate-pulse"></div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full w-full sm:h-[870px] sm:w-full md:w-[540px] md:h-[960px] lg:w-[540px] lg:h-[960px] overflow-hidden font-sans mx-auto flex flex-col">
