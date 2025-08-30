@@ -182,37 +182,120 @@ export const useERC1155Mint = () => {
           toast.success("Music uploaded successfully");
         }
 
-        // 4. Crear metadatos del NFT
+        // 4. Crear metadatos del NFT con estándares completos
         const nftMetadata = {
+          // ✅ CAMPOS BÁSICOS REQUERIDOS (ERC721/ERC1155)
           name: params.name,
-          description: params.description,
+          description: params.description || `${params.name}`,
           image: imageUrl,
-          external_url: `https://miniapp.tuneport.xyz/track/${params.name
+
+          // ✅ CAMPOS MULTIMEDIA ESTÁNDAR
+          animation_url: musicUrl,
+
+          // ✅ CAMPOS DE ENLACE EXTERNOS
+          external_url: `https://miniapp.tuneport.xyz/album/${params.name
             .toLowerCase()
             .replace(/\s+/g, "-")}`,
-          animation_url: musicUrl,
+          home_url: "https://miniapp.tuneport.xyz",
+
+          // ✅ ATRIBUTOS ESTÁNDAR OPENSEA/MARKETPLACE
           attributes: [
             // Atributos del formulario/usuario
             ...(params.attributes || []),
             // Atributos predeterminados del sistema
             {
-              trait_type: "Collection",
+              trait_type: "Collection ID",
               value: params.collectionId,
-            },
-            {
-              trait_type: "Copies",
-              value: params.copies || 1,
             },
             {
               trait_type: "Token ID",
               value: tokenId,
             },
+            {
+              trait_type: "Edition Size",
+              value: params.copies || 1,
+            },
+            {
+              trait_type: "Creator",
+              value: evmAddress,
+            },
+            {
+              trait_type: "Platform",
+              value: "Tuneport",
+            },
+            {
+              trait_type: "Blockchain",
+              value: "Base",
+            },
+            {
+              trait_type: "Token Standard",
+              value: "ERC-1155",
+            },
+            {
+              trait_type: "Content Type",
+              value: "Music",
+            },
+            {
+              trait_type: "Creation Date",
+              value: new Date().toISOString(),
+            },
           ],
+
+          // ✅ CAMPOS ESPECÍFICOS DE MÚSICA
           music: musicUrl,
+          audio: musicUrl, // Alias para compatibilidad
+          media_type: "audio",
+          content_type: "music",
+
+          // ✅ INFORMACIÓN DEL ARTISTA/CREATOR
           artist: evmAddress,
+          creator: evmAddress,
+
+          // ✅ INFORMACIÓN ECONÓMICA
           price: params.price || 0,
           currency: params.currency || "ETH",
+
+          // ✅ CAMPOS DE CATEGORIZACIÓN
+          category: "Music",
           community: "tuneport",
+          collection: params.collectionId,
+
+          // ✅ METADATOS TÉCNICOS
+          decimals: 0, // ERC1155 estándar
+          version: "1.0",
+          schema_version: "1.0.0",
+
+          // ✅ CAMPOS ADICIONALES PARA COMPATIBILIDAD
+          properties: {
+            collection_id: params.collectionId,
+            token_id: tokenId,
+            copies: params.copies || 1,
+            artist_address: evmAddress,
+            platform: "Tuneport",
+            blockchain: "Base",
+            created_at: new Date().toISOString(),
+          },
+
+          // ✅ CAMPOS PARA BASE BLOCKCHAIN EXPLORER
+          base_uri: imageUrl,
+          metadata_uri: "", // Se llenará después de subir a IPFS
+
+          // ✅ CAMPOS PARA MEJOR INDEXACIÓN
+          tags: ["music", "nft", "tuneport", "base", "web3"],
+          genre:
+            params.attributes?.find((attr) => attr.trait_type === "Genre")
+              ?.value || "Music",
+
+          // ✅ CAMPOS DE LICENCIA Y DERECHOS
+          license: "All rights reserved",
+          rights: `© ${new Date().getFullYear()} ${
+            params.name
+          }. All rights reserved.`,
+
+          // ✅ CAMPOS ADICIONALES PARA MARKETPLACES
+          background_color: "", // Opcional para OpenSea
+          seller_fee_basis_points: 0, // Para royalties
+          fee_recipient: evmAddress, // Para royalties
         };
 
         // 5. Subir metadatos a IPFS
@@ -855,6 +938,8 @@ export const useERC1155Mint = () => {
       publicClient,
       getGasPayerWallet,
       getEmbeddedWalletClient,
+      getEmbeddedWalletClientMetamask,
+      user?.wallet?.walletClientType,
     ]
   );
 

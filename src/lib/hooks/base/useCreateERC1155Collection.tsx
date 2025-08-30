@@ -43,18 +43,25 @@ export const useCreateERC1155Collection = (
       imageUrl: string
     ): Promise<string | null> => {
       try {
-        // Crear objeto de metadatos mejorado con campos adicionales
+        // Crear objeto de metadatos completo con todos los estándares
         const slug = slugify(params.name);
         const evmAddress = getEvmWalletAddress();
         const metadata: NFTMetadata = {
+          // ✅ CAMPOS BÁSICOS REQUERIDOS (ERC721/ERC1155 Collection)
           name: params.name,
           description:
             params.description || `${params.name} (${params.symbol})`,
           image: imageUrl,
+
+          // ✅ CAMPOS DE ENLACE EXTERNOS
           external_url: `https://miniapp.tuneport.xyz/album/${slug}`,
+          home_url: "https://miniapp.tuneport.xyz",
+          website: "https://miniapp.tuneport.xyz",
+
+          // ✅ ATRIBUTOS ESTÁNDAR OPENSEA/MARKETPLACE PARA COLECCIONES
           attributes: [
             {
-              trait_type: "Collection",
+              trait_type: "Collection Name",
               value: params.name,
             },
             {
@@ -62,28 +69,85 @@ export const useCreateERC1155Collection = (
               value: params.symbol,
             },
             {
-              trait_type: "Mint Start",
+              trait_type: "Collection Type",
+              value: params.collectionType || "SINGLE",
+            },
+            {
+              trait_type: "Mint Start Date",
               value: new Date(params.mintStartDate * 1000).toISOString(),
             },
             {
-              trait_type: "Mint End",
+              trait_type: "Mint End Date",
               value: new Date(params.mintEndDate * 1000).toISOString(),
             },
             {
-              trait_type: "Price",
-              value: params.price,
+              trait_type: "Mint Price",
+              value: params.price || 0,
             },
             {
               trait_type: "Royalty Fee",
               value: `${params.royaltyFee / 100}%`,
             },
+            {
+              trait_type: "Max Items",
+              value: params.maxItems || 1000,
+            },
+            {
+              trait_type: "Creator",
+              value: evmAddress || "",
+            },
+            {
+              trait_type: "Platform",
+              value: "Tuneport",
+            },
+            {
+              trait_type: "Blockchain",
+              value: "Base",
+            },
+            {
+              trait_type: "Token Standard",
+              value: "ERC-1155",
+            },
+            {
+              trait_type: "Music Genre",
+              value: params.musicGenre || "Music",
+            },
+            {
+              trait_type: "Creation Date",
+              value: new Date().toISOString(),
+            },
+            {
+              trait_type: "Network",
+              value: network,
+            },
           ],
-          collection_type: params.collectionType || "music",
+
+          // ✅ CAMPOS ESPECÍFICOS DE COLECCIÓN DE MÚSICA
+          collection_type: params.collectionType || "SINGLE",
+          content_type: "music_collection",
+          category: "Music",
+          media_type: "audio",
+
+          // ✅ INFORMACIÓN DEL CREADOR/ARTISTA
           address_creator_collection: evmAddress || undefined,
+          artist: evmAddress || undefined,
+          creator: evmAddress || undefined,
+          artist_name: params.artistName || "",
+          record_label: params.recordLabel || "",
+
+          // ✅ CONFIGURACIÓN DE MINT
           max_items: params.maxItems || 1000,
           mint_price: params.price || 0,
           mint_currency: params.symbol || params.currency || "ETH",
+          mint_start_timestamp: params.mintStartDate,
+          mint_end_timestamp: params.mintEndDate,
+
+          // ✅ INFORMACIÓN DE LA COMUNIDAD Y PLATAFORMA
           community: "tuneport",
+          platform: "Tuneport",
+          blockchain: "Base",
+
+          // ✅ COLABORADORES (MANTENER ESTRUCTURA EXISTENTE)
           collaborators:
             params.collaborators?.map((c) => ({
               name: c.name,
@@ -91,15 +155,69 @@ export const useCreateERC1155Collection = (
               mintPercentage: c.mintPercentage,
               royaltyPercentage: c.royaltyPercentage,
             })) || [],
+
+          // ✅ METADATOS DE MÚSICA
           music_genre: params.musicGenre || "",
-          artist_name: params.artistName || "",
-          record_label: params.recordLabel || "",
+          genre: params.musicGenre || "Music",
+
+          // ✅ FECHAS IMPORTANTES
           start_mint_date: new Date(params.mintStartDate * 1000).toISOString(),
           release_date: params.releaseDate || new Date().toISOString(),
+          created_at: new Date().toISOString(),
+
+          // ✅ IDENTIFICADORES Y NAVEGACIÓN
           slug: slug,
+          collection_slug: slug,
           network: network,
           symbol: params.symbol,
+
+          // ✅ IMÁGENES Y MEDIOS
           image_cover: imageUrl,
+          cover_image: imageUrl,
+          banner_image: imageUrl, // Para marketplaces que usan banner
+
+          // ✅ METADATOS TÉCNICOS
+          version: "1.0",
+          schema_version: "1.0.0",
+          contract_type: "ERC-1155",
+
+          // ✅ CAMPOS PARA INDEXACIÓN Y SEO
+          tags: ["music", "nft", "collection", "tuneport", "base", "web3"],
+          keywords: [
+            params.name,
+            params.symbol,
+            params.musicGenre || "music",
+            "tuneport",
+          ].filter(Boolean),
+
+          // ✅ PROPIEDADES ADICIONALES PARA COMPATIBILIDAD
+          properties: {
+            collection_name: params.name,
+            collection_symbol: params.symbol,
+            collection_type: params.collectionType || "SINGLE",
+            creator_address: evmAddress,
+            platform: "Tuneport",
+            blockchain: "Base",
+            network: network,
+            created_at: new Date().toISOString(),
+            max_supply: params.maxItems || 1000,
+            //mint_price: params.price || 0,
+            currency: params.symbol || params.currency || "ETH",
+          },
+
+          // ✅ CAMPOS PARA MARKETPLACES
+          seller_fee_basis_points: params.royaltyFee || 0,
+          fee_recipient: evmAddress || undefined,
+
+          // ✅ CAMPOS DE LICENCIA Y DERECHOS
+          license: "All rights reserved",
+          rights: `© ${new Date().getFullYear()} ${
+            params.name
+          }. All rights reserved.`,
+
+          // ✅ CAMPOS ADICIONALES PARA BASE BLOCKCHAIN EXPLORER
+          base_uri: imageUrl,
+          contract_uri: "", // Se llenará después de subir a IPFS
         };
 
         // Subir metadatos a IPFS usando el método mejorado

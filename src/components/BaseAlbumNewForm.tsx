@@ -130,7 +130,7 @@ export default function BaseAlbumNewForm({
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
   const [description, setDescription] = useState("");
-  const [maxSupply, setMaxSupply] = useState("1000");
+  const [maxSupply, setMaxSupply] = useState("5");
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverUrl, setCoverUrl] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -317,7 +317,7 @@ export default function BaseAlbumNewForm({
     setName("");
     setSymbol("");
     setDescription("");
-    setMaxSupply("1000");
+    setMaxSupply("5");
     setCoverImage(null);
     setCoverUrl("");
     setStartDate("");

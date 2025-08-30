@@ -1,6 +1,6 @@
 # Tuneport Mini App - Farcaster
 
-Una **miniapp simplificada** para Farcaster que se enfoca en las funcionalidades esenciales de música NFT.
+Una **miniapp** para Farcaster que se enfoca en las funcionalidades esenciales de música NFT.
 
 ## ✨ Funcionalidades
 
@@ -73,29 +73,12 @@ npm run build
 - Meta tags para embed correcto
 - SDK de Farcaster integrado en providers
 
-### Variables de entorno requeridas
-
-```env
-API_ELEI=https://api.tuneport.xyz
-NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
-```
-
 ## 📱 Rutas Disponibles
 
 - `/` - Página principal con navegación
 - `/foryou` - Feed principal tipo TikTok
 - `/u/[nickname]` - Perfiles de usuario
 - `/album/[slug]` - Páginas de álbumes individuales
-
-## ⚠️ Removido en versión simplificada
-
-Para enfocar la experiencia, se removieron:
-
-- ❌ Página de exploración (`/explore`)
-- ❌ Página de tienda (`/store`)
-- ❌ Página de Base (`/base`)
-- ❌ Página de trading (`/trading`)
-- ❌ Navegación compleja
 
 ## 🎯 Enfoque de la miniapp
 

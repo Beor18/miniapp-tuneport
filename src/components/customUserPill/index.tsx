@@ -64,7 +64,9 @@ export function CustomUserPill({
 
   // Detectar entorno basado en hostname
   const isMainnet =
-    hostname === "app.tuneport.xyz" || hostname === "tuneport.xyz";
+    hostname === "app.tuneport.xyz" ||
+    hostname === "tuneport.xyz" ||
+    hostname === "miniapp.tuneport.xyz";
 
   // Determinar la cadena correcta según el entorno
   const getChain = () => {

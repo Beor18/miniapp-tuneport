@@ -7,8 +7,8 @@ export const CONTRACT_ADDRESSES = {
   },
   // Base Mainnet (Producción) - Pendiente
   mainnet: {
-    factory: "", // Pendiente de despliegue
-    revenueShareFactory: "", // Pendiente de despliegue
+    factory: "0x061Fa3d70a8BAa1635569670ce5A3eD2184C25C8", // Pendiente de despliegue
+    revenueShareFactory: "0x43e935AD1F78D66d6Cc3cA62EF1F63F70485bA2a", // Pendiente de despliegue
   },
   // Legacy: Ethereum Sepolia (Deprecated - Solo para referencia)
   sepolialegacy: {
@@ -36,4 +36,4 @@ export const NETWORKS = {
 };
 
 // Red por defecto
-export const DEFAULT_NETWORK = "sepolia";
+export const DEFAULT_NETWORK = "mainnet";

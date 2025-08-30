@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useMemo } from "react";
+import { useState, useEffect, Suspense, useMemo, useContext } from "react";
 import { default as importDynamic } from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -39,6 +39,7 @@ import WalletConnector from "@Src/components/walletConector";
 import LanguageSelector from "@Src/components/LanguageSelector";
 import { useTranslations, useLocale } from "next-intl";
 import { usePlayer } from "@Src/contexts/PlayerContext";
+import { UserRegistrationContext } from "@Src/app/providers";
 
 // Importación dinámica optimizada con loading: () => null
 const FloatingPlayer = importDynamic(() => import("../FloatingPlayer"), {
@@ -137,6 +138,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   const [loading, setLoading] = useState(false);
   const [userNickname, setUserNickname] = useState<string | null>(null);
   const [userType, setUserType] = useState<string | null>(null);
+  const { userData, isRegistered } = useContext(UserRegistrationContext);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [hostname, setHostname] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -160,9 +162,10 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
 
   // Detectar entorno basado en hostname
   const isMainnet =
-    hostname === "app.tuneport.xyz" || hostname === "tuneport.xyz";
-  const isTestnet =
-    hostname === "testnet.tuneport.xyz" || hostname === "miniapp.tuneport.xyz";
+    hostname === "app.tuneport.xyz" ||
+    hostname === "tuneport.xyz" ||
+    hostname === "miniapp.tuneport.xyz";
+  const isTestnet = hostname === "testnet.tuneport.xyz";
 
   // Determinar el texto del entorno
   const getEnvironmentText = () => {
@@ -183,6 +186,14 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
 
   useEffect(() => {
     const checkUserAndSetNickname = async () => {
+      // 🆕 Priorizar userData del contexto si está disponible y el usuario está registrado
+      if (isRegistered && userData?.nickname) {
+        setUserNickname(userData.nickname);
+        setUserType(userData.type);
+        return;
+      }
+
+      // Fallback al método original con mockUsers
       if (address?.toString()) {
         const user = stableMockUsers.find((user) => {
           const addressMatch =
@@ -208,7 +219,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
     };
 
     checkUserAndSetNickname();
-  }, [stableMockUsers, address]);
+  }, [stableMockUsers, address, isRegistered, userData]);
 
   // Memoizar navItems para evitar re-cálculos innecesarios
   const navItems = useMemo(() => {

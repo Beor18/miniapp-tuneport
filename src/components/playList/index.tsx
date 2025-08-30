@@ -172,6 +172,7 @@ export const Playlist: React.FC<PlaylistProps> = ({
   const [playlistDescription, setPlaylistDescription] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [playlistPrice, setPlaylistPrice] = useState<number>(0); // Usuario define el precio
   const [isCreating, setIsCreating] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const { userData } = useContext(UserRegistrationContext);
@@ -287,6 +288,7 @@ export const Playlist: React.FC<PlaylistProps> = ({
     if (!showCreateForm) {
       setPlaylistName(`My Queue - ${new Date().toLocaleDateString()}`);
       setSelectedTags([]);
+      setPlaylistPrice(0); // Resetear precio
     }
   };
 
@@ -474,7 +476,7 @@ export const Playlist: React.FC<PlaylistProps> = ({
       const revenueShareAddress = await createRevenueShare({
         artist: userWalletAddress, // El curator es el owner
         name: `${playlistName} - Revenue Sharing`,
-        description: `Distribución automática: 70% artistas originales, 30% curator`,
+        description: `Distribución automática: 70% artistas originales, 29% curator, 1% plataforma`,
       });
 
       if (!revenueShareAddress) {
@@ -499,7 +501,7 @@ export const Playlist: React.FC<PlaylistProps> = ({
           `Curated playlist: ${playlistName} with ${songs.length} amazing tracks`,
         mintStartDate: Math.floor(Date.now() / 1000), // Ahora
         mintEndDate: Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60, // 1 año
-        price: 0.001, // Precio accesible para playlists
+        price: playlistPrice, // Precio establecido por el usuario
         paymentToken: "ETH", // ETH nativo
         royaltyReceiver: userWalletAddress,
         royaltyFee: 1000, // 10% de royalties
@@ -514,7 +516,7 @@ export const Playlist: React.FC<PlaylistProps> = ({
         createRevenueShare: false, // Ya lo creamos antes
         existingRevenueShareAddress: revenueShareAddress,
         revenueShareName: `${playlistName} - Revenue Sharing`,
-        revenueShareDescription: `Distribución automática: 70% artistas originales, 30% curator`,
+        revenueShareDescription: `Distribución automática: 70% artistas originales, 29% curator, 1% plataforma`,
       });
 
       // ✅ EXTRAER DIRECCIONES DEL RESULTADO
@@ -555,21 +557,26 @@ export const Playlist: React.FC<PlaylistProps> = ({
           throw new Error("Falló la configuración del porcentaje de cascada");
         }
 
-        // 💰 CONFIGURAR SPLITS PARA EL CURATOR (30% restante)
-        console.log("💰 Configurando splits finales para curator...");
+        // 💰 CONFIGURAR SPLITS PARA EL CURATOR Y PLATAFORMA (30% restante)
+        console.log(
+          "💰 Configurando splits finales para curator y plataforma..."
+        );
         const finalSplitsSuccess = await setMintSplitsForCurator(
           revenueShareAddress,
           collectionAddress,
           playlistTokenId,
           userWalletAddress,
-          30 // 30% para el curator
+          29, // 29% para el curator (del total)
+          1 // 1% para la plataforma (del total)
         );
 
         if (finalSplitsSuccess) {
-          console.log("✅ Splits del curator configurados correctamente");
+          console.log(
+            "✅ Splits del curator y plataforma configurados correctamente"
+          );
         } else {
           console.warn(
-            "⚠️ Advertencia: No se pudieron configurar splits finales del curator"
+            "⚠️ Advertencia: No se pudieron configurar splits finales"
           );
         }
 
@@ -578,7 +585,9 @@ export const Playlist: React.FC<PlaylistProps> = ({
         console.log(
           `🏦 ${originalCollections.length} colecciones originales heredadas`
         );
-        console.log("⚖️ 70% → Artistas originales | 30% → Curator");
+        console.log(
+          "⚖️ 70% → Artistas originales | 29% → Curator | 1% → Plataforma"
+        );
       } else {
         console.warn("⚠️ No se pudo obtener la dirección de la colección");
       }
@@ -612,7 +621,8 @@ export const Playlist: React.FC<PlaylistProps> = ({
         // 🏦 INFORMACIÓN ADICIONAL DE ECONOMÍA EN CASCADA
         original_collections: originalCollections,
         cascade_percentage: 70, // 70% a artistas originales
-        curator_percentage: 30, // 30% al curator
+        curator_percentage: 29, // 29% al curator
+        platform_percentage: 1, // 1% a la plataforma
         total_original_songs: originalCollections.length,
       });
 
@@ -640,7 +650,9 @@ export const Playlist: React.FC<PlaylistProps> = ({
           console.log(
             "✅ Cascada configurada: 70% → Artistas originales automáticamente"
           );
-          console.log("✅ Splits configurados: 30% → Curator de la playlist");
+          console.log(
+            "✅ Splits configurados: 29% → Curator + 1% → Plataforma"
+          );
           console.log("✅ RevenueShare address:", revenueShareAddress);
           console.log("✅ Collection address:", collectionAddress);
           console.log("🚀 ¡PLAYLIST TOKENIZADA CON DISTRIBUCIÓN AUTOMÁTICA!");
@@ -660,6 +672,7 @@ export const Playlist: React.FC<PlaylistProps> = ({
         setPlaylistDescription("");
         setIsPublic(false);
         setSelectedTags([]);
+        setPlaylistPrice(0); // Resetear precio
         setShowCreateForm(false);
       } else {
         // Cerrar loading y mostrar error
@@ -763,6 +776,28 @@ export const Playlist: React.FC<PlaylistProps> = ({
                       placeholder={tPlaylist("enterDescription")}
                       rows={3}
                     />
+                  </div>
+
+                  {/* Campo de precio */}
+                  <div>
+                    <label className="text-sm font-medium text-zinc-200 mb-2 block">
+                      💰 {tPlaylist("pricePerNFT")}
+                    </label>
+                    <Input
+                      type="number"
+                      value={playlistPrice}
+                      onChange={(e) =>
+                        setPlaylistPrice(
+                          Math.max(0, parseFloat(e.target.value) || 0)
+                        )
+                      }
+                      className="bg-zinc-700/50 border-zinc-500/30 text-white focus:border-zinc-400/50 focus:ring-zinc-400/20 transition-all duration-200"
+                      placeholder="0.0"
+                      min="0"
+                    />
+                    <p className="text-xs text-zinc-400 mt-1">
+                      {tPlaylist("priceDescription")}
+                    </p>
                   </div>
 
                   {/* Tags Selection */}

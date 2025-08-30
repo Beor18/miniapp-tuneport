@@ -35,7 +35,7 @@ export function ShareToFarcaster({
       return;
     }
 
-    console.log("nft FER >>>>> ", nft);
+    //console.log("nft FER >>>>> ", nft);
     setIsSharing(true);
 
     try {

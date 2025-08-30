@@ -187,7 +187,7 @@
     "enterPlaylistName": "Digite o nome da playlist",
     "enterDescription": "Digite descrição",
     "symbolPlaceholder": "MUSI",
-    "maxSupplyPlaceholder": "1000",
+    "maxSupplyPlaceholder": "5",
     "releaseDate": "Data de Lançamento",
     "endDate": "Data de Fim",
     "musicGenre": "Gênero Musical",
@@ -215,7 +215,7 @@
     "nameSymbolRequired": "Nome e símbolo são obrigatórios",
     "mintPercentageError": "Porcentagens de distribuição de mint devem somar 100%",
     "royaltyPercentageError": "Porcentagens de royalties devem somar 100%",
-    "maxSupplyDescription": "Número máximo de cópias digitais que podem ser criadas",
+    "maxSupplyDescription": "Limite de músicas a criar",
     "myMusicProject": "Meu Projeto Musical",
     "musicProjectDescription": "Projeto musical com meus colaboradores"
   },
@@ -493,7 +493,9 @@
     "tryAgainLater": "Por favor, tente novamente",
     "cascadeEconomyError": "Erro ao criar playlist com economia em cascata",
     "noCollectionsFound": "Não foram encontrados endereços de coleções originais",
-    "tokenCreatedSuccessfully": "criada com sucesso"
+    "tokenCreatedSuccessfully": "criada com sucesso",
+    "pricePerNFT": "Preço",
+    "priceDescription": "Preço que os usuários pagarão por sua playlist. 0 ETH = grátis"
   },
   "farcaster": {
     "share": "Compartilhar",
@@ -561,6 +563,9 @@
       "createPlaylistAppearRanking": "Crie sua playlist e apareça no ranking.",
       "preparingPlaylistRanking": "Preparando o ranking de playlists",
       "calculatingPopularPlaylists": "Calculando as playlists mais populares...",
+      "noPlaylistsYet": "Ainda não há playlists",
+      "beFirstToCreatePlaylist": "Seja o primeiro a criar uma playlist!",
+      "createPlaylistToSeeHere": "Crie uma playlist e ela aparecerá aqui no ranking.",
       "tracks": "faixas",
       "min": "min",
       "score": "pontuação",

@@ -55,7 +55,7 @@ export function TradingInterface({
   const [coinAddress, setCoinAddress] = useState(
     initialCoinAddress || "0xe4d2a1f49ab87eebc53a3d9d706449e8fe066566"
   );
-  const [buyAmount, setBuyAmount] = useState("0.001"); // Valor más realista
+  const [buyAmount, setBuyAmount] = useState("0.00001"); // Valor más realista
   const [sellAmount, setSellAmount] = useState("100");
   const [buySlippage, setBuySlippage] = useState("5");
   const [sellSlippage, setSellSlippage] = useState("15");
@@ -292,14 +292,14 @@ export function TradingInterface({
                 </label>
                 <Input
                   type="number"
-                  step="0.001"
-                  min="0.0001"
+                  step="0.00001"
+                  min="0.00001"
                   value={buyAmount}
                   onChange={(e) => setBuyAmount(e.target.value)}
-                  placeholder="0.001"
+                  placeholder="0.00001"
                   className="h-11 w-full bg-neutral-800/50 border-neutral-700 text-white placeholder:text-neutral-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
                 />
-                <p className="text-xs text-neutral-500">Minimum: 0.0001 ETH</p>
+                <p className="text-xs text-neutral-500">Minimum: 0.00001 ETH</p>
               </div>
 
               {/* Advanced Settings for Buy */}

@@ -166,7 +166,7 @@
     "profilePicturePreview": "Profile picture preview"
   },
   "auth": {
-    "signIn": "Sign In",
+    "signIn": "Join Now",
     "signUp": "Sign Up",
     "signOut": "Sign Out",
     "email": "Email",
@@ -229,7 +229,7 @@
     "enterPlaylistName": "Enter playlist name",
     "enterDescription": "Enter description",
     "symbolPlaceholder": "MUSI",
-    "maxSupplyPlaceholder": "1000",
+    "maxSupplyPlaceholder": "5",
     "releaseDate": "Release Date",
     "endDate": "End Date",
     "musicGenre": "Music Genre",
@@ -258,13 +258,13 @@
     "nameSymbolRequired": "Name and symbol are required",
     "mintPercentageError": "Sales percentages must add up to 100%",
     "royaltyPercentageError": "Commission percentages must add up to 100%",
-    "maxSupplyDescription": "Maximum number of copies that can be created",
+    "maxSupplyDescription": "Limit songs to create",
     "myMusicProject": "My Music Project",
     "musicProjectDescription": "Music project with my collaborators"
   },
   "album": {
     "createMusicAlbum": "🎵 Create Album",
-    "createSingleTrack": "🎵 Create Song",
+    "createSingleTrack": "🎵 Create Project Music",
     "createCollaborativeProject": "🎵 Create Group Project",
     "createMusicProject": "🎵 Create Project",
     "createAlbum": "Create Album",
@@ -495,7 +495,9 @@
     "tryAgainLater": "Please try again",
     "cascadeEconomyError": "Error creating playlist with cascade economy",
     "noCollectionsFound": "No original collection addresses found",
-    "tokenCreatedSuccessfully": "created successfully"
+    "tokenCreatedSuccessfully": "created successfully",
+    "pricePerNFT": "Price",
+    "priceDescription": "Price users will pay for your playlist. 0 ETH = free"
   },
   "farcaster": {
     "share": "Share",
@@ -563,6 +565,9 @@
       "createPlaylistAppearRanking": "Create your playlist and appear in the ranking.",
       "preparingPlaylistRanking": "Preparing the playlists ranking",
       "calculatingPopularPlaylists": "Calculating the most popular playlists...",
+      "noPlaylistsYet": "No playlists yet",
+      "beFirstToCreatePlaylist": "Be the first to create a playlist!",
+      "createPlaylistToSeeHere": "Create a playlist and it will appear here in the ranking.",
       "tracks": "tracks",
       "min": "min",
       "score": "score",

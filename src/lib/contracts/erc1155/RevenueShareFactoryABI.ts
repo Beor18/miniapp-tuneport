@@ -1,6 +1,38 @@
 export const RevenueShareFactoryABI = [
   {
     inputs: [],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "target",
+        type: "address",
+      },
+    ],
+    name: "AddressEmptyCode",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "implementation",
+        type: "address",
+      },
+    ],
+    name: "ERC1967InvalidImplementation",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ERC1967NonPayable",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "EmptyDescription",
     type: "error",
   },
@@ -11,13 +43,92 @@ export const RevenueShareFactoryABI = [
   },
   {
     inputs: [],
+    name: "FailedCall",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidArtist",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidInitialization",
     type: "error",
   },
   {
     inputs: [],
     name: "ManagerCreationFailed",
     type: "error",
+  },
+  {
+    inputs: [],
+    name: "NotInitializing",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+    ],
+    name: "OwnableInvalidOwner",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+    ],
+    name: "OwnableUnauthorizedAccount",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "UUPSUnauthorizedCallContext",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "slot",
+        type: "bytes32",
+      },
+    ],
+    name: "UUPSUnsupportedProxiableUUID",
+    type: "error",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "newImplementation",
+        type: "address",
+      },
+    ],
+    name: "ImplementationUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint64",
+        name: "version",
+        type: "uint64",
+      },
+    ],
+    name: "Initialized",
+    type: "event",
   },
   {
     anonymous: false,
@@ -56,6 +167,25 @@ export const RevenueShareFactoryABI = [
       {
         indexed: true,
         internalType: "address",
+        name: "previousOwner",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      },
+    ],
+    name: "OwnershipTransferred",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
         name: "artist",
         type: "address",
       },
@@ -80,6 +210,32 @@ export const RevenueShareFactoryABI = [
     ],
     name: "RevenueShareCreated",
     type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "implementation",
+        type: "address",
+      },
+    ],
+    name: "Upgraded",
+    type: "event",
+  },
+  {
+    inputs: [],
+    name: "UPGRADE_INTERFACE_VERSION",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
   },
   {
     inputs: [
@@ -239,7 +395,7 @@ export const RevenueShareFactoryABI = [
             type: "uint256",
           },
         ],
-        internalType: "struct RevenueShareFactory.ManagerInfo[]",
+        internalType: "struct RevenueShareFactoryUpgradeable.ManagerInfo[]",
         name: "",
         type: "tuple[]",
       },
@@ -304,7 +460,7 @@ export const RevenueShareFactoryABI = [
             type: "uint256",
           },
         ],
-        internalType: "struct RevenueShareFactory.ManagerInfo",
+        internalType: "struct RevenueShareFactoryUpgradeable.ManagerInfo",
         name: "",
         type: "tuple",
       },
@@ -329,6 +485,24 @@ export const RevenueShareFactoryABI = [
     inputs: [
       {
         internalType: "address",
+        name: "_revenueShareImplementation",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "initialOwner",
+        type: "address",
+      },
+    ],
+    name: "initialize",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
         name: "managerAddress",
         type: "address",
       },
@@ -342,6 +516,109 @@ export const RevenueShareFactoryABI = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "owner",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "proxiableUUID",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "renounceOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "revenueShareImplementation",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      },
+    ],
+    name: "transferOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "newImplementation",
+        type: "address",
+      },
+    ],
+    name: "updateRevenueShareImplementation",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "newImplementation",
+        type: "address",
+      },
+      {
+        internalType: "bytes",
+        name: "data",
+        type: "bytes",
+      },
+    ],
+    name: "upgradeToAndCall",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "version",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "pure",
     type: "function",
   },
 ] as const;

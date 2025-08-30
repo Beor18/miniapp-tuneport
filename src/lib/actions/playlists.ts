@@ -18,7 +18,8 @@ interface CreatePlaylistData {
   // 🏦 INFORMACIÓN ADICIONAL DE ECONOMÍA EN CASCADA
   original_collections?: string[]; // Direcciones de colecciones originales para herencia
   cascade_percentage?: number; // Porcentaje que va a artistas originales (ej: 70)
-  curator_percentage?: number; // Porcentaje que va al curator (ej: 30)
+  curator_percentage?: number; // Porcentaje que va al curator (ej: 29)
+  platform_percentage?: number; // Porcentaje que va a la plataforma (ej: 1)
   total_original_songs?: number; // Número total de canciones originales
 }
 

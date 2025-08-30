@@ -20,18 +20,196 @@ export const MusicCollectionABI = [
 
   // Errores personalizados
   {
-    inputs: [],
-    name: "InvalidDates",
+    inputs: [
+      {
+        internalType: "address",
+        name: "target",
+        type: "address",
+      },
+    ],
+    name: "AddressEmptyCode",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "balance",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "needed",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
+    ],
+    name: "ERC1155InsufficientBalance",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "approver",
+        type: "address",
+      },
+    ],
+    name: "ERC1155InvalidApprover",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "idsLength",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "valuesLength",
+        type: "uint256",
+      },
+    ],
+    name: "ERC1155InvalidArrayLength",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "operator",
+        type: "address",
+      },
+    ],
+    name: "ERC1155InvalidOperator",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "receiver",
+        type: "address",
+      },
+    ],
+    name: "ERC1155InvalidReceiver",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+    ],
+    name: "ERC1155InvalidSender",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "operator",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+    ],
+    name: "ERC1155MissingApprovalForAll",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "implementation",
+        type: "address",
+      },
+    ],
+    name: "ERC1967InvalidImplementation",
     type: "error",
   },
   {
     inputs: [],
-    name: "MintNotStarted",
+    name: "ERC1967NonPayable",
     type: "error",
   },
   {
-    inputs: [],
-    name: "MintEnded",
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "numerator",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "denominator",
+        type: "uint256",
+      },
+    ],
+    name: "ERC2981InvalidDefaultRoyalty",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "receiver",
+        type: "address",
+      },
+    ],
+    name: "ERC2981InvalidDefaultRoyaltyReceiver",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "numerator",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "denominator",
+        type: "uint256",
+      },
+    ],
+    name: "ERC2981InvalidTokenRoyalty",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "receiver",
+        type: "address",
+      },
+    ],
+    name: "ERC2981InvalidTokenRoyaltyReceiver",
     type: "error",
   },
   {
@@ -41,7 +219,12 @@ export const MusicCollectionABI = [
   },
   {
     inputs: [],
-    name: "UnsupportedToken",
+    name: "FailedCall",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "IncorrectValue",
     type: "error",
   },
   {
@@ -51,16 +234,97 @@ export const MusicCollectionABI = [
   },
   {
     inputs: [],
+    name: "InvalidDates",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidInitialization",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "MintEnded",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "MintNotStarted",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "NotInitializing",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+    ],
+    name: "OwnableInvalidOwner",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+    ],
+    name: "OwnableUnauthorizedAccount",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ReentrancyGuardReentrantCall",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "TransferFailed",
     type: "error",
   },
   {
     inputs: [],
-    name: "IncorrectValue",
+    name: "UUPSUnauthorizedCallContext",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "slot",
+        type: "bytes32",
+      },
+    ],
+    name: "UUPSUnsupportedProxiableUUID",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "UnsupportedToken",
     type: "error",
   },
 
   // Eventos
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint64",
+        name: "version",
+        type: "uint64",
+      },
+    ],
+    name: "Initialized",
+    type: "event",
+  },
   {
     anonymous: false,
     inputs: [
@@ -252,6 +516,13 @@ export const MusicCollectionABI = [
   },
 
   // Funciones de lectura (view/pure)
+  {
+    inputs: [],
+    name: "UPGRADE_INTERFACE_VERSION",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function",
+  },
   {
     inputs: [],
     name: "name",
@@ -612,6 +883,19 @@ export const MusicCollectionABI = [
     name: "URI",
     type: "event",
   },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "implementation",
+        type: "address",
+      },
+    ],
+    name: "Upgraded",
+    type: "event",
+  },
 
   // Funciones de Ownable
   {
@@ -943,6 +1227,58 @@ export const MusicCollectionABI = [
       },
     ],
     stateMutability: "pure",
+    type: "function",
+  },
+
+  // Funciones de inicialización y upgrade
+  {
+    inputs: [
+      { internalType: "string", name: "_name", type: "string" },
+      { internalType: "string", name: "_symbol", type: "string" },
+      { internalType: "string", name: "_baseURI", type: "string" },
+      { internalType: "string", name: "_collectionMetadata", type: "string" },
+      { internalType: "uint256", name: "_mintStartDate", type: "uint256" },
+      { internalType: "uint256", name: "_mintEndDate", type: "uint256" },
+      { internalType: "address", name: "_paymentToken", type: "address" },
+      { internalType: "address", name: "_royaltyReceiver", type: "address" },
+      { internalType: "uint96", name: "_royaltyFee", type: "uint96" },
+      { internalType: "address", name: "initialOwner", type: "address" },
+      { internalType: "address", name: "_revenueShare", type: "address" },
+    ],
+    name: "initialize",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "proxiableUUID",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "newImplementation",
+        type: "address",
+      },
+      {
+        internalType: "bytes",
+        name: "data",
+        type: "bytes",
+      },
+    ],
+    name: "upgradeToAndCall",
+    outputs: [],
+    stateMutability: "payable",
     type: "function",
   },
 

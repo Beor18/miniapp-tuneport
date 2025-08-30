@@ -42,7 +42,9 @@ export const useZoraCoinCreation = () => {
 
   // Detectar entorno basado en hostname (misma lógica que providers.tsx)
   const isMainnet =
-    hostname === "app.tuneport.xyz" || hostname === "tuneport.xyz";
+    hostname === "app.tuneport.xyz" ||
+    hostname === "tuneport.xyz" ||
+    hostname === "miniapp.tuneport.xyz";
   const isTestnet = hostname === "testnet.tuneport.xyz";
 
   // Determinar la network basada en el hostname
@@ -116,19 +118,19 @@ export const useZoraCoinCreation = () => {
           name: `${params.albumName}`,
           description: `Official coin for ${params.albumName} - Trade, collect, and support the artist directly!`,
           image: params.albumImageUrl,
-          external_url: `https://app.tuneport.xyz/coin/${params.albumSymbol.toLowerCase()}`,
+          //external_url: `https://miniapp.tuneport.xyz/album/${params.albumSymbol.toLowerCase()}`,
           attributes: [
             {
               trait_type: "Type",
-              value: "Music Album",
+              value: "Single",
             },
             {
-              trait_type: "Album",
+              trait_type: "Single",
               value: params.albumName,
             },
             {
               trait_type: "Platform",
-              value: "TUNEPORT",
+              value: "Tuneport",
             },
             {
               trait_type: "Network",
@@ -161,6 +163,8 @@ export const useZoraCoinCreation = () => {
           payoutRecipient: params.artistAddress,
           chainId: targetChain.id,
           currency: currency,
+          platformReferrer:
+            "0xea049eF29ef59ce889Dfedffbb655BaDc734bD42" as `0x${string}`,
         };
 
         console.log("🚀 Creating coin with params:", coinParams);

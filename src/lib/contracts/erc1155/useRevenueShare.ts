@@ -36,7 +36,7 @@ export interface ManagerInfo {
 }
 
 // Función para obtener el cliente wallet que pagará el gas
-const getGasPayerWallet = () => {
+const getGasPayerWallet = (): any => {
   const privateKey = process.env.NEXT_PUBLIC_GAS_PAYER_PRIVATE_KEY;
 
   if (!privateKey) {
@@ -733,7 +733,8 @@ export const useRevenueShare = (
       collectionAddress: string,
       tokenId: number,
       curatorAddress: string,
-      curatorPercentage: number
+      curatorPercentage: number,
+      platformPercentage?: number // Nuevo parámetro opcional para la plataforma
     ): Promise<boolean> => {
       const evmAddress = getEvmWalletAddress();
       if (!authenticated || !evmAddress) {
@@ -864,16 +865,69 @@ export const useRevenueShare = (
           return false;
         }
 
-        // Si gasPayerWallet ES el owner, usar el flujo original
         // 🔧 SPLITS DE MINT: Debe totalizar 100% (10000) - representa la distribución de la parte NO-cascade
         // La cascada (70%) se maneja automáticamente en distributeCascadePayment
         // Los splits (100%) se aplicarán solo al 30% restante después del cascade
-        const mintShares = [
-          {
+
+        const mintShares = [];
+
+        // Obtener dirección de la plataforma (ya tenemos gasPayerWallet)
+        const platformAddress: string | undefined =
+          "0xea049eF29ef59ce889Dfedffbb655BaDc734bD42";
+
+        if (platformPercentage && platformPercentage > 0 && platformAddress) {
+          // Si se especifica porcentaje de plataforma, crear splits para ambos
+          const totalRemanentPercentage =
+            curatorPercentage + platformPercentage;
+
+          if (totalRemanentPercentage > 30) {
+            throw new Error(
+              `Error: La suma de curator (${curatorPercentage}%) y plataforma (${platformPercentage}%) no puede exceder el 30% del total`
+            );
+          }
+
+          // Convertir porcentajes relativos al remanente (30%) a basis points del 100%
+          const curatorBasisPoints = Math.floor(
+            (curatorPercentage / 30) * 10000
+          );
+          const platformBasisPoints = Math.floor(
+            (platformPercentage / 30) * 10000
+          );
+
+          // Ajustar para que sume exactamente 10000
+          const totalCalculated = curatorBasisPoints + platformBasisPoints;
+          const adjustment = 10000 - totalCalculated;
+          const adjustedCuratorBasisPoints = curatorBasisPoints + adjustment;
+
+          console.log(
+            `💰 Configurando splits: ${curatorPercentage}% curator + ${platformPercentage}% plataforma del 30% remanente`
+          );
+          console.log(
+            `📊 Basis points: ${adjustedCuratorBasisPoints} curator + ${platformBasisPoints} plataforma = ${
+              adjustedCuratorBasisPoints + platformBasisPoints
+            }`
+          );
+
+          mintShares.push(
+            {
+              account: curatorAddress as `0x${string}`,
+              percentage: BigInt(adjustedCuratorBasisPoints),
+            },
+            {
+              account: platformAddress as `0x${string}`,
+              percentage: BigInt(platformBasisPoints),
+            }
+          );
+        } else {
+          // Flujo original: todo el remanente (30%) va al curator
+          console.log(
+            `💰 Configurando splits: ${curatorPercentage}% solo para curator (sin plataforma)`
+          );
+          mintShares.push({
             account: curatorAddress as `0x${string}`,
             percentage: BigInt(10000), // 100% del remanente después del cascade
-          },
-        ];
+          });
+        }
 
         // Codificar la función setMintSplits para token específico
         const data = encodeFunctionData({
@@ -898,7 +952,15 @@ export const useRevenueShare = (
           hash: txHash,
         });
 
-        toast.success(`Splits de curator configurados: ${curatorPercentage}%`);
+        if (platformPercentage && platformPercentage > 0) {
+          toast.success(
+            `Splits configurados: ${curatorPercentage}% curator + ${platformPercentage}% plataforma`
+          );
+        } else {
+          toast.success(
+            `Splits de curator configurados: ${curatorPercentage}%`
+          );
+        }
         return true;
       } catch (error: any) {
         console.error("Error configurando splits de curator:", error);
@@ -1339,29 +1401,29 @@ export const useRevenueShare = (
             );
 
             // 🧪 PROBAR DIRECTAMENTE SI PODEMOS ENVIAR ETH AL ARTISTA
-            const artistAddress = "0x8AdB648bB68c1Ea15Ec5d510Da8D374A6Cb9b447";
-            console.log(
-              "🧪 Probando envío directo de ETH al artista:",
-              artistAddress
-            );
+            // const artistAddress = "0x8AdB648bB68c1Ea15Ec5d510Da8D374A6Cb9b447";
+            // console.log(
+            //   "🧪 Probando envío directo de ETH al artista:",
+            //   artistAddress
+            // );
 
-            try {
-              await publicClient.call({
-                to: artistAddress as `0x${string}`,
-                value: BigInt(1), // 1 wei para probar
-                data: "0x",
-                account: fromAddress as `0x${string}`,
-              });
-              console.log("✅ El artista PUEDE recibir ETH directamente");
-            } catch (directError) {
-              console.error(
-                "❌ El artista NO puede recibir ETH directamente:",
-                directError
-              );
-              toast.error("Problema detectado", {
-                description: `La dirección del artista ${artistAddress} no puede recibir ETH. Podría ser un Smart Contract Wallet sin función receive().`,
-              });
-            }
+            // try {
+            //   await publicClient.call({
+            //     to: artistAddress as `0x${string}`,
+            //     value: BigInt(1), // 1 wei para probar
+            //     data: "0x",
+            //     account: fromAddress as `0x${string}`,
+            //   });
+            //   console.log("✅ El artista PUEDE recibir ETH directamente");
+            // } catch (directError) {
+            //   console.error(
+            //     "❌ El artista NO puede recibir ETH directamente:",
+            //     directError
+            //   );
+            //   toast.error("Problema detectado", {
+            //     description: `La dirección del artista ${artistAddress} no puede recibir ETH. Podría ser un Smart Contract Wallet sin función receive().`,
+            //   });
+            // }
 
             // 🧪 PROBAR TAMBIÉN EL CURADOR (aquí podría estar el problema real)
             console.log("📊 Verificando mint splits del curador...");

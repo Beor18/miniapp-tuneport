@@ -268,7 +268,9 @@ export default function WalletConnector() {
         style={{ display: "flex", visibility: "visible" }}
       >
         <Wallet className="h-3.5 w-3.5 flex-shrink-0" />
-        <span className="text-xs text-zinc-400 whitespace-nowrap">Sign In</span>
+        <span className="text-xs text-zinc-400 whitespace-nowrap">
+          Join Now
+        </span>
       </Button>
     );
   }
@@ -281,7 +283,9 @@ export default function WalletConnector() {
         style={{ display: "flex", visibility: "visible" }}
       >
         <Wallet className="h-3.5 w-3.5 flex-shrink-0" />
-        <span className="text-xs text-zinc-400 whitespace-nowrap">Sign In</span>
+        <span className="text-xs text-zinc-400 whitespace-nowrap">
+          Join Now
+        </span>
       </Button>
     );
   }

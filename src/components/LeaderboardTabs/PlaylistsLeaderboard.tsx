@@ -291,17 +291,12 @@ export default function PlaylistsLeaderboard({
         );
 
         if (success) {
-          toast.success(
-            `🎉 ¡Tip de ${amount} ETH enviado a "${playlist.name}"!`,
-            {
-              id: `tip-${playlist._id}`,
-              description: `${
-                playlist.cascade_percentage || 70
-              }% → Artistas originales | ${
-                playlist.curator_percentage || 30
-              }% → @${playlist.userId.nickname}`,
-            }
-          );
+          toast.success(`🎉 ¡Tip ${amount} ETH sent to "${playlist.name}"!`, {
+            id: `tip-${playlist._id}`,
+            description: `${playlist.cascade_percentage || 70}% → Artists | ${
+              playlist.curator_percentage || 30
+            }% → @${playlist.userId.nickname}`,
+          });
         } else {
           toast.error("Error procesando el tip", { id: `tip-${playlist._id}` });
         }
@@ -381,29 +376,19 @@ export default function PlaylistsLeaderboard({
 
   if (playlists.length === 0) {
     return (
-      <div className="relative bg-gradient-to-r from-green-500/10 via-purple-500/10 to-blue-500/10 border border-green-500/30 rounded-xl p-12 text-center backdrop-blur-sm">
-        <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-transparent rounded-xl"></div>
+      <div className="relative bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-green-500/10 border border-blue-500/30 rounded-xl p-12 text-center backdrop-blur-sm">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent rounded-xl"></div>
         <div className="relative">
-          <span className="text-6xl mb-6 block animate-pulse">🎶</span>
+          <span className="text-6xl mb-6 block">📝</span>
           <h3 className="text-white font-bold text-2xl mb-3">
-            {tLeaderboard("preparingPlaylistRanking")}
+            {tLeaderboard("noPlaylistsYet")}
           </h3>
           <p className="text-zinc-300 mb-6">
-            {tLeaderboard("calculatingPopularPlaylists")}
+            {tLeaderboard("beFirstToCreatePlaylist")}
           </p>
-          <div className="flex justify-center">
-            <div className="flex space-x-1">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-bounce"></div>
-              <div
-                className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
-                style={{ animationDelay: "0.1s" }}
-              ></div>
-              <div
-                className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                style={{ animationDelay: "0.2s" }}
-              ></div>
-            </div>
-          </div>
+          <p className="text-zinc-400 text-sm">
+            {tLeaderboard("createPlaylistToSeeHere")}
+          </p>
         </div>
       </div>
     );

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useUserQuality } from "@Src/lib/hooks/useUserQuality";
 import { useTranslations, useLocale } from "next-intl";
-import { Users } from "lucide-react";
+import { Users, Zap } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useFarcasterMiniApp } from "@Src/components/FarcasterProvider";
@@ -396,14 +396,14 @@ export default function ArtistsLeaderboard({
                         {user.displayName}
                       </h3>
 
-                      {user.powerBadge && (
+                      {/* {user.powerBadge && (
                         <span
                           className="inline-flex items-center px-1 md:px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
                           title={t("powerBadge")}
                         >
                           ⚡
                         </span>
-                      )}
+                      )} */}
                     </div>
 
                     {user.displayName && user.displayName !== user.nickname && (
@@ -416,11 +416,17 @@ export default function ArtistsLeaderboard({
 
                 <div className="flex-shrink-0 text-right ml-auto pr-1">
                   <div className="flex flex-col items-end gap-2">
-                    <div className="text-right space-y-1">
-                      <div className="flex items-center gap-1 justify-end">
+                    <div className="flex flex-row items-center gap-3 justify-end">
+                      {/* <div className="flex items-center gap-1">
                         <Users className="w-4 h-4 text-zinc-400" />
                         <span className="text-zinc-400 text-sm">
                           {user.followerCount?.toLocaleString() || 0}
+                        </span>
+                      </div> */}
+                      <div className="flex items-center gap-1">
+                        <Zap className="w-4 h-4 text-zinc-400" />
+                        <span className="text-zinc-400 text-sm">
+                          {user.neynarScore?.toLocaleString() || 0}
                         </span>
                       </div>
                     </div>
