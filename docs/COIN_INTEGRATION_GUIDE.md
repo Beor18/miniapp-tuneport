@@ -358,29 +358,6 @@ export interface IPlaylist {
 }
 ```
 
-### 🔄 Migración de Base de Datos
-
-Creamos una migración completa (`migration-coin-address.ts`) que:
-
-- ✅ **Actualiza documentos existentes**: Agrega `coin_address: null` a todos los documentos que no tienen el campo
-- ✅ **Crea índices optimizados**: Para búsquedas rápidas por `coin_address`
-- ✅ **Preserva datos existentes**: Sin afectar ningún dato actual
-- ✅ **Reportes detallados**: Muestra estadísticas de migración
-
-**Ejecutar migración:**
-
-```bash
-cd elei-marketplace
-npm run ts-node src/server/migration/migration-coin-address.ts
-```
-
-**Verificar estado:**
-
-```typescript
-import { checkMigrationStatus } from "./migration/migration-coin-address";
-await checkMigrationStatus(); // Muestra estadísticas de migración
-```
-
 ### 🔗 Flujo de Integración
 
 ```typescript

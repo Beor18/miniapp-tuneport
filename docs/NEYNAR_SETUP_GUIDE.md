@@ -18,22 +18,6 @@ Esta guía explica cómo configurar las nuevas funcionalidades implementadas usa
 - ✅ Opciones de $1, $5, $10, $25 USDC
 - ✅ Usa la API de Neynar para envío de fungibles
 
-## 🔧 **Variables de Entorno Requeridas**
-
-Agrega estas variables a tu archivo `.env.local`:
-
-```env
-# API Key de Neynar (plan pagado)
-NEYNAR_API_KEY=your_neynar_api_key_here
-
-# Signer UUID de Farcaster para tips y casting
-FARCASTER_SIGNER_UUID=your_farcaster_signer_uuid_here
-
-# Existentes (mantener las que ya tienes)
-API_ELEI=https://api.tuneport.xyz
-NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
-```
-
 ## 📋 **Cómo Obtener las Claves**
 
 ### **NEYNAR_API_KEY**
