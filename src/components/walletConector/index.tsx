@@ -13,8 +13,9 @@ import RegistrationForm from "@Src/components/registrationForm";
 import { Button } from "@Src/ui/components/ui/button";
 import { Wallet } from "lucide-react";
 
-// Importar desde nuestro adaptador de Privy
-import { useAppKitAccount, useSolanaWallets } from "@Src/lib/privy";
+// Importar hook unificado y Solana wallets
+import { useUnifiedAccount } from "@Src/lib/hooks/useUnifiedAccount";
+import { useSolanaWallets } from "@Src/lib/privy";
 import { checkUser, getUserData } from "@Src/app/actions/checkUser.actions";
 import { createUser } from "@Src/app/actions/createUser.actions";
 import { useFarcaster } from "@Src/lib/hooks/useFarcaster";
@@ -61,25 +62,7 @@ export default function WalletConnector() {
   const { isRegistered, setIsRegistered, userData, setUserData } = useContext(
     UserRegistrationContext
   );
-  const { isMiniApp } = useContext(MiniAppContext);
-
-  useEffect(() => {
-    // Solo para logging
-    console.log("🔍 IFRAME DETECTION:", {
-      isMiniApp,
-      userAgent:
-        typeof navigator !== "undefined"
-          ? navigator.userAgent.substring(0, 50)
-          : "SSR",
-    });
-  }, [isMiniApp]);
-
-  const { isReady, isAuthenticated } = useStableAuth();
-  const locale = useLocale();
-  const verificationRef = useRef<boolean>(false);
-  const addressKeyRef = useRef<string>("");
-
-  // Usar nuestro adaptador de Privy para información general de la cuenta
+  // Hook unificado que maneja Privy + Mini Apps automáticamente
   const {
     address,
     isConnected,
@@ -89,10 +72,30 @@ export default function WalletConnector() {
     evmWalletAddress,
     solanaWalletAddress,
     wallets,
-    // 🆕 FARCASTER: Datos de Farcaster
     farcasterConnected,
     farcasterData,
-  } = useAppKitAccount();
+    isMiniApp,
+    isAutoRegistered,
+    userData: unifiedUserData,
+  } = useUnifiedAccount();
+
+  const { isReady, isAuthenticated } = useStableAuth();
+  const locale = useLocale();
+  const verificationRef = useRef<boolean>(false);
+  const addressKeyRef = useRef<string>("");
+
+  useEffect(() => {
+    console.log("🔍 useUnifiedAccount:", {
+      isMiniApp,
+      isAutoRegistered,
+      isConnected,
+      address: !!address,
+      userAgent:
+        typeof navigator !== "undefined"
+          ? navigator.userAgent.substring(0, 50)
+          : "SSR",
+    });
+  }, [isMiniApp, isAutoRegistered, isConnected, address]);
 
   // Obtener específicamente las wallets de Solana para mejor detección
   const { wallets: solanaWallets, ready: solanaReady } = useSolanaWallets();
@@ -150,12 +153,11 @@ export default function WalletConnector() {
     [userParams.evm, userParams.solana, userParams.email]
   );
 
-  // Estado de conexión memoizado
+  // Estado de conexión simplificado - useUnifiedAccount ya maneja Mini Apps
   const hasWalletConnected = useMemo(
     () =>
-      isConnected &&
-      (!!address || !!walletAddresses.solana || !!walletAddresses.evm),
-    [isConnected, address, walletAddresses.solana, walletAddresses.evm]
+      isConnected && (!!address || !!solanaWalletAddress || !!evmWalletAddress),
+    [isConnected, address, solanaWalletAddress, evmWalletAddress]
   );
 
   // 🚫 MINIKIT: Ya inicializado en layout.tsx (PASO 2), no duplicar aquí
@@ -717,13 +719,10 @@ export default function WalletConnector() {
   console.log("🎯 RENDER FINAL - CustomUserPill:", {
     isRegistered,
     userData: !!userData,
-    userDataKeys: userData ? Object.keys(userData) : [],
     isMiniApp,
-    // 🚨 WALLET STATE DEBUG:
+    isAutoRegistered,
     isConnected,
     address: !!address,
-    evmWallet: !!evmWalletAddress,
-    solanaWallet: !!solanaWalletAddress,
     hasWalletConnected,
   });
 

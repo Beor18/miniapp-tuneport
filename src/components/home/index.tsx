@@ -34,7 +34,7 @@ import {
   Trophy,
 } from "lucide-react";
 import BaseAlbumNewForm from "@Src/components/BaseAlbumNewForm";
-import { useAppKitAccount } from "@Src/lib/privy";
+import { useUnifiedAccount } from "@Src/lib/hooks/useUnifiedAccount";
 import WalletConnector from "@Src/components/walletConector";
 import LanguageSelector from "@Src/components/LanguageSelector";
 import { useTranslations, useLocale } from "next-intl";
@@ -153,8 +153,16 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { address, isConnected, caipAddress, status, embeddedWalletInfo } =
-    useAppKitAccount();
+  const {
+    address,
+    isConnected,
+    caipAddress,
+    status,
+    embeddedWalletInfo,
+    isMiniApp: unifiedIsMiniApp,
+    isAutoRegistered,
+    userData: unifiedUserData,
+  } = useUnifiedAccount();
 
   // 🎯 INICIALIZACIÓN MINIKIT (siguiendo documentación oficial de Base)
   const { setFrameReady, isFrameReady } = useMiniKit();
@@ -270,23 +278,18 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
 
   // Memoizar navItems para evitar re-cálculos innecesarios
   const navItems = useMemo(() => {
-    // 🎯 EN MINI APPS: Si está registrado, usar userData.address como fallback
-    const effectiveAddress =
-      address?.toString() || (isMiniApp && userData?.address);
-
+    // 🎯 useUnifiedAccount ya maneja el fallback automáticamente
     console.log("🎯 HomeLayout - navItems calculation:", {
-      isMiniApp,
-      isRegistered,
+      unifiedIsMiniApp,
+      isAutoRegistered,
       address: !!address,
-      userDataAddress: !!userData?.address,
-      effectiveAddress: !!effectiveAddress,
       userNickname,
       userType,
-      willShowCreate: !!(effectiveAddress && userType === "artist"),
+      willShowCreate: !!(address && userType === "artist"),
     });
 
     return getNavItems(
-      effectiveAddress,
+      address?.toString(),
       userNickname,
       userType,
       tNav,
@@ -300,9 +303,8 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
     tNav,
     locale,
     tCommon,
-    isMiniApp,
-    userData?.address,
-    isRegistered,
+    unifiedIsMiniApp,
+    isAutoRegistered,
   ]);
 
   // normaliza locale si ya lo tenés, o usa directamente pathname
@@ -464,9 +466,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
               <MobileNavLink
                 key={item.href}
                 {...item}
-                isConnected={
-                  isConnected || (isMiniApp && isRegistered === true)
-                }
+                isConnected={isConnected}
                 onCreateClick={() => setIsCreateModalOpen(true)}
               />
             ))}
@@ -475,12 +475,11 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
       )}
 
       {/* FloatingPlayer solo si hay usuario autenticado */}
-      {(isConnected || (isMiniApp && isRegistered === true)) &&
-        !layoutFlags.isForYou && (
-          <Suspense fallback={null}>
-            <FloatingPlayer />
-          </Suspense>
-        )}
+      {isConnected && !layoutFlags.isForYou && (
+        <Suspense fallback={null}>
+          <FloatingPlayer />
+        </Suspense>
+      )}
 
       {/* Modal para crear álbum */}
       <BaseAlbumNewForm

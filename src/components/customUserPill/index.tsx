@@ -16,7 +16,7 @@ import { base, baseSepolia } from "viem/chains";
 import { useState, useEffect } from "react";
 import { usePlayer } from "@Src/contexts/PlayerContext";
 import Link from "next/link";
-import { useAppKitAccount } from "@Src/lib/privy";
+import { useUnifiedAccount } from "@Src/lib/hooks/useUnifiedAccount";
 
 interface CustomUserPillProps {
   handleLogout: () => void;
@@ -36,8 +36,7 @@ export function CustomUserPill({
   const { fundWallet } = useFundWallet();
 
   // 🆕 FARCASTER: Obtener datos de Farcaster del usuario
-  const { farcasterConnected, farcasterData, linkFarcaster } =
-    useAppKitAccount();
+  const { farcasterConnected, farcasterData } = useUnifiedAccount();
 
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -106,11 +105,7 @@ export function CustomUserPill({
 
   // 🆕 FARCASTER: Función para manejar la vinculación de Farcaster
   const handleLinkFarcaster = () => {
-    try {
-      linkFarcaster();
-    } catch (error) {
-      console.error("Error linking Farcaster:", error);
-    }
+    console.log("Link Farcaster functionality - use Privy login flow");
   };
 
   const handleLogoutWithPlayerCleanup = async () => {

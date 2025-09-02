@@ -27,7 +27,7 @@ import { LikeButton } from "../ui/LikeButton";
 import { useCandyMachineMint } from "@Src/lib/hooks/solana/useCandyMachineMint";
 import { useBlockchainOperations } from "@Src/lib/hooks/common/useBlockchainOperations";
 import { toast } from "sonner";
-import { useAppKitAccount } from "@Src/lib/privy";
+import { useUnifiedAccount } from "@Src/lib/hooks/useUnifiedAccount";
 import { motion } from "framer-motion";
 import { MintModal } from "@Src/components/MintModal";
 import { TradingInterface } from "@Src/components/TradingInterface";
@@ -67,7 +67,7 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
     useERC1155: true,
   });
 
-  // Usar nuestro hook actualizado de Privy para la detección de wallet
+  // Usar hook unificado que maneja Privy + Mini Apps
   const {
     address,
     isConnected,
@@ -75,24 +75,18 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
     embeddedWalletInfo,
     solanaWalletAddress,
     evmWalletAddress,
-  } = useAppKitAccount();
-
-  // 🎯 DETECCIÓN MINI APP
-  const isMiniApp =
-    typeof window !== "undefined" ? window.parent !== window : false;
+    isMiniApp: unifiedIsMiniApp,
+    isAutoRegistered,
+  } = useUnifiedAccount();
 
   // Verificar si hay alguna wallet conectada (especialmente importante para Solana)
-  // 🆕 EN MINI APPS: También considerar si está registrado (auto-registro completado)
-  const hasWalletConnected = isMiniApp
-    ? (isRegistered === true && userData) ||
-      (isConnected &&
-        (!!address || !!solanaWalletAddress || !!evmWalletAddress))
-    : isConnected && (!!address || !!solanaWalletAddress || !!evmWalletAddress);
+  // 🎯 useUnifiedAccount ya maneja Mini Apps automáticamente
+  const hasWalletConnected =
+    isConnected && (!!address || !!solanaWalletAddress || !!evmWalletAddress);
 
   console.log("🎯 CardMusicHome - hasWalletConnected:", {
-    isMiniApp,
-    isRegistered,
-    userData: !!userData,
+    unifiedIsMiniApp,
+    isAutoRegistered,
     isConnected,
     hasWallets: !!(address || solanaWalletAddress || evmWalletAddress),
     FINAL: hasWalletConnected,
