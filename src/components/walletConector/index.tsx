@@ -29,7 +29,11 @@ import { CustomUserPill } from "../customUserPill";
 import { useLocale } from "next-intl";
 
 // 🆕 MiniKit para Base App según documentación oficial
-import { useMiniKit, useIsInMiniApp } from "@coinbase/onchainkit/minikit";
+import {
+  useMiniKit,
+  useIsInMiniApp,
+  useAuthenticate,
+} from "@coinbase/onchainkit/minikit";
 
 // Cache global para evitar re-verificaciones innecesarias
 const userDataCache = new Map<string, any>();
@@ -87,6 +91,7 @@ export default function WalletConnector() {
   // 🆕 MINIKIT: Hooks para Base App según documentación oficial
   const { context: minikitContext, isFrameReady, setFrameReady } = useMiniKit();
   const { isInMiniApp } = useIsInMiniApp();
+  const { signIn: minikitSignIn } = useAuthenticate();
 
   // Usamos las direcciones específicas para cada cadena
   const userAddressEvm = evmWalletAddress;
@@ -319,18 +324,36 @@ export default function WalletConnector() {
     ]
   );
 
-  // 🆕 AUTO-LOGIN: Effect para auto-login automático cuando se detecta Mini App
+  // 🆕 AUTO-LOGIN: Effect para auto-login con MiniKit (Base App) y Privy (Farcaster)
   useEffect(() => {
     if (isReady && !isAuthenticated && isInFarcasterMiniApp) {
       const attemptAutoLogin = async () => {
         try {
           console.log("🎯 Mini App detectada. Iniciando auto-login...");
-          // 🆕 Login con configuración específica para Mini Apps
-          await login({
-            loginMethods: ["farcaster"], // Solo Farcaster en Mini Apps
-            disableSignup: false, // Permitir signup pero silencioso
-          });
-          console.log("🎉 Auto-login completado");
+
+          // Detectar si es Base App para usar MiniKit o Farcaster para usar Privy
+          const isInIframe =
+            typeof window !== "undefined" && window.parent !== window;
+          const hasUserAgent =
+            typeof navigator !== "undefined" && navigator.userAgent;
+          const isBaseMiniApp = isInMiniApp && (minikitContext || isFrameReady);
+
+          if (isBaseMiniApp && minikitSignIn) {
+            // 🆕 Base App: usar autenticación oficial de MiniKit
+            console.log(
+              "🎯 Base App detectada. Usando autenticación MiniKit..."
+            );
+            const result = await minikitSignIn();
+            console.log("🎉 MiniKit auto-login completado:", result);
+          } else {
+            // Farcaster App: usar Privy como antes
+            console.log("🎯 Farcaster App detectada. Usando Privy...");
+            await login({
+              loginMethods: ["farcaster"], // Solo Farcaster en Mini Apps
+              disableSignup: false, // Permitir signup pero silencioso
+            });
+            console.log("🎉 Privy auto-login completado");
+          }
         } catch (error) {
           console.log("ℹ️ Auto-login falló:", error);
         }
@@ -340,7 +363,16 @@ export default function WalletConnector() {
       const timeoutId = setTimeout(attemptAutoLogin, 500);
       return () => clearTimeout(timeoutId);
     }
-  }, [isReady, isAuthenticated, isInFarcasterMiniApp, login]);
+  }, [
+    isReady,
+    isAuthenticated,
+    isInFarcasterMiniApp,
+    isInMiniApp,
+    minikitContext,
+    isFrameReady,
+    minikitSignIn,
+    login,
+  ]);
 
   // 🆕 OCULTAR MODAL PRIVY: Effect para ocultar modals solo en Base App
   useEffect(() => {

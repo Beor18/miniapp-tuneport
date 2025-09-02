@@ -5,6 +5,7 @@ import { locales, type Locale } from "../../i18n/config";
 import { Inter } from "next/font/google";
 import HomeLayout from "@Src/components/home";
 import { Toaster } from "sonner";
+import MiniKitInitializer from "@Src/components/MiniKitInitializer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -66,6 +67,7 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages}>
+      <MiniKitInitializer />
       <HomeLayout mockUsers={userData}>{children}</HomeLayout>
       <Toaster richColors position="top-right" expand={false} closeButton />
     </NextIntlClientProvider>
