@@ -148,9 +148,8 @@ export default function WalletConnector() {
 
   // 🚫 MINIKIT: Ya inicializado en layout.tsx (PASO 2), no duplicar aquí
 
-  // 🎯 PASO 4: USAR detección del layout (NO hacer detección propia)
+  // 🎯 PASO 4: USAR detección del layout + AUTO-REGISTRO INMEDIATO
   const [isMiniApp, setIsMiniApp] = useState(false);
-  const [farcasterFID, setFarcasterFID] = useState<number | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -162,50 +161,7 @@ export default function WalletConnector() {
     });
 
     setIsMiniApp(detected);
-
-    // 🎯 Si estamos en Mini App (según el layout), obtener FID inmediatamente
-    if (detected) {
-      const getFIDImmediately = async () => {
-        try {
-          console.log("🔍 Buscando FID de Farcaster...");
-
-          // MÉTODO 1: Desde Farcaster SDK
-          if (isSDKLoaded && userInfo?.fid) {
-            console.log("✅ FID obtenido desde Farcaster SDK:", userInfo.fid);
-            setFarcasterFID(userInfo.fid);
-            return;
-          }
-
-          // MÉTODO 2: Desde useFarcaster hook
-          if (farcasterHookData?.fid) {
-            console.log(
-              "✅ FID obtenido desde useFarcaster hook:",
-              farcasterHookData.fid
-            );
-            setFarcasterFID(farcasterHookData.fid);
-            return;
-          }
-
-          // MÉTODO 3: Desde Privy Farcaster data
-          if (farcasterData?.fid) {
-            console.log("✅ FID obtenido desde Privy:", farcasterData.fid);
-            setFarcasterFID(farcasterData.fid);
-            return;
-          }
-
-          console.log("⏳ FID no disponible aún, reintentando...");
-        } catch (error) {
-          console.error("❌ Error obteniendo FID:", error);
-        }
-      };
-
-      // Intentar cada 1 segundo hasta obtener FID
-      const interval = setInterval(getFIDImmediately, 1000);
-      getFIDImmediately(); // Ejecutar inmediatamente también
-
-      return () => clearInterval(interval);
-    }
-  }, [isSDKLoaded, userInfo, farcasterHookData, farcasterData]);
+  }, []);
 
   // 🆕 NEYNAR API: Obtener address desde FID
   const getAddressFromFID = useCallback(
@@ -246,43 +202,53 @@ export default function WalletConnector() {
     []
   );
 
-  // 🆕 AUTO-REGISTRO INMEDIATO: Tan pronto como tengamos FID
+  // 🎯 AUTO-REGISTRO INMEDIATO: Detectar cualquier fuente de Farcaster y registrar
   useEffect(() => {
-    if (isMiniApp && farcasterFID && !verificationRef.current) {
-      console.log("🎯 EJECUTANDO AUTO-REGISTRO con FID:", farcasterFID);
+    if (!isMiniApp || verificationRef.current) return;
+
+    // Obtener FID de cualquier fuente disponible
+    const fid = userInfo?.fid || farcasterHookData?.fid || farcasterData?.fid;
+
+    if (fid) {
+      console.log(
+        "🎯 FID encontrado, ejecutando auto-registro INMEDIATO:",
+        fid
+      );
       verificationRef.current = true;
 
       const immediateAutoRegister = async () => {
         try {
-          // 🎯 PASO 1: Obtener address verificada desde Neynar
-          const verifiedAddress = await getAddressFromFID(farcasterFID);
-
-          // 🎯 PASO 2: Obtener datos de Farcaster (usar cualquier fuente disponible)
+          // 🎯 OBTENER TODOS LOS DATOS de Farcaster (cualquier fuente)
           const farcasterInfo =
             userInfo || farcasterHookData || farcasterData || {};
 
-          // 🎯 PASO 3: Generar nickname único usando FID
-          const nickname = farcasterInfo.username
-            ? `${farcasterInfo.username}${farcasterFID}`
-            : `user${farcasterFID}`;
+          console.log("📝 Datos de Farcaster disponibles:", farcasterInfo);
 
-          // 🎯 PASO 4: Crear usuario con todos los datos (manejar diferencias de tipos)
+          // 🎯 PASO 1: Obtener address verificada desde Neynar
+          const verifiedAddress = await getAddressFromFID(fid);
+
+          // 🎯 PASO 2: Generar nickname único
+          const nickname = farcasterInfo.username
+            ? `${farcasterInfo.username}${fid}`
+            : `user${fid}`;
+
+          // 🎯 PASO 3: Crear usuario con TODOS los datos (incluyendo bio)
           const userData = {
             name:
               farcasterInfo.displayName ||
               farcasterInfo.username ||
-              `User ${farcasterFID}`,
+              `User ${fid}`,
             nickname,
             email: userParams.email || "",
             address: verifiedAddress || "", // Address desde Neynar
             address_solana: "", // Vacío por ahora
-            type: "artist", // 🎯 SIEMPRE artist para usuarios de Mini App
-            farcaster_fid: farcasterFID,
+            type: "artist", // 🎯 SIEMPRE artist para Mini Apps
+            farcaster_fid: fid,
             farcaster_username: farcasterInfo.username || "",
             farcaster_display_name: farcasterInfo.displayName || "",
             farcaster_pfp:
               (farcasterInfo as any).pfp || (farcasterInfo as any).pfpUrl || "",
-            farcaster_bio: (farcasterInfo as any).bio || "",
+            farcaster_bio: (farcasterInfo as any).bio || "", // ✅ INCLUIR BIO
             farcaster_verified: true,
           };
 
@@ -291,7 +257,7 @@ export default function WalletConnector() {
           const newUser = await createUser(userData);
 
           if (newUser) {
-            console.log("✅ Auto-registro EXITOSO:", newUser);
+            console.log("✅ Auto-registro INMEDIATO exitoso:", newUser);
             setUserData(newUser);
             setIsRegistered(true);
           } else {
@@ -309,18 +275,21 @@ export default function WalletConnector() {
       };
 
       immediateAutoRegister();
+    } else {
+      console.log("⏳ Esperando datos de Farcaster...");
     }
   }, [
     isMiniApp,
-    farcasterFID,
-    getAddressFromFID,
     userInfo,
     farcasterHookData,
     farcasterData,
+    getAddressFromFID,
     userParams.email,
     setUserData,
     setIsRegistered,
   ]);
+
+  // 🚫 FUNCIÓN DUPLICADA ELIMINADA: getAddressFromFID ya está definida arriba
 
   // 🆕 FARCASTER AUTO-REGISTER: Función simplificada usando Neynar (BACKUP)
   const autoRegisterFarcasterUser = useCallback(async () => {
