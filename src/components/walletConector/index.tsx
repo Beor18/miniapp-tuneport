@@ -8,7 +8,7 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { UserRegistrationContext } from "@Src/app/providers";
+import { UserRegistrationContext, MiniAppContext } from "@Src/app/providers";
 import RegistrationForm from "@Src/components/registrationForm";
 import { Button } from "@Src/ui/components/ui/button";
 import { Wallet } from "lucide-react";
@@ -61,6 +61,7 @@ export default function WalletConnector() {
   const { isRegistered, setIsRegistered, userData, setUserData } = useContext(
     UserRegistrationContext
   );
+  const { isMiniApp } = useContext(MiniAppContext);
 
   const { isReady, isAuthenticated } = useStableAuth();
   const locale = useLocale();
@@ -148,21 +149,13 @@ export default function WalletConnector() {
 
   // 🚫 MINIKIT: Ya inicializado en layout.tsx (PASO 2), no duplicar aquí
 
-  // 🎯 PASO 4: USAR detección del layout + AUTO-REGISTRO INMEDIATO
-  const [isMiniApp, setIsMiniApp] = useState(false);
+  // 🎯 AUTO-REGISTRO: Estado para manejar el procesamiento
   const [isProcessingMiniApp, setIsProcessingMiniApp] = useState(false);
 
+  // 🎯 LOG para debugging
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    // LEER la detección que ya se hizo en el layout (PASO 2)
-    const detected = window.__MINIAPP_DETECTED__ === true;
-    console.log("🔍 PASO 4 - WalletConnector usando detección del layout:", {
-      detected,
-    });
-
-    setIsMiniApp(detected);
-  }, []);
+    console.log("🎯 WALLET CONNECTOR - isMiniApp desde contexto:", isMiniApp);
+  }, [isMiniApp]);
 
   // 🆕 NEYNAR API: Obtener address desde FID
   const getAddressFromFID = useCallback(

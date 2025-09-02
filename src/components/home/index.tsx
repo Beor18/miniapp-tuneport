@@ -39,7 +39,8 @@ import WalletConnector from "@Src/components/walletConector";
 import LanguageSelector from "@Src/components/LanguageSelector";
 import { useTranslations, useLocale } from "next-intl";
 import { usePlayer } from "@Src/contexts/PlayerContext";
-import { UserRegistrationContext } from "@Src/app/providers";
+import { UserRegistrationContext, MiniAppContext } from "@Src/app/providers";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
 
 // 🎯 PASO 3: Declarar tipo global para leer detección del layout
 declare global {
@@ -146,6 +147,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   const [userNickname, setUserNickname] = useState<string | null>(null);
   const [userType, setUserType] = useState<string | null>(null);
   const { userData, isRegistered } = useContext(UserRegistrationContext);
+  const { isMiniApp, setIsMiniApp } = useContext(MiniAppContext);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [hostname, setHostname] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -154,18 +156,35 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   const { address, isConnected, caipAddress, status, embeddedWalletInfo } =
     useAppKitAccount();
 
-  // 🎯 PASO 3: LEER detección del layout (siguiendo flujo)
-  const [isMiniApp, setIsMiniApp] = useState(false);
+  // 🎯 INICIALIZACIÓN MINIKIT (siguiendo documentación oficial de Base)
+  const { setFrameReady, isFrameReady } = useMiniKit();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const detected = window.__MINIAPP_DETECTED__ === true;
-    console.log("🔍 PASO 3 - HomeLayout leyendo detección del layout:", {
-      detected,
+    // 🎯 DETECCIÓN SEGÚN PATRÓN OFICIAL DE BASE
+    const isInIframe = window.parent !== window;
+
+    console.log("🔍 BASE OFFICIAL - MiniKit Detection:", {
+      isInIframe,
+      isFrameReady,
+      userAgent: navigator?.userAgent?.substring(0, 50),
     });
-    setIsMiniApp(detected);
-  }, []);
+
+    if (isInIframe) {
+      console.log("✅ Mini App detectada! Inicializando MiniKit...");
+      setIsMiniApp(true);
+
+      // 🎯 INICIALIZAR MINIKIT según documentación oficial
+      if (!isFrameReady) {
+        console.log("🎯 Llamando setFrameReady()...");
+        setFrameReady();
+      }
+    } else {
+      console.log("❌ No es Mini App");
+      setIsMiniApp(false);
+    }
+  }, [setFrameReady, isFrameReady, setIsMiniApp]);
 
   // Hook del reproductor para verificar el estado real
   const { currentSong, showFloatingPlayer } = usePlayer();
