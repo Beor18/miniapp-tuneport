@@ -47,14 +47,13 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   const { initLoginToMiniApp, loginToMiniApp } = useLoginToMiniApp();
 
   useEffect(() => {
-    // Detectar si estamos en una Mini App
-    const isMiniApp = typeof window !== "undefined" && window.parent !== window;
+    console.log(
+      "🔥 FarcasterProvider: ALWAYS TRYING AUTO-LOGIN - Testing mode"
+    );
 
-    if (!isMiniApp) {
-      console.log("🎯 FarcasterProvider: No es Mini App, modo normal");
-      setIsSDKLoaded(true);
-      return;
-    }
+    // 🔥 FORCE MODE: Siempre intentar auto-login para testing
+    const isMiniApp = true; // Forzamos true para testing
+    console.log("🎯 FarcasterProvider - FORCED MODE:", { isMiniApp });
 
     // 🎯 AUTO-LOGIN según documentación oficial de Privy
     const login = async () => {
