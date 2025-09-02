@@ -38,54 +38,10 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
     useState<FarcasterContextType["userInfo"]>(null);
 
   useEffect(() => {
-    // Cargar SDK de Farcaster Mini Apps
-    const loadSDK = async () => {
-      try {
-        const { sdk } = await import("@farcaster/miniapp-sdk");
-
-        // Inicializar SDK
-        await sdk.actions.ready();
-
-        // Obtener contexto de la mini app
-        const appContext = await sdk.context;
-        const actionContext = await sdk.actions;
-        const appWalletContext = await sdk.wallet.getEthereumProvider();
-
-        setWalletContext(appWalletContext);
-        setContext(appContext);
-        setTipContext(actionContext);
-
-        // Extraer información del usuario del contexto
-        if (appContext?.user) {
-          const userInfoData = {
-            fid: appContext.user.fid,
-            username: appContext.user.username,
-            displayName: appContext.user.displayName,
-            pfpUrl: appContext.user.pfpUrl,
-          };
-          setUserInfo(userInfoData);
-
-          console.log(
-            "🎯 FarcasterProvider: User info extracted",
-            userInfoData
-          );
-        } else {
-          console.log("⚠️ FarcasterProvider: No user info in context");
-        }
-
-        setIsSDKLoaded(true);
-
-        console.log("✅ Farcaster SDK loaded successfully:", appContext);
-        console.log("✅ Wallet context:", appWalletContext);
-        console.log("✅ User info:", appContext?.user);
-      } catch (error) {
-        console.error("Error loading Farcaster SDK:", error);
-        // Para desarrollo, marcar como listo de todas formas
-        setIsSDKLoaded(true);
-      }
-    };
-
-    loadSDK();
+    // 🎯 MINIKIT: No cargar Farcaster SDK, solo marcar como listo
+    // MiniKit + Privy manejan toda la autenticación automáticamente
+    console.log("🎯 FarcasterProvider: Modo MiniKit - No cargar SDK");
+    setIsSDKLoaded(true);
   }, []);
 
   return (

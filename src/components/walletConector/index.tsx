@@ -85,12 +85,8 @@ export default function WalletConnector() {
   // Privy original para funciones como login/logout
   const { login, logout, user } = usePrivy();
 
-  // 🆕 FARCASTER: Hooks del proyecto para manejo completo de Farcaster
-  const { isSDKLoaded, context, userInfo } = useFarcasterMiniApp();
-  const {
-    isConnected: farcasterHookConnected,
-    farcasterData: farcasterHookData,
-  } = useFarcaster();
+  // 🎯 MINIKIT: Solo usar datos de Privy (farcasterData viene de Privy automáticamente)
+  // Remover hooks innecesarios que causan conflictos
 
   // Usamos las direcciones específicas para cada cadena
   const userAddressEvm = evmWalletAddress;
@@ -186,125 +182,65 @@ export default function WalletConnector() {
     []
   );
 
-  // 🎯 AUTO-REGISTRO INMEDIATO: Detectar cualquier fuente de Farcaster y registrar
+  // 🎯 AUTO-REGISTRO: Solo cuando Privy ya está autenticado (no interferir con Privy login)
   useEffect(() => {
-    console.log("🔥 AUTO-REGISTRO useEffect triggered:", {
-      isMiniApp,
-      verificationRef: verificationRef.current,
-      farcasterData: !!farcasterData,
-      userInfo: !!userInfo,
-      farcasterHookData: !!farcasterHookData,
-    });
-
-    if (!isMiniApp || verificationRef.current) {
-      console.log("❌ Auto-registro skipped:", {
-        isMiniApp,
-        verificationRef: verificationRef.current,
-      });
+    if (!isMiniApp || !isAuthenticated || verificationRef.current) {
       return;
     }
 
-    // 🎯 PRIORIZAR por tipo de Mini App:
-    // - Farcaster Apps: userInfo (FarcasterProvider) tiene prioridad
-    // - Base Apps: farcasterData (Privy) tiene prioridad
-    const fid = farcasterData?.fid || userInfo?.fid || farcasterHookData?.fid;
+    // Solo usar datos de Privy (simplificado)
+    const fid = farcasterData?.fid;
 
-    console.log("🔍 FID check:", {
-      farcasterDataFid: farcasterData?.fid,
-      userInfoFid: userInfo?.fid,
-      farcasterHookDataFid: farcasterHookData?.fid,
-      finalFid: fid,
-    });
-
-    if (fid) {
+    if (fid && isAuthenticated) {
       console.log(
-        "🎯 FID encontrado, ejecutando auto-registro INMEDIATO:",
+        "✅ MiniKit: Privy autenticado, ejecutando auto-registro:",
         fid
       );
       verificationRef.current = true;
-      setIsProcessingMiniApp(true); // 🎯 Indicar que está procesando
+      setIsProcessingMiniApp(true);
 
-      const immediateAutoRegister = async () => {
+      const registerAfterPrivyAuth = async () => {
         try {
-          // 🎯 OBTENER TODOS LOS DATOS de Farcaster (priorizar según Mini App)
-          const farcasterInfo =
-            farcasterData || userInfo || farcasterHookData || {};
-
-          console.log("📝 Datos de Farcaster disponibles:", farcasterInfo);
-
-          // 🎯 PASO 1: Obtener address verificada desde Neynar
           const verifiedAddress = await getAddressFromFID(fid);
-
-          // 🎯 PASO 2: Generar nickname único
-          const nickname = farcasterInfo.username
-            ? `${farcasterInfo.username}${fid}`
+          const nickname = farcasterData.username
+            ? `${farcasterData.username}${fid}`
             : `user${fid}`;
 
-          // 🎯 PASO 3: Crear usuario con TODOS los datos (incluyendo bio)
           const userData = {
             name:
-              farcasterInfo.displayName ||
-              farcasterInfo.username ||
+              farcasterData.displayName ||
+              farcasterData.username ||
               `User ${fid}`,
             nickname,
             email: userParams.email || "",
-            address: verifiedAddress || "", // Address desde Neynar
-            address_solana: "", // Vacío por ahora
-            type: "artist", // 🎯 SIEMPRE artist para Mini Apps
+            address: verifiedAddress || "",
+            address_solana: "",
+            type: "artist",
             farcaster_fid: fid,
-            farcaster_username: farcasterInfo.username || "",
-            farcaster_display_name: farcasterInfo.displayName || "",
-            farcaster_pfp:
-              (farcasterInfo as any).pfp || (farcasterInfo as any).pfpUrl || "",
-            farcaster_bio: (farcasterInfo as any).bio || "", // ✅ INCLUIR BIO
+            farcaster_username: farcasterData.username || "",
+            farcaster_display_name: farcasterData.displayName || "",
+            farcaster_pfp: farcasterData.pfp || "",
+            farcaster_bio: farcasterData.bio || "",
             farcaster_verified: true,
           };
 
-          console.log("📝 Auto-registrando con datos completos:", userData);
-
           const newUser = await createUser(userData);
-
           if (newUser) {
-            console.log("✅ Auto-registro INMEDIATO exitoso:", newUser);
-            // 🎯 FORZAR actualización del estado en Mini Apps
-            setTimeout(() => {
-              setUserData(newUser);
-              setIsRegistered(true);
-              setIsProcessingMiniApp(false); // 🎯 Completado
-              console.log("🎯 Estado actualizado FORZADAMENTE:", {
-                isRegistered: true,
-                userData: !!newUser,
-              });
-            }, 100);
-          } else {
-            console.log("❌ Falló createUser");
-            setIsRegistered(false);
-            setUserData(null);
+            setUserData(newUser);
+            setIsRegistered(true);
+            console.log("✅ MiniKit: Auto-registro exitoso");
           }
         } catch (error) {
-          console.error("❌ Error en auto-registro inmediato:", error);
-          setIsRegistered(false);
-          setUserData(null);
+          console.error("❌ MiniKit: Error en auto-registro:", error);
         } finally {
           verificationRef.current = false;
-          setIsProcessingMiniApp(false); // 🎯 Asegurar que se resetee
+          setIsProcessingMiniApp(false);
         }
       };
 
-      immediateAutoRegister();
-    } else {
-      console.log("⏳ Esperando datos de Farcaster...");
+      registerAfterPrivyAuth();
     }
-  }, [
-    isMiniApp,
-    farcasterData, // Prioridad 1: Privy (Base Apps)
-    userInfo, // Prioridad 2: FarcasterProvider (Farcaster Apps)
-    farcasterHookData, // Prioridad 3: Hook proyecto
-    getAddressFromFID,
-    userParams.email,
-    setUserData,
-    setIsRegistered,
-  ]);
+  }, [isMiniApp, isAuthenticated, farcasterData]);
 
   // 🚫 FUNCIÓN DUPLICADA ELIMINADA: getAddressFromFID ya está definida arriba
 
@@ -594,39 +530,31 @@ export default function WalletConnector() {
     logout();
   }, [logout]);
 
-  // 🆕 RENDER LOGIC SIMPLIFICADO: Mini Apps = UX directo sin UI
+  // 🎯 MINIKIT: Render simplificado para Mini Apps
   if (isMiniApp) {
-    console.log("🎯 Mini App render:", {
-      isRegistered,
-      userData: !!userData,
-      isAutoRegistered,
-      unifiedUserData: !!unifiedUserData,
-      isProcessingMiniApp,
-      isMiniApp,
-    });
-
-    // En Mini Apps, SOLO mostrar el user pill cuando esté registrado
-    // Usar isAutoRegistered del hook unificado O isRegistered del contexto
-    if (
-      (isRegistered === true && userData) ||
-      (isAutoRegistered && unifiedUserData)
-    ) {
-      console.log("✅ Mostrando CustomUserPill en Mini App");
-      const profileData = userData || unifiedUserData;
+    // Si Privy está autenticado y tenemos datos de usuario registrado
+    if (isAuthenticated && isRegistered === true && userData) {
+      console.log("✅ MiniKit: Mostrando CustomUserPill");
       return (
         <div className="flex items-center gap-3">
           <CustomUserPill
             handleLogout={handleLogout}
-            profile={profileData}
+            profile={userData}
             locale={locale}
-            userNickname={profileData?.nickname || null}
+            userNickname={userData?.nickname || null}
           />
         </div>
       );
     }
 
-    // Mientras procesa el auto-registro, no mostrar nada
-    console.log("⏳ Mini App procesando o sin datos, no mostrar UI");
+    // Si Privy está autenticado pero no registrado, mostrar estado de carga
+    if (isAuthenticated && isRegistered !== true) {
+      console.log("⏳ MiniKit: Privy autenticado, registrando usuario...");
+      return null; // Loading state
+    }
+
+    // Si Privy no está listo o no autenticado, no mostrar nada
+    console.log("⏳ MiniKit: Esperando autenticación de Privy...");
     return null;
   }
 
