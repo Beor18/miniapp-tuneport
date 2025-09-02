@@ -270,15 +270,40 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
 
   // Memoizar navItems para evitar re-cálculos innecesarios
   const navItems = useMemo(() => {
+    // 🎯 EN MINI APPS: Si está registrado, usar userData.address como fallback
+    const effectiveAddress =
+      address?.toString() || (isMiniApp && userData?.address);
+
+    console.log("🎯 HomeLayout - navItems calculation:", {
+      isMiniApp,
+      isRegistered,
+      address: !!address,
+      userDataAddress: !!userData?.address,
+      effectiveAddress: !!effectiveAddress,
+      userNickname,
+      userType,
+      willShowCreate: !!(effectiveAddress && userType === "artist"),
+    });
+
     return getNavItems(
-      address?.toString(),
+      effectiveAddress,
       userNickname,
       userType,
       tNav,
       locale,
       tCommon
     );
-  }, [address, userNickname, userType, tNav, locale, tCommon]);
+  }, [
+    address,
+    userNickname,
+    userType,
+    tNav,
+    locale,
+    tCommon,
+    isMiniApp,
+    userData?.address,
+    isRegistered,
+  ]);
 
   // normaliza locale si ya lo tenés, o usa directamente pathname
   const rawPath = usePathname();
@@ -439,7 +464,9 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
               <MobileNavLink
                 key={item.href}
                 {...item}
-                isConnected={isConnected}
+                isConnected={
+                  isConnected || (isMiniApp && isRegistered === true)
+                }
                 onCreateClick={() => setIsCreateModalOpen(true)}
               />
             ))}
@@ -448,11 +475,12 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
       )}
 
       {/* FloatingPlayer solo si hay usuario autenticado */}
-      {isConnected && !layoutFlags.isForYou && (
-        <Suspense fallback={null}>
-          <FloatingPlayer />
-        </Suspense>
-      )}
+      {(isConnected || (isMiniApp && isRegistered === true)) &&
+        !layoutFlags.isForYou && (
+          <Suspense fallback={null}>
+            <FloatingPlayer />
+          </Suspense>
+        )}
 
       {/* Modal para crear álbum */}
       <BaseAlbumNewForm
