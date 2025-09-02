@@ -149,24 +149,39 @@ export default function WalletConnector() {
 
   // 🆕 DETECCIÓN según documentación oficial de Base
   const isInFarcasterMiniApp = useMemo(() => {
-    // Base App: usar hook oficial de MiniKit
-    const isBaseMiniApp = isInMiniApp;
+    // Debug completo de todos los valores
+    const isInIframe = typeof window !== "undefined" && window.parent !== window;
+    const hasUserAgent = typeof navigator !== "undefined" && navigator.userAgent;
+    
+    // Base App: múltiples métodos de detección
+    const isBaseMiniApp = isInMiniApp; // Hook oficial MiniKit
+    const isBaseMiniAppFallback = isInIframe && hasUserAgent && 
+      (navigator.userAgent.includes("BaseMiniApp") || 
+       navigator.userAgent.includes("Base"));
 
     // Farcaster App: detectar por SDK + iframe
-    const isInIframe =
-      typeof window !== "undefined" && window.parent !== window;
     const isFarcasterMiniApp = isInIframe && isSDKLoaded;
 
-    const result = isBaseMiniApp || isFarcasterMiniApp;
+    // Resultado final: cualquier método que detecte Mini App
+    const result = isBaseMiniApp || isBaseMiniAppFallback || isFarcasterMiniApp;
 
-    console.log("📱 Mini App Detection (oficial):", {
-      isBaseMiniApp,
+    console.log("📱 Mini App Detection (debug completo):", {
+      isInIframe,
+      hasUserAgent,
+      userAgent: navigator?.userAgent?.substring(0, 50) + "...",
+      isInMiniApp, // Hook MiniKit
+      minikitContext: !!minikitContext,
+      isFrameReady,
+      isSDKLoaded,
+      // Resultados
+      isBaseMiniApp, // Hook oficial
+      isBaseMiniAppFallback, // Fallback por user agent
       isFarcasterMiniApp,
       result,
     });
 
     return result;
-  }, [isInMiniApp, isSDKLoaded]);
+  }, [isInMiniApp, minikitContext, isFrameReady, isSDKLoaded]);
 
   // 🆕 FARCASTER AUTO-REGISTER: Función usando lógica existente del proyecto
   const autoRegisterFarcasterUser = useCallback(async () => {
