@@ -519,8 +519,17 @@ export default function WalletConnector() {
     logout();
   }, [logout]);
 
+  // 🎯 MINIKIT: Obtener estado de auto-login
+  const { isAutoLoggingIn } = useFarcasterMiniApp();
+
   // 🎯 MINIKIT: Render simplificado para Mini Apps
   if (isMiniApp) {
+    // Si está en proceso de auto-login, mostrar estado de carga
+    if (isAutoLoggingIn) {
+      console.log("🔄 MiniKit: Auto-login en progreso...");
+      return null;
+    }
+
     // Si Privy está autenticado y tenemos datos de usuario registrado
     if (isAuthenticated && isRegistered === true && userData) {
       console.log("✅ MiniKit: Mostrando CustomUserPill");
