@@ -678,37 +678,53 @@ export default function WalletConnector() {
   //   );
   // }
 
-  // if (isRegistered === null) {
-  //   return null;
-  // }
+  if (isRegistered === null) {
+    return null;
+  }
 
   // 🆕 OCULTAR RegistrationForm solo en Mini Apps, mostrar en entornos normales
-  // if (isRegistered === false) {
-  //   // En Mini Apps: ocultar formulario (auto-registro en curso)
-  //   if (isMiniApp) {
-  //     return null; // ✅ UX sin fricción en Mini Apps
-  //   }
+  if (isRegistered === false) {
+    // En Mini Apps: NO mostrar formulario (auto-registro en curso o ya hecho)
+    if (isMiniApp) {
+      console.log(
+        "🎯 Mini App con isRegistered=false, continuando al CustomUserPill..."
+      );
+      // NO return null aquí, continuar al render final
+    } else {
+      // En entornos normales: mostrar formulario
+      return (
+        <RegistrationForm
+          walletAddressEvm={userParams.evm || ""}
+          walletAddressSolana={userParams.solana || ""}
+          email={userParams.email}
+          farcasterData={
+            farcasterConnected && farcasterData?.fid
+              ? {
+                  fid: farcasterData.fid,
+                  username: farcasterData.username || "",
+                  displayName: farcasterData.displayName || "",
+                  pfp: farcasterData.pfp || "",
+                  bio: farcasterData.bio || "",
+                }
+              : null
+          }
+        />
+      );
+    }
+  }
 
-  //   // En entornos normales: mostrar formulario
-  //   return (
-  //     <RegistrationForm
-  //       walletAddressEvm={userParams.evm || ""}
-  //       walletAddressSolana={userParams.solana || ""}
-  //       email={userParams.email}
-  //       farcasterData={
-  //         farcasterConnected && farcasterData?.fid
-  //           ? {
-  //               fid: farcasterData.fid,
-  //               username: farcasterData.username || "",
-  //               displayName: farcasterData.displayName || "",
-  //               pfp: farcasterData.pfp || "",
-  //               bio: farcasterData.bio || "",
-  //             }
-  //           : null
-  //       }
-  //     />
-  //   );
-  // }
+  console.log("🎯 RENDER FINAL - CustomUserPill:", {
+    isRegistered,
+    userData: !!userData,
+    userDataKeys: userData ? Object.keys(userData) : [],
+    isMiniApp,
+    // 🚨 WALLET STATE DEBUG:
+    isConnected,
+    address: !!address,
+    evmWallet: !!evmWalletAddress,
+    solanaWallet: !!solanaWalletAddress,
+    hasWalletConnected,
+  });
 
   return (
     <div className="flex items-center gap-3">

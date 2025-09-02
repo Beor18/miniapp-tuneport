@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useContext } from "react";
 import { Card } from "@Src/ui/components/ui/card";
 import { Button } from "@Src/ui/components/ui/button";
 import {
@@ -39,6 +39,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@Src/ui/components/ui/dialog";
+import { UserRegistrationContext } from "@Src/app/providers";
 
 export default function CardMusicHome({ nftData, collectionData }: any) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,6 +49,9 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
   const [isMintModalOpen, setIsMintModalOpen] = useState(false);
   const [selectedSongForMint, setSelectedSongForMint] = useState<any>(null);
   const [isTradingModalOpen, setIsTradingModalOpen] = useState(false);
+
+  // 🆕 ACCESO AL CONTEXTO DE REGISTRO para Mini Apps
+  const { isRegistered, userData } = useContext(UserRegistrationContext);
 
   // Hook para traducciones
   const tCommon = useTranslations("common");
@@ -73,9 +77,26 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
     evmWalletAddress,
   } = useAppKitAccount();
 
+  // 🎯 DETECCIÓN MINI APP
+  const isMiniApp =
+    typeof window !== "undefined" ? window.parent !== window : false;
+
   // Verificar si hay alguna wallet conectada (especialmente importante para Solana)
-  const hasWalletConnected =
-    isConnected && (!!address || !!solanaWalletAddress || !!evmWalletAddress);
+  // 🆕 EN MINI APPS: También considerar si está registrado (auto-registro completado)
+  const hasWalletConnected = isMiniApp
+    ? (isRegistered === true && userData) ||
+      (isConnected &&
+        (!!address || !!solanaWalletAddress || !!evmWalletAddress))
+    : isConnected && (!!address || !!solanaWalletAddress || !!evmWalletAddress);
+
+  console.log("🎯 CardMusicHome - hasWalletConnected:", {
+    isMiniApp,
+    isRegistered,
+    userData: !!userData,
+    isConnected,
+    hasWallets: !!(address || solanaWalletAddress || evmWalletAddress),
+    FINAL: hasWalletConnected,
+  });
 
   // Estado de minting combinado para ambas redes
   const isMintingAny = isMinting || baseOperations.isMinting;

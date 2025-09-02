@@ -230,6 +230,11 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
     const checkUserAndSetNickname = async () => {
       // 🆕 Priorizar userData del contexto si está disponible y el usuario está registrado
       if (isRegistered && userData?.nickname) {
+        console.log("🎯 HomeLayout - Usando userData del contexto:", {
+          nickname: userData.nickname,
+          type: userData.type,
+          isRegistered,
+        });
         setUserNickname(userData.nickname);
         setUserType(userData.type);
         return;
