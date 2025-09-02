@@ -72,7 +72,6 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
   const { address, isConnected, solanaWalletAddress, evmWalletAddress } =
     useAppKitAccount();
   const { isMiniApp } = useContext(MiniAppContext);
-  const { isRegistered, userData } = useContext(UserRegistrationContext);
 
   // Verificar si hay alguna wallet conectada
   const hasWalletConnected = isMiniApp
