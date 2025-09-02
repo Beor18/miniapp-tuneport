@@ -325,7 +325,11 @@ export default function WalletConnector() {
       const attemptAutoLogin = async () => {
         try {
           console.log("🎯 Mini App detectada. Iniciando auto-login...");
-          await login();
+          // 🆕 Login con configuración específica para Mini Apps
+          await login({
+            loginMethods: ["farcaster"], // Solo Farcaster en Mini Apps
+            disableSignup: false, // Permitir signup pero silencioso
+          });
           console.log("🎉 Auto-login completado");
         } catch (error) {
           console.log("ℹ️ Auto-login falló:", error);
@@ -337,6 +341,61 @@ export default function WalletConnector() {
       return () => clearTimeout(timeoutId);
     }
   }, [isReady, isAuthenticated, isInFarcasterMiniApp, login]);
+
+  // 🆕 OCULTAR MODAL PRIVY: Effect para ocultar modals solo en Base App
+  useEffect(() => {
+    // Solo aplicar en Base App (detectar por user agent)
+    const isInIframe =
+      typeof window !== "undefined" && window.parent !== window;
+    const hasUserAgent =
+      typeof navigator !== "undefined" && navigator.userAgent;
+    const isBaseMiniApp =
+      isInIframe &&
+      hasUserAgent &&
+      (navigator.userAgent.includes("BaseMiniApp") ||
+        navigator.userAgent.includes("Base"));
+
+    if (isBaseMiniApp) {
+      // Interceptar y ocultar cualquier modal de Privy que aparezca solo en Base App
+      const hidePrivyModals = () => {
+        const privyModal = document.querySelector("[data-privy-modal]");
+        const privyOverlay = document.querySelector(".privy-modal");
+        const privyDialog = document.querySelector('[role="dialog"]');
+
+        if (privyModal) {
+          (privyModal as HTMLElement).style.display = "none";
+          console.log("🚫 Modal Privy ocultado en Base App");
+        }
+        if (privyOverlay) {
+          (privyOverlay as HTMLElement).style.display = "none";
+        }
+        if (
+          privyDialog &&
+          privyDialog.textContent?.includes("Log in or sign up")
+        ) {
+          (privyDialog as HTMLElement).style.display = "none";
+          console.log(
+            "🚫 Dialog Privy 'Log in or sign up' ocultado en Base App"
+          );
+        }
+      };
+
+      // Observar cambios en el DOM para detectar modals
+      const observer = new MutationObserver(hidePrivyModals);
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+
+      // Ejecutar inmediatamente por si ya existe
+      hidePrivyModals();
+
+      // Cleanup
+      return () => {
+        observer.disconnect();
+      };
+    }
+  }, []);
 
   // 🆕 AUTO-REGISTRO: Effect adicional para forzar auto-registro cuando datos estén listos
   useEffect(() => {
@@ -355,9 +414,37 @@ export default function WalletConnector() {
       const forceAutoRegister = async () => {
         verificationRef.current = true;
         try {
-          const newUser = await autoRegisterFarcasterUser();
-          if (newUser) {
-            console.log("✅ Auto-registro forzado exitoso");
+          // 🆕 Esperar a que las direcciones estén disponibles antes de registrar
+          let attempts = 0;
+          const maxAttempts = 10;
+
+          while (
+            attempts < maxAttempts &&
+            !userParams.evm &&
+            !userParams.solana
+          ) {
+            console.log(
+              `⏳ Esperando direcciones... intento ${
+                attempts + 1
+              }/${maxAttempts}`
+            );
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            attempts++;
+          }
+
+          if (userParams.evm || userParams.solana) {
+            console.log("✅ Direcciones disponibles:", {
+              evm: userParams.evm,
+              solana: userParams.solana,
+            });
+            const newUser = await autoRegisterFarcasterUser();
+            if (newUser) {
+              console.log("✅ Auto-registro forzado exitoso con direcciones");
+            }
+          } else {
+            console.log(
+              "⚠️ No se pudieron obtener direcciones después de esperar"
+            );
           }
         } catch (error) {
           console.error("❌ Error en auto-registro forzado:", error);
@@ -374,6 +461,8 @@ export default function WalletConnector() {
     isRegistered,
     farcasterConnected,
     farcasterData,
+    userParams.evm,
+    userParams.solana,
     autoRegisterFarcasterUser,
   ]);
 
