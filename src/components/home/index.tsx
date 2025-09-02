@@ -41,6 +41,9 @@ import { useTranslations, useLocale } from "next-intl";
 import { usePlayer } from "@Src/contexts/PlayerContext";
 import { UserRegistrationContext } from "@Src/app/providers";
 
+// 🆕 MiniKit para Base App según documentación oficial
+import { useMiniKit, useIsInMiniApp } from "@coinbase/onchainkit/minikit";
+
 // Importación dinámica optimizada con loading: () => null
 const FloatingPlayer = importDynamic(() => import("../FloatingPlayer"), {
   ssr: false,
@@ -147,6 +150,10 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   const { address, isConnected, caipAddress, status, embeddedWalletInfo } =
     useAppKitAccount();
 
+  // 🆕 MINIKIT: Hooks para Base App según documentación oficial
+  const { setFrameReady, isFrameReady } = useMiniKit();
+  const { isInMiniApp } = useIsInMiniApp();
+
   // Hook del reproductor para verificar el estado real
   const { currentSong, showFloatingPlayer } = usePlayer();
 
@@ -159,6 +166,14 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   useEffect(() => {
     setHostname(window.location.hostname);
   }, []);
+
+  // 🆕 MINIKIT: Inicializar según documentación oficial de Base
+  useEffect(() => {
+    if (isInMiniApp && !isFrameReady) {
+      console.log("🎯 Inicializando MiniKit en HomeLayout...");
+      setFrameReady();
+    }
+  }, [isInMiniApp, isFrameReady, setFrameReady]);
 
   // Detectar entorno basado en hostname
   const isMainnet =

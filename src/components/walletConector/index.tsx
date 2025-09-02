@@ -29,7 +29,7 @@ import { CustomUserPill } from "../customUserPill";
 import { useLocale } from "next-intl";
 
 // 🆕 MiniKit para Base App según documentación oficial
-import { useMiniKit } from "@coinbase/onchainkit/minikit";
+import { useMiniKit, useIsInMiniApp } from "@coinbase/onchainkit/minikit";
 
 // Cache global para evitar re-verificaciones innecesarias
 const userDataCache = new Map<string, any>();
@@ -84,8 +84,9 @@ export default function WalletConnector() {
     farcasterData: farcasterHookData,
   } = useFarcaster();
 
-  // 🆕 MINIKIT: Hooks para Base App
+  // 🆕 MINIKIT: Hooks para Base App según documentación oficial
   const { context: minikitContext, isFrameReady, setFrameReady } = useMiniKit();
+  const { isInMiniApp } = useIsInMiniApp();
 
   // Usamos las direcciones específicas para cada cadena
   const userAddressEvm = evmWalletAddress;
@@ -133,52 +134,34 @@ export default function WalletConnector() {
     [isConnected, address, walletAddresses.solana, walletAddresses.evm]
   );
 
-  // 🆕 MINIKIT: Inicializar frame cuando esté disponible
+  // 🆕 MINIKIT: Inicializar frame según documentación oficial
   useEffect(() => {
-    const isInIframe =
-      typeof window !== "undefined" && window.parent !== window;
-    if (isInIframe && !isFrameReady) {
+    if (isInMiniApp && !isFrameReady) {
       console.log("🎯 Inicializando MiniKit frame...");
       setFrameReady();
     }
-  }, [isFrameReady, setFrameReady]);
+  }, [isInMiniApp, isFrameReady, setFrameReady]);
 
-  // 🆕 DETECCIÓN COMPLETA: Base App (MiniKit) + Farcaster App (SDK)
+  // 🆕 DETECCIÓN según documentación oficial de Base
   const isInFarcasterMiniApp = useMemo(() => {
+    // Base App: usar hook oficial de MiniKit
+    const isBaseMiniApp = isInMiniApp;
+
+    // Farcaster App: detectar por SDK + iframe
     const isInIframe =
       typeof window !== "undefined" && window.parent !== window;
-    const hasUserAgent =
-      typeof navigator !== "undefined" && navigator.userAgent;
-
-    // Detectar Base App con MiniKit (método oficial)
-    const isBaseMiniApp = isInIframe && (minikitContext || isFrameReady);
-
-    // Detectar Base App por user agent (fallback)
-    const isBaseFallback =
-      isInIframe &&
-      hasUserAgent &&
-      (navigator.userAgent.includes("BaseMiniApp") ||
-        navigator.userAgent.includes("Base"));
-
-    // Detectar Farcaster por SDK
     const isFarcasterMiniApp = isInIframe && isSDKLoaded;
 
-    const result = isBaseMiniApp || isBaseFallback || isFarcasterMiniApp;
+    const result = isBaseMiniApp || isFarcasterMiniApp;
 
-    console.log("🔍 Mini App Detection:", {
-      isInIframe,
-      isBaseMiniApp: !!isBaseMiniApp,
-      isBaseFallback: !!isBaseFallback,
-      isFarcasterMiniApp: !!isFarcasterMiniApp,
-      isSDKLoaded,
-      minikitContext: !!minikitContext,
-      isFrameReady,
-      userAgent: navigator?.userAgent?.substring(0, 100) + "...",
+    console.log("📱 Mini App Detection (oficial):", {
+      isBaseMiniApp,
+      isFarcasterMiniApp,
       result,
     });
 
     return result;
-  }, [minikitContext, isFrameReady, isSDKLoaded]);
+  }, [isInMiniApp, isSDKLoaded]);
 
   // 🆕 FARCASTER AUTO-REGISTER: Función usando lógica existente del proyecto
   const autoRegisterFarcasterUser = useCallback(async () => {
@@ -279,28 +262,18 @@ export default function WalletConnector() {
         nickname: userParams.nickname || undefined,
       })
         .then(async (user: any) => {
-          // 🆕 FARCASTER AUTO-REGISTER: Si no existe usuario pero estamos en Mini App, registrar automáticamente
-          if (!user && isInFarcasterMiniApp) {
-            console.log(
-              "🎯 Usuario no encontrado en Mini App. Intentando auto-registro..."
-            );
-
-            // Esperar un poco para que los datos de Farcaster estén disponibles
-            if (farcasterConnected && farcasterData) {
-              console.log(
-                "✅ Datos de Farcaster disponibles, auto-registrando..."
-              );
-              const newUser = await autoRegisterFarcasterUser();
-              if (newUser) {
-                userDataCache.set(addressKey, newUser);
-                verificationPromises.delete(addressKey);
-                return newUser;
-              }
-            } else {
-              console.log("⏳ Esperando datos de Farcaster...", {
-                farcasterConnected,
-                farcasterData: !!farcasterData,
-              });
+          // 🆕 AUTO-REGISTER: Si no existe usuario y estamos en Mini App, auto-registrar
+          if (
+            !user &&
+            isInFarcasterMiniApp &&
+            farcasterConnected &&
+            farcasterData
+          ) {
+            const newUser = await autoRegisterFarcasterUser();
+            if (newUser) {
+              userDataCache.set(addressKey, newUser);
+              verificationPromises.delete(addressKey);
+              return newUser;
             }
           }
 
@@ -346,28 +319,63 @@ export default function WalletConnector() {
     ]
   );
 
-  // 🆕 FARCASTER AUTO-LOGIN: Effect para auto-login automático cuando se detecta Mini App
+  // 🆕 AUTO-LOGIN: Effect para auto-login automático cuando se detecta Mini App
   useEffect(() => {
     if (isReady && !isAuthenticated && isInFarcasterMiniApp) {
-      const attemptFarcasterAutoLogin = async () => {
+      const attemptAutoLogin = async () => {
         try {
-          console.log(
-            "🎯 Mini App de Farcaster detectada. Iniciando auto-login..."
-          );
-          // Activar login automático sin mostrar UI
+          console.log("🎯 Mini App detectada. Iniciando auto-login...");
           await login();
           console.log("🎉 Auto-login completado");
         } catch (error) {
           console.log("ℹ️ Auto-login falló:", error);
-          // Fallar silenciosamente - el usuario puede conectar manualmente
         }
       };
 
       // Delay mínimo para asegurar que el contexto esté cargado
-      const timeoutId = setTimeout(attemptFarcasterAutoLogin, 300);
+      const timeoutId = setTimeout(attemptAutoLogin, 500);
       return () => clearTimeout(timeoutId);
     }
   }, [isReady, isAuthenticated, isInFarcasterMiniApp, login]);
+
+  // 🆕 AUTO-REGISTRO: Effect adicional para forzar auto-registro cuando datos estén listos
+  useEffect(() => {
+    if (
+      isAuthenticated &&
+      isInFarcasterMiniApp &&
+      isRegistered === false &&
+      farcasterConnected &&
+      farcasterData &&
+      !verificationRef.current
+    ) {
+      console.log(
+        "🔄 Forzando auto-registro con datos de Farcaster disponibles..."
+      );
+
+      const forceAutoRegister = async () => {
+        verificationRef.current = true;
+        try {
+          const newUser = await autoRegisterFarcasterUser();
+          if (newUser) {
+            console.log("✅ Auto-registro forzado exitoso");
+          }
+        } catch (error) {
+          console.error("❌ Error en auto-registro forzado:", error);
+        } finally {
+          verificationRef.current = false;
+        }
+      };
+
+      forceAutoRegister();
+    }
+  }, [
+    isAuthenticated,
+    isInFarcasterMiniApp,
+    isRegistered,
+    farcasterConnected,
+    farcasterData,
+    autoRegisterFarcasterUser,
+  ]);
 
   // Effect para verificación - altamente optimizado
   useEffect(() => {
