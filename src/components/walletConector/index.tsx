@@ -62,18 +62,20 @@ export default function WalletConnector() {
     UserRegistrationContext
   );
 
-  // 🎯 DETECCIÓN CON useEffect para evitar SSR
-  const [isMiniApp, setIsMiniApp] = useState(false);
+  // 🎯 DETECCIÓN INMEDIATA (igual que CardMusicHome)
+  const isMiniApp =
+    typeof window !== "undefined" ? window.parent !== window : false;
 
   useEffect(() => {
-    // Detectar iframe después de que se monte el componente
-    const isInIframe = window.parent !== window;
-    setIsMiniApp(isInIframe);
+    // Solo para logging
     console.log("🔍 IFRAME DETECTION:", {
-      isInIframe,
-      userAgent: navigator.userAgent.substring(0, 50),
+      isMiniApp,
+      userAgent:
+        typeof navigator !== "undefined"
+          ? navigator.userAgent.substring(0, 50)
+          : "SSR",
     });
-  }, []);
+  }, [isMiniApp]);
 
   const { isReady, isAuthenticated } = useStableAuth();
   const locale = useLocale();
