@@ -127,12 +127,9 @@ export default function WalletConnector() {
     [isConnected, address, walletAddresses.solana, walletAddresses.evm]
   );
 
-  // 🆕 FARCASTER AUTO-LOGIN: Detectar si estamos en un entorno de Mini App
+  // 🆕 FARCASTER AUTO-LOGIN: Detectar si estamos en un entorno de Mini App (Base App o Farcaster)
   const isInFarcasterMiniApp =
-    typeof window !== "undefined" &&
-    window.parent !== window &&
-    isSDKLoaded &&
-    (userInfo || context?.user);
+    typeof window !== "undefined" && window.parent !== window && isSDKLoaded;
 
   // 🆕 FARCASTER AUTO-REGISTER: Función usando lógica existente del proyecto
   const autoRegisterFarcasterUser = useCallback(async () => {
@@ -233,8 +230,13 @@ export default function WalletConnector() {
         nickname: userParams.nickname || undefined,
       })
         .then((user: any) => {
-          // 🆕 FARCASTER AUTO-REGISTER: Si no existe usuario pero tenemos datos de Farcaster, registrar automáticamente
-          if (!user && isInFarcasterMiniApp && farcasterConnected) {
+          // 🆕 FARCASTER AUTO-REGISTER: Si no existe usuario pero estamos en Mini App, registrar automáticamente
+          if (
+            !user &&
+            isInFarcasterMiniApp &&
+            farcasterConnected &&
+            farcasterData
+          ) {
             console.log(
               "🎯 Usuario no encontrado. Auto-registrando con datos de Farcaster..."
             );
@@ -278,6 +280,7 @@ export default function WalletConnector() {
       setUserData,
       isInFarcasterMiniApp,
       farcasterConnected,
+      farcasterData,
       autoRegisterFarcasterUser,
     ]
   );
@@ -414,11 +417,11 @@ export default function WalletConnector() {
   }
 
   // Solo mostrar RegistrationForm cuando estamos 100% seguros de que NO está registrado
-  // 🆕 FARCASTER AUTO-REGISTER: NUNCA mostrar RegistrationForm para usuarios de Farcaster
+  // 🆕 FARCASTER AUTO-REGISTER: NUNCA mostrar RegistrationForm para usuarios de Mini App
   if (isRegistered === false) {
-    // Si es un usuario de Farcaster en Mini App, NO mostrar nada - debe auto-registrarse silenciosamente
-    if (isInFarcasterMiniApp && farcasterConnected) {
-      return null;
+    // Si estamos en Mini App (Base/Farcaster), NO mostrar formulario - debe auto-registrarse silenciosamente
+    if (isInFarcasterMiniApp) {
+      return null; // ✅ UX directo sin formularios
     }
 
     // Para usuarios regulares (no Farcaster), mostrar formulario normal
