@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@allfeat/types": "https://github.com/Allfeat/js-types",
+    "@coinbase/onchainkit": "^0.38.19",
     "@coral-xyz/anchor": "0.27.0",
     "@farcaster/frame-wagmi-connector": "^1.0.0",
     "@farcaster/miniapp-sdk": "^0.1.7",

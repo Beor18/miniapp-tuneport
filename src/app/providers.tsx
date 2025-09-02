@@ -25,6 +25,10 @@ import { PrivyProvider } from "@privy-io/react-auth";
 import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
 import { SmartWalletsProvider } from "@privy-io/react-auth/smart-wallets";
 
+// 🆕 MiniKit para Base App
+import { MiniKitProvider } from "@coinbase/onchainkit/minikit";
+import { base } from "viem/chains";
+
 const queryClient = new QueryClient();
 
 // Eliminar configuración de Reown AppKit
@@ -169,77 +173,82 @@ export default function Providers({ children }: { children: ReactNode }) {
   };
 
   return (
-    <FarcasterProvider>
-      <UserRegistrationContext.Provider
-        value={{ isRegistered, setIsRegistered, userData, setUserData }}
-      >
-        {/* Configuración de Privy */}
-        <PrivyProvider
-          appId={privyAppId}
-          config={{
-            appearance: {
-              theme: "dark",
-              accentColor: "#6701e6",
-              logo: metadata.icons[0],
-              walletChainType: "ethereum-and-solana", // Explícitamente configurar para soportar ambas cadenas
-              // Configuración para personalizar la UI de conexión de wallet
-              showWalletLoginFirst: false, // Mostrar opciones de wallet primero
-              walletList: ["coinbase_wallet"], // Solo mostrar Phantom y MetaMask
-            },
-            loginMethods: ["farcaster", "wallet"],
-            embeddedWallets: {
-              createOnLogin: "all-users",
-            },
-            // Configurar cadena por defecto dinámicamente
-            defaultChain: getDefaultChain(),
-            // Configurar cadenas soportadas dinámicamente
-            supportedChains: getSupportedChains(),
-            // Configuración de clústeres de Solana
-            solanaClusters: solanaClusters.map((cluster) => ({
-              name:
-                cluster.name === "mainnet-beta"
-                  ? "mainnet-beta"
-                  : cluster.name === "devnet"
-                  ? "devnet"
-                  : cluster.name === "testnet"
-                  ? "testnet"
-                  : "devnet",
-              rpcUrl: cluster.rpcUrl,
-            })),
-            // Desactivar WalletConnect explícitamente y configurar wallets externas
-            externalWallets: {
-              walletConnect: { enabled: false }, // Desactivar WalletConnect para evitar el QR con "UX by reown"
-              // Configuración para wallets de Solana
-              solana: {
-                connectors: toSolanaWalletConnectors(), // Incluir conectores específicos de Solana
-              },
-            },
-          }}
+    <MiniKitProvider
+      apiKey={process.env.NEXT_PUBLIC_CDP_CLIENT_API_KEY}
+      chain={base}
+    >
+      <FarcasterProvider>
+        <UserRegistrationContext.Provider
+          value={{ isRegistered, setIsRegistered, userData, setUserData }}
         >
-          <SmartWalletsProvider
+          {/* Configuración de Privy */}
+          <PrivyProvider
+            appId={privyAppId}
             config={{
-              paymasterContext: {
-                mode: "SPONSORED",
-                AppWalletProvider: AppWalletProvider,
-                PrivyProvider: PrivyProvider,
-                calculateGasLimits: true,
-                expiryDuration: 300,
-                sponsorshipInfo: {
-                  webhookData: {},
-                  smartAccountInfo: {
-                    name: "Coinbase",
-                    version: "2.0.0",
-                  },
+              appearance: {
+                theme: "dark",
+                accentColor: "#6701e6",
+                logo: metadata.icons[0],
+                walletChainType: "ethereum-and-solana", // Explícitamente configurar para soportar ambas cadenas
+                // Configuración para personalizar la UI de conexión de wallet
+                showWalletLoginFirst: false, // Mostrar opciones de wallet primero
+                walletList: ["coinbase_wallet"], // Solo mostrar Phantom y MetaMask
+              },
+              loginMethods: ["farcaster", "wallet"],
+              embeddedWallets: {
+                createOnLogin: "all-users",
+              },
+              // Configurar cadena por defecto dinámicamente
+              defaultChain: getDefaultChain(),
+              // Configurar cadenas soportadas dinámicamente
+              supportedChains: getSupportedChains(),
+              // Configuración de clústeres de Solana
+              solanaClusters: solanaClusters.map((cluster) => ({
+                name:
+                  cluster.name === "mainnet-beta"
+                    ? "mainnet-beta"
+                    : cluster.name === "devnet"
+                    ? "devnet"
+                    : cluster.name === "testnet"
+                    ? "testnet"
+                    : "devnet",
+                rpcUrl: cluster.rpcUrl,
+              })),
+              // Desactivar WalletConnect explícitamente y configurar wallets externas
+              externalWallets: {
+                walletConnect: { enabled: false }, // Desactivar WalletConnect para evitar el QR con "UX by reown"
+                // Configuración para wallets de Solana
+                solana: {
+                  connectors: toSolanaWalletConnectors(), // Incluir conectores específicos de Solana
                 },
               },
             }}
           >
-            <QueryClientProvider client={queryClient}>
-              {children}
-            </QueryClientProvider>
-          </SmartWalletsProvider>
-        </PrivyProvider>
-      </UserRegistrationContext.Provider>
-    </FarcasterProvider>
+            <SmartWalletsProvider
+              config={{
+                paymasterContext: {
+                  mode: "SPONSORED",
+                  AppWalletProvider: AppWalletProvider,
+                  PrivyProvider: PrivyProvider,
+                  calculateGasLimits: true,
+                  expiryDuration: 300,
+                  sponsorshipInfo: {
+                    webhookData: {},
+                    smartAccountInfo: {
+                      name: "Coinbase",
+                      version: "2.0.0",
+                    },
+                  },
+                },
+              }}
+            >
+              <QueryClientProvider client={queryClient}>
+                {children}
+              </QueryClientProvider>
+            </SmartWalletsProvider>
+          </PrivyProvider>
+        </UserRegistrationContext.Provider>
+      </FarcasterProvider>
+    </MiniKitProvider>
   );
 }

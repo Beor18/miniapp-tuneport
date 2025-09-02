@@ -28,6 +28,9 @@ import { useFarcasterMiniApp } from "../FarcasterProvider";
 import { CustomUserPill } from "../customUserPill";
 import { useLocale } from "next-intl";
 
+// 🆕 MiniKit para Base App según documentación oficial
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
+
 // Cache global para evitar re-verificaciones innecesarias
 const userDataCache = new Map<string, any>();
 const verificationPromises = new Map<string, Promise<any>>();
@@ -81,6 +84,9 @@ export default function WalletConnector() {
     farcasterData: farcasterHookData,
   } = useFarcaster();
 
+  // 🆕 MINIKIT: Hooks para Base App
+  const { context: minikitContext, isFrameReady, setFrameReady } = useMiniKit();
+
   // Usamos las direcciones específicas para cada cadena
   const userAddressEvm = evmWalletAddress;
   const userAddressSolana = solanaWalletAddress;
@@ -127,9 +133,52 @@ export default function WalletConnector() {
     [isConnected, address, walletAddresses.solana, walletAddresses.evm]
   );
 
-  // 🆕 FARCASTER AUTO-LOGIN: Detectar si estamos en un entorno de Mini App (Base App o Farcaster)
-  const isInFarcasterMiniApp =
-    typeof window !== "undefined" && window.parent !== window && isSDKLoaded;
+  // 🆕 MINIKIT: Inicializar frame cuando esté disponible
+  useEffect(() => {
+    const isInIframe =
+      typeof window !== "undefined" && window.parent !== window;
+    if (isInIframe && !isFrameReady) {
+      console.log("🎯 Inicializando MiniKit frame...");
+      setFrameReady();
+    }
+  }, [isFrameReady, setFrameReady]);
+
+  // 🆕 DETECCIÓN COMPLETA: Base App (MiniKit) + Farcaster App (SDK)
+  const isInFarcasterMiniApp = useMemo(() => {
+    const isInIframe =
+      typeof window !== "undefined" && window.parent !== window;
+    const hasUserAgent =
+      typeof navigator !== "undefined" && navigator.userAgent;
+
+    // Detectar Base App con MiniKit (método oficial)
+    const isBaseMiniApp = isInIframe && (minikitContext || isFrameReady);
+
+    // Detectar Base App por user agent (fallback)
+    const isBaseFallback =
+      isInIframe &&
+      hasUserAgent &&
+      (navigator.userAgent.includes("BaseMiniApp") ||
+        navigator.userAgent.includes("Base"));
+
+    // Detectar Farcaster por SDK
+    const isFarcasterMiniApp = isInIframe && isSDKLoaded;
+
+    const result = isBaseMiniApp || isBaseFallback || isFarcasterMiniApp;
+
+    console.log("🔍 Mini App Detection:", {
+      isInIframe,
+      isBaseMiniApp: !!isBaseMiniApp,
+      isBaseFallback: !!isBaseFallback,
+      isFarcasterMiniApp: !!isFarcasterMiniApp,
+      isSDKLoaded,
+      minikitContext: !!minikitContext,
+      isFrameReady,
+      userAgent: navigator?.userAgent?.substring(0, 100) + "...",
+      result,
+    });
+
+    return result;
+  }, [minikitContext, isFrameReady, isSDKLoaded]);
 
   // 🆕 FARCASTER AUTO-REGISTER: Función usando lógica existente del proyecto
   const autoRegisterFarcasterUser = useCallback(async () => {
@@ -229,18 +278,30 @@ export default function WalletConnector() {
         farcaster_username: userParams.farcaster_username || undefined,
         nickname: userParams.nickname || undefined,
       })
-        .then((user: any) => {
+        .then(async (user: any) => {
           // 🆕 FARCASTER AUTO-REGISTER: Si no existe usuario pero estamos en Mini App, registrar automáticamente
-          if (
-            !user &&
-            isInFarcasterMiniApp &&
-            farcasterConnected &&
-            farcasterData
-          ) {
+          if (!user && isInFarcasterMiniApp) {
             console.log(
-              "🎯 Usuario no encontrado. Auto-registrando con datos de Farcaster..."
+              "🎯 Usuario no encontrado en Mini App. Intentando auto-registro..."
             );
-            return autoRegisterFarcasterUser();
+
+            // Esperar un poco para que los datos de Farcaster estén disponibles
+            if (farcasterConnected && farcasterData) {
+              console.log(
+                "✅ Datos de Farcaster disponibles, auto-registrando..."
+              );
+              const newUser = await autoRegisterFarcasterUser();
+              if (newUser) {
+                userDataCache.set(addressKey, newUser);
+                verificationPromises.delete(addressKey);
+                return newUser;
+              }
+            } else {
+              console.log("⏳ Esperando datos de Farcaster...", {
+                farcasterConnected,
+                farcasterData: !!farcasterData,
+              });
+            }
           }
 
           // Guardar en cache
