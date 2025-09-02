@@ -1,6 +1,5 @@
-import { useEffect } from "react";
-import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import CardMusicHome from "@Src/components/cardMusicHome";
+import { MiniKitInitializer } from "@Src/components/MiniKitInitializer";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -105,21 +104,4 @@ async function PageContent() {
   //console.log("randomSongs FER >>>>> ", randomSongs);
 
   return <CardMusicHome nftData={randomSongs} collectionData={albumData} />;
-}
-
-// 🎯 COMPONENTE PARA INICIALIZAR MINIKIT SEGÚN DOCUMENTACIÓN OFICIAL
-function MiniKitInitializer() {
-  "use client";
-  const { setFrameReady, isFrameReady } = useMiniKit();
-
-  useEffect(() => {
-    if (!isFrameReady) {
-      console.log(
-        "🎯 BASE OFFICIAL - Inicializando MiniKit con setFrameReady()"
-      );
-      setFrameReady();
-    }
-  }, [isFrameReady, setFrameReady]);
-
-  return null;
 }
