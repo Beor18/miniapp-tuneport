@@ -211,8 +211,10 @@ export default function WalletConnector() {
   useEffect(() => {
     if (!isMiniApp || verificationRef.current) return;
 
-    // Obtener FID de cualquier fuente disponible
-    const fid = userInfo?.fid || farcasterHookData?.fid || farcasterData?.fid;
+    // 🎯 PRIORIZAR por tipo de Mini App:
+    // - Farcaster Apps: userInfo (FarcasterProvider) tiene prioridad
+    // - Base Apps: farcasterData (Privy) tiene prioridad
+    const fid = farcasterData?.fid || userInfo?.fid || farcasterHookData?.fid;
 
     if (fid) {
       console.log(
@@ -224,9 +226,9 @@ export default function WalletConnector() {
 
       const immediateAutoRegister = async () => {
         try {
-          // 🎯 OBTENER TODOS LOS DATOS de Farcaster (cualquier fuente)
+          // 🎯 OBTENER TODOS LOS DATOS de Farcaster (priorizar según Mini App)
           const farcasterInfo =
-            userInfo || farcasterHookData || farcasterData || {};
+            farcasterData || userInfo || farcasterHookData || {};
 
           console.log("📝 Datos de Farcaster disponibles:", farcasterInfo);
 
@@ -295,9 +297,9 @@ export default function WalletConnector() {
     }
   }, [
     isMiniApp,
-    userInfo,
-    farcasterHookData,
-    farcasterData,
+    farcasterData, // Prioridad 1: Privy (Base Apps)
+    userInfo, // Prioridad 2: FarcasterProvider (Farcaster Apps)
+    farcasterHookData, // Prioridad 3: Hook proyecto
     getAddressFromFID,
     userParams.email,
     setUserData,
