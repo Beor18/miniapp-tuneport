@@ -107,13 +107,24 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    // 🔥 FORCE EXECUTION: Ejecutar siempre para debugging
+    console.log(
+      "🔄 FarcasterProvider: EJECUTANDO SIEMPRE - ready:",
+      ready,
+      "authenticated:",
+      authenticated
+    );
+
     if (ready) {
       if (!authenticated) {
+        console.log("⚡ FarcasterProvider: FORZANDO LOGIN NOW!");
         login();
       } else {
         console.log("✅ FarcasterProvider: Usuario ya autenticado");
       }
       setIsSDKLoaded(true);
+    } else {
+      console.log("⏸️ FarcasterProvider: Privy not ready yet");
     }
   }, [
     ready,
