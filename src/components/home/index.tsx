@@ -34,7 +34,7 @@ import {
   Trophy,
 } from "lucide-react";
 import BaseAlbumNewForm from "@Src/components/BaseAlbumNewForm";
-import { useUnifiedAccount } from "@Src/lib/hooks/useUnifiedAccount";
+import { useAppKitAccount } from "@Src/lib/privy";
 import WalletConnector from "@Src/components/walletConector";
 import LanguageSelector from "@Src/components/LanguageSelector";
 import { useTranslations, useLocale } from "next-intl";
@@ -148,16 +148,8 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const {
-    address,
-    isConnected,
-    caipAddress,
-    status,
-    embeddedWalletInfo,
-    isMiniApp: unifiedIsMiniApp,
-    isAutoRegistered,
-    userData: unifiedUserData,
-  } = useUnifiedAccount();
+  // 🎯 MINIKIT: Simplificar - solo usar useAppKitAccount directamente
+  const { address, isConnected } = useAppKitAccount();
 
   // 🎯 DETECCIÓN SEGÚN DOCUMENTACIÓN OFICIAL
   useEffect(() => {
@@ -252,16 +244,6 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
 
   // Memoizar navItems para evitar re-cálculos innecesarios
   const navItems = useMemo(() => {
-    // 🎯 useUnifiedAccount ya maneja el fallback automáticamente
-    console.log("🎯 HomeLayout - navItems calculation:", {
-      unifiedIsMiniApp,
-      isAutoRegistered,
-      address: !!address,
-      userNickname,
-      userType,
-      willShowCreate: !!(address && userType === "artist"),
-    });
-
     return getNavItems(
       address?.toString(),
       userNickname,
@@ -270,16 +252,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
       locale,
       tCommon
     );
-  }, [
-    address,
-    userNickname,
-    userType,
-    tNav,
-    locale,
-    tCommon,
-    unifiedIsMiniApp,
-    isAutoRegistered,
-  ]);
+  }, [address, userNickname, userType, tNav, locale, tCommon]);
 
   // normaliza locale si ya lo tenés, o usa directamente pathname
   const rawPath = usePathname();

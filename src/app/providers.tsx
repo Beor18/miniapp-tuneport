@@ -182,47 +182,16 @@ export default function Providers({ children }: { children: ReactNode }) {
     }
   };
 
-  // 🆕 CSS para ocultar modals de Privy solo en Base App
+  // 🎯 MINIKIT: CSS simplificado para ocultar modals de Privy en Mini Apps
   useEffect(() => {
-    // Usar detección centralizada del estado local (se actualiza desde HomeLayout)
-    const hasUserAgent =
-      typeof navigator !== "undefined" && navigator.userAgent;
-
-    // Solo aplicar en Base App (no en Farcaster)
-    const isBaseMiniApp =
-      isMiniApp &&
-      hasUserAgent &&
-      (navigator.userAgent.includes("BaseMiniApp") ||
-        navigator.userAgent.includes("Base"));
-
-    if (isBaseMiniApp) {
-      // Agregar CSS para ocultar modals de Privy solo en Base App
+    if (isMiniApp) {
       const style = document.createElement("style");
       style.textContent = `
-        /* Ocultar modals de Privy solo en Base App */
-        [data-privy-modal],
-        .privy-modal,
-        [role="dialog"][aria-labelledby*="privy"],
-        div[id*="privy"]:has([role="dialog"]) {
-          display: none !important;
-          visibility: hidden !important;
-          opacity: 0 !important;
-          pointer-events: none !important;
-        }
-        
-        /* Ocultar overlay/backdrop de Privy */
-        .privy-modal-overlay,
-        .privy-backdrop,
-        [data-privy-backdrop] {
+        [data-privy-modal], .privy-modal, [role="dialog"][aria-labelledby*="privy"] {
           display: none !important;
         }
       `;
       document.head.appendChild(style);
-
-      console.log(
-        "🎯 CSS para ocultar modals de Privy aplicado solo en Base App"
-      );
-
       return () => {
         document.head.removeChild(style);
       };
