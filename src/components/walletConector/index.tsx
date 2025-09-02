@@ -62,9 +62,18 @@ export default function WalletConnector() {
     UserRegistrationContext
   );
 
-  // 🎯 SIMPLE: Solo detectar iframe
-  const isMiniApp =
-    typeof window !== "undefined" ? window.parent !== window : false;
+  // 🎯 DETECCIÓN CON useEffect para evitar SSR
+  const [isMiniApp, setIsMiniApp] = useState(false);
+
+  useEffect(() => {
+    // Detectar iframe después de que se monte el componente
+    const isInIframe = window.parent !== window;
+    setIsMiniApp(isInIframe);
+    console.log("🔍 IFRAME DETECTION:", {
+      isInIframe,
+      userAgent: navigator.userAgent.substring(0, 50),
+    });
+  }, []);
 
   const { isReady, isAuthenticated } = useStableAuth();
   const locale = useLocale();
