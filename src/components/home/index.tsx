@@ -40,14 +40,9 @@ import LanguageSelector from "@Src/components/LanguageSelector";
 import { useTranslations, useLocale } from "next-intl";
 import { usePlayer } from "@Src/contexts/PlayerContext";
 import { UserRegistrationContext, MiniAppContext } from "@Src/app/providers";
-import { useMiniKit } from "@coinbase/onchainkit/minikit";
+// import { useMiniKit } from "@coinbase/onchainkit/minikit"; // Movido a page.tsx según documentación oficial
 
-// 🎯 PASO 3: Declarar tipo global para leer detección del layout
-declare global {
-  interface Window {
-    __MINIAPP_DETECTED__?: boolean;
-  }
-}
+// Tipos globales removidos - ya no se usan
 
 // Importación dinámica optimizada con loading: () => null
 const FloatingPlayer = importDynamic(() => import("../FloatingPlayer"), {
@@ -164,35 +159,19 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
     userData: unifiedUserData,
   } = useUnifiedAccount();
 
-  // 🎯 INICIALIZACIÓN MINIKIT (siguiendo documentación oficial de Base)
-  const { setFrameReady, isFrameReady } = useMiniKit();
-
+  // 🎯 DETECCIÓN SIMPLE SIN MINIKIT (MiniKit se maneja en page.tsx según documentación oficial)
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // 🎯 DETECCIÓN SEGÚN PATRÓN OFICIAL DE BASE
     const isInIframe = window.parent !== window;
 
-    console.log("🔍 BASE OFFICIAL - MiniKit Detection:", {
+    console.log("🔍 SIMPLE DETECTION:", {
       isInIframe,
-      isFrameReady,
       userAgent: navigator?.userAgent?.substring(0, 50),
     });
 
-    if (isInIframe) {
-      console.log("✅ Mini App detectada! Inicializando MiniKit...");
-      setIsMiniApp(true);
-
-      // 🎯 INICIALIZAR MINIKIT según documentación oficial
-      if (!isFrameReady) {
-        console.log("🎯 Llamando setFrameReady()...");
-        setFrameReady();
-      }
-    } else {
-      console.log("❌ No es Mini App");
-      setIsMiniApp(false);
-    }
-  }, [setFrameReady, isFrameReady, setIsMiniApp]);
+    setIsMiniApp(isInIframe);
+  }, [setIsMiniApp]);
 
   // Hook del reproductor para verificar el estado real
   const { currentSong, showFloatingPlayer } = usePlayer();
@@ -207,7 +186,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
     setHostname(window.location.hostname);
   }, []);
 
-  // 🆕 MINIKIT: Ya inicializado en layout.tsx siguiendo flujo oficial
+  // 🆕 MINIKIT: Inicializado en page.tsx (foryou) siguiendo documentación oficial de Base
 
   // Detectar entorno basado en hostname
   const isMainnet =

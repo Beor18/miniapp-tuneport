@@ -29,19 +29,9 @@ import { useFarcasterMiniApp } from "../FarcasterProvider";
 import { CustomUserPill } from "../customUserPill";
 import { useLocale } from "next-intl";
 
-// 🆕 MiniKit para Base App según documentación oficial
-import {
-  useMiniKit,
-  useIsInMiniApp,
-  useAuthenticate,
-} from "@coinbase/onchainkit/minikit";
+// MiniKit hooks - REMOVIDOS: Solo usar en MiniKitInitializer según documentación oficial
 
-// 🆕 Declarar tipo global para TypeScript
-declare global {
-  interface Window {
-    __MINIAPP_DETECTED__?: boolean;
-  }
-}
+// Tipos globales removidos - no se usan en el nuevo flujo oficial
 
 // Cache global para evitar re-verificaciones innecesarias
 const userDataCache = new Map<string, any>();
@@ -110,10 +100,7 @@ export default function WalletConnector() {
     farcasterData: farcasterHookData,
   } = useFarcaster();
 
-  // 🆕 MINIKIT: Hooks para Base App según documentación oficial
-  const { context: minikitContext, isFrameReady, setFrameReady } = useMiniKit();
-  const { isInMiniApp } = useIsInMiniApp();
-  const { signIn: minikitSignIn } = useAuthenticate();
+  // 🆕 MINIKIT: Hooks REMOVIDOS - Solo usar en MiniKitInitializer según documentación oficial
 
   // Usamos las direcciones específicas para cada cadena
   const userAddressEvm = evmWalletAddress;
@@ -483,13 +470,11 @@ export default function WalletConnector() {
 
   // 🆕 OCULTAR MODAL PRIVY: Effect para ocultar modals solo en Base App
   useEffect(() => {
-    // Solo aplicar en Base App (detectar por user agent)
-    const isInIframe =
-      typeof window !== "undefined" && window.parent !== window;
+    // Usar detección centralizada del contexto, no duplicar
     const hasUserAgent =
       typeof navigator !== "undefined" && navigator.userAgent;
     const isBaseMiniApp =
-      isInIframe &&
+      isMiniApp &&
       hasUserAgent &&
       (navigator.userAgent.includes("BaseMiniApp") ||
         navigator.userAgent.includes("Base"));
@@ -534,7 +519,7 @@ export default function WalletConnector() {
         observer.disconnect();
       };
     }
-  }, []);
+  }, [isMiniApp]);
 
   // 🚫 AUTO-REGISTRO COMPLEJO ELIMINADO: Ya tenemos auto-registro inmediato con FID
 

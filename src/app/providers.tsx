@@ -184,14 +184,13 @@ export default function Providers({ children }: { children: ReactNode }) {
 
   // 🆕 CSS para ocultar modals de Privy solo en Base App
   useEffect(() => {
-    const isInIframe =
-      typeof window !== "undefined" && window.parent !== window;
+    // Usar detección centralizada del estado local (se actualiza desde HomeLayout)
     const hasUserAgent =
       typeof navigator !== "undefined" && navigator.userAgent;
 
     // Solo aplicar en Base App (no en Farcaster)
     const isBaseMiniApp =
-      isInIframe &&
+      isMiniApp &&
       hasUserAgent &&
       (navigator.userAgent.includes("BaseMiniApp") ||
         navigator.userAgent.includes("Base"));
@@ -228,7 +227,7 @@ export default function Providers({ children }: { children: ReactNode }) {
         document.head.removeChild(style);
       };
     }
-  }, []);
+  }, [isMiniApp]);
 
   return (
     <MiniKitProvider
