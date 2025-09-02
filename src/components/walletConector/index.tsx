@@ -150,6 +150,7 @@ export default function WalletConnector() {
 
   // 🎯 PASO 4: USAR detección del layout + AUTO-REGISTRO INMEDIATO
   const [isMiniApp, setIsMiniApp] = useState(false);
+  const [isProcessingMiniApp, setIsProcessingMiniApp] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -215,6 +216,7 @@ export default function WalletConnector() {
         fid
       );
       verificationRef.current = true;
+      setIsProcessingMiniApp(true); // 🎯 Indicar que está procesando
 
       const immediateAutoRegister = async () => {
         try {
@@ -258,8 +260,16 @@ export default function WalletConnector() {
 
           if (newUser) {
             console.log("✅ Auto-registro INMEDIATO exitoso:", newUser);
-            setUserData(newUser);
-            setIsRegistered(true);
+            // 🎯 FORZAR actualización del estado en Mini Apps
+            setTimeout(() => {
+              setUserData(newUser);
+              setIsRegistered(true);
+              setIsProcessingMiniApp(false); // 🎯 Completado
+              console.log("🎯 Estado actualizado FORZADAMENTE:", {
+                isRegistered: true,
+                userData: !!newUser,
+              });
+            }, 100);
           } else {
             console.log("❌ Falló createUser");
             setIsRegistered(false);
@@ -271,6 +281,7 @@ export default function WalletConnector() {
           setUserData(null);
         } finally {
           verificationRef.current = false;
+          setIsProcessingMiniApp(false); // 🎯 Asegurar que se resetee
         }
       };
 
@@ -581,8 +592,15 @@ export default function WalletConnector() {
 
   // 🆕 RENDER LOGIC SIMPLIFICADO: Mini Apps = UX directo sin UI
   if (isMiniApp) {
+    console.log("🎯 Mini App render:", {
+      isRegistered,
+      userData: !!userData,
+      isProcessingMiniApp,
+    });
+
     // En Mini Apps, SOLO mostrar el user pill cuando esté registrado
     if (isRegistered === true && userData) {
+      console.log("✅ Mostrando CustomUserPill en Mini App");
       return (
         <div className="flex items-center gap-3">
           <CustomUserPill
@@ -596,6 +614,7 @@ export default function WalletConnector() {
     }
 
     // Mientras procesa el auto-registro, no mostrar nada
+    console.log("⏳ Mini App procesando o sin datos, no mostrar UI");
     return null;
   }
 
