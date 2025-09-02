@@ -41,7 +41,12 @@ import { useTranslations, useLocale } from "next-intl";
 import { usePlayer } from "@Src/contexts/PlayerContext";
 import { UserRegistrationContext } from "@Src/app/providers";
 
-// 🆕 MiniKit ya inicializado en layout.tsx siguiendo flujo oficial
+// 🎯 PASO 3: Declarar tipo global para leer detección del layout
+declare global {
+  interface Window {
+    __MINIAPP_DETECTED__?: boolean;
+  }
+}
 
 // Importación dinámica optimizada con loading: () => null
 const FloatingPlayer = importDynamic(() => import("../FloatingPlayer"), {
@@ -149,7 +154,18 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   const { address, isConnected, caipAddress, status, embeddedWalletInfo } =
     useAppKitAccount();
 
-  // 🆕 MINIKIT: Ya inicializado en layout.tsx siguiendo flujo oficial
+  // 🎯 PASO 3: LEER detección del layout (siguiendo flujo)
+  const [isMiniApp, setIsMiniApp] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const detected = window.__MINIAPP_DETECTED__ === true;
+    console.log("🔍 PASO 3 - HomeLayout leyendo detección del layout:", {
+      detected,
+    });
+    setIsMiniApp(detected);
+  }, []);
 
   // Hook del reproductor para verificar el estado real
   const { currentSong, showFloatingPlayer } = usePlayer();

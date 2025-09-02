@@ -18,35 +18,39 @@ export default function MiniKitInitializer() {
   const { setFrameReady, isFrameReady } = useMiniKit();
   const { isInMiniApp } = useIsInMiniApp();
 
-  // 🆕 DETECCIÓN Y INICIALIZACIÓN en layout (PASO 2 del flujo)
+  // 🎯 PASO 2: DETECCIÓN Y INICIALIZACIÓN definitiva en layout
   useEffect(() => {
-    // ✅ Solo ejecutar en el cliente
     if (typeof window === "undefined") return;
 
-    // Detección simple y confiable
     const isInIframe = window.parent !== window;
 
-    console.log("🔍 PASO 2 - Layout Detection:", {
+    console.log("🔍 PASO 2 - Layout Detection (siguiendo flujo):", {
       isInMiniApp,
       isFrameReady,
       isInIframe,
-      userAgent: navigator?.userAgent?.substring(0, 100),
+      userAgent: navigator?.userAgent?.substring(0, 50),
     });
 
-    // Inicializar MiniKit si estamos en cualquier iframe
-    if (isInIframe && !isFrameReady) {
-      console.log("🎯 PASO 2 - Inicializando MiniKit en Layout...");
-      setFrameReady();
-
-      // Guardar detección en window para que otros componentes la usen
+    // 🎯 DETECCIÓN PRINCIPAL: iframe = Mini App
+    if (isInIframe) {
+      console.log("✅ PASO 2 - Mini App detectada en Layout! Guardando...");
       window.__MINIAPP_DETECTED__ = true;
+
+      // Inicializar MiniKit para Base App
+      if (!isFrameReady) {
+        console.log("🎯 PASO 2 - Inicializando MiniKit...");
+        setFrameReady();
+      }
+    } else {
+      console.log("❌ PASO 2 - No es Mini App");
+      window.__MINIAPP_DETECTED__ = false;
     }
 
-    // También inicializar si MiniKit lo detecta oficialmente
-    if (isInMiniApp && !isFrameReady) {
-      console.log("🎯 PASO 2 - MiniKit oficial detectado, inicializando...");
-      setFrameReady();
+    // Backup: MiniKit oficial también detecta
+    if (isInMiniApp && !window.__MINIAPP_DETECTED__) {
+      console.log("🔄 PASO 2 - MiniKit oficial detectó, backup activation...");
       window.__MINIAPP_DETECTED__ = true;
+      if (!isFrameReady) setFrameReady();
     }
   }, [isInMiniApp, isFrameReady, setFrameReady]);
 

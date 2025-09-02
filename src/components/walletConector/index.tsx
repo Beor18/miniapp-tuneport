@@ -146,45 +146,210 @@ export default function WalletConnector() {
     [isConnected, address, walletAddresses.solana, walletAddresses.evm]
   );
 
-  // 🆕 MINIKIT: Inicializar frame según documentación oficial
-  useEffect(() => {
-    if (isInMiniApp && !isFrameReady) {
-      console.log("🎯 Inicializando MiniKit frame...");
-      setFrameReady();
-    }
-  }, [isInMiniApp, isFrameReady, setFrameReady]);
+  // 🚫 MINIKIT: Ya inicializado en layout.tsx (PASO 2), no duplicar aquí
 
-  // 🆕 PASO 4 - USAR DETECCIÓN del layout (siguiendo flujo correcto)
-  const [isMiniAppDetected, setIsMiniAppDetected] = useState(false);
+  // 🎯 PASO 4: USAR detección del layout (NO hacer detección propia)
+  const [isMiniApp, setIsMiniApp] = useState(false);
+  const [farcasterFID, setFarcasterFID] = useState<number | null>(null);
 
   useEffect(() => {
-    // ✅ Solo ejecutar en el cliente
     if (typeof window === "undefined") return;
 
-    // USAR la detección que ya se hizo en el layout (PASO 2)
-    const wasMiniAppDetected = window.__MINIAPP_DETECTED__ === true;
-
-    console.log("📱 PASO 4 - WalletConnector usando detección del layout:", {
-      wasMiniAppDetected,
-      isFrameReady,
-      isInMiniAppHook: isInMiniApp,
+    // LEER la detección que ya se hizo en el layout (PASO 2)
+    const detected = window.__MINIAPP_DETECTED__ === true;
+    console.log("🔍 PASO 4 - WalletConnector usando detección del layout:", {
+      detected,
     });
 
-    setIsMiniAppDetected(wasMiniAppDetected);
-  }, [isFrameReady, isInMiniApp]);
+    setIsMiniApp(detected);
 
-  // 🆕 FARCASTER AUTO-REGISTER: Función usando lógica existente del proyecto
+    // 🎯 Si estamos en Mini App (según el layout), obtener FID inmediatamente
+    if (detected) {
+      const getFIDImmediately = async () => {
+        try {
+          console.log("🔍 Buscando FID de Farcaster...");
+
+          // MÉTODO 1: Desde Farcaster SDK
+          if (isSDKLoaded && userInfo?.fid) {
+            console.log("✅ FID obtenido desde Farcaster SDK:", userInfo.fid);
+            setFarcasterFID(userInfo.fid);
+            return;
+          }
+
+          // MÉTODO 2: Desde useFarcaster hook
+          if (farcasterHookData?.fid) {
+            console.log(
+              "✅ FID obtenido desde useFarcaster hook:",
+              farcasterHookData.fid
+            );
+            setFarcasterFID(farcasterHookData.fid);
+            return;
+          }
+
+          // MÉTODO 3: Desde Privy Farcaster data
+          if (farcasterData?.fid) {
+            console.log("✅ FID obtenido desde Privy:", farcasterData.fid);
+            setFarcasterFID(farcasterData.fid);
+            return;
+          }
+
+          console.log("⏳ FID no disponible aún, reintentando...");
+        } catch (error) {
+          console.error("❌ Error obteniendo FID:", error);
+        }
+      };
+
+      // Intentar cada 1 segundo hasta obtener FID
+      const interval = setInterval(getFIDImmediately, 1000);
+      getFIDImmediately(); // Ejecutar inmediatamente también
+
+      return () => clearInterval(interval);
+    }
+  }, [isSDKLoaded, userInfo, farcasterHookData, farcasterData]);
+
+  // 🆕 NEYNAR API: Obtener address desde FID
+  const getAddressFromFID = useCallback(
+    async (fid: number): Promise<string | null> => {
+      try {
+        console.log("🔍 Obteniendo address desde FID:", fid);
+
+        const response = await fetch(
+          `https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`,
+          {
+            headers: {
+              Accept: "application/json",
+              api_key: process.env.NEXT_PUBLIC_NEYNAR_API_KEY || "",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Neynar API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const user = data.users?.[0];
+
+        if (user?.verified_addresses?.eth_addresses?.[0]) {
+          const ethAddress = user.verified_addresses.eth_addresses[0];
+          console.log("✅ Address obtenida desde Neynar:", ethAddress);
+          return ethAddress;
+        }
+
+        console.log("⚠️ No se encontró address verificada para FID:", fid);
+        return null;
+      } catch (error) {
+        console.error("❌ Error obteniendo address desde Neynar:", error);
+        return null;
+      }
+    },
+    []
+  );
+
+  // 🆕 AUTO-REGISTRO INMEDIATO: Tan pronto como tengamos FID
+  useEffect(() => {
+    if (isMiniApp && farcasterFID && !verificationRef.current) {
+      console.log("🎯 EJECUTANDO AUTO-REGISTRO con FID:", farcasterFID);
+      verificationRef.current = true;
+
+      const immediateAutoRegister = async () => {
+        try {
+          // 🎯 PASO 1: Obtener address verificada desde Neynar
+          const verifiedAddress = await getAddressFromFID(farcasterFID);
+
+          // 🎯 PASO 2: Obtener datos de Farcaster (usar cualquier fuente disponible)
+          const farcasterInfo =
+            userInfo || farcasterHookData || farcasterData || {};
+
+          // 🎯 PASO 3: Generar nickname único usando FID
+          const nickname = farcasterInfo.username
+            ? `${farcasterInfo.username}${farcasterFID}`
+            : `user${farcasterFID}`;
+
+          // 🎯 PASO 4: Crear usuario con todos los datos (manejar diferencias de tipos)
+          const userData = {
+            name:
+              farcasterInfo.displayName ||
+              farcasterInfo.username ||
+              `User ${farcasterFID}`,
+            nickname,
+            email: userParams.email || "",
+            address: verifiedAddress || "", // Address desde Neynar
+            address_solana: "", // Vacío por ahora
+            type: "artist", // 🎯 SIEMPRE artist para usuarios de Mini App
+            farcaster_fid: farcasterFID,
+            farcaster_username: farcasterInfo.username || "",
+            farcaster_display_name: farcasterInfo.displayName || "",
+            farcaster_pfp:
+              (farcasterInfo as any).pfp || (farcasterInfo as any).pfpUrl || "",
+            farcaster_bio: (farcasterInfo as any).bio || "",
+            farcaster_verified: true,
+          };
+
+          console.log("📝 Auto-registrando con datos completos:", userData);
+
+          const newUser = await createUser(userData);
+
+          if (newUser) {
+            console.log("✅ Auto-registro EXITOSO:", newUser);
+            setUserData(newUser);
+            setIsRegistered(true);
+          } else {
+            console.log("❌ Falló createUser");
+            setIsRegistered(false);
+            setUserData(null);
+          }
+        } catch (error) {
+          console.error("❌ Error en auto-registro inmediato:", error);
+          setIsRegistered(false);
+          setUserData(null);
+        } finally {
+          verificationRef.current = false;
+        }
+      };
+
+      immediateAutoRegister();
+    }
+  }, [
+    isMiniApp,
+    farcasterFID,
+    getAddressFromFID,
+    userInfo,
+    farcasterHookData,
+    farcasterData,
+    userParams.email,
+    setUserData,
+    setIsRegistered,
+  ]);
+
+  // 🆕 FARCASTER AUTO-REGISTER: Función simplificada usando Neynar (BACKUP)
   const autoRegisterFarcasterUser = useCallback(async () => {
-    if (!farcasterConnected || !farcasterData) return null;
+    if (!farcasterData?.fid) {
+      console.log("❌ No hay FID disponible en backup function");
+      return null;
+    }
 
     try {
-      console.log("🎨 Auto-registrando usuario de Farcaster como artist...");
+      console.log(
+        "🎨 Auto-registrando usuario de Farcaster con FID:",
+        farcasterData.fid
+      );
 
-      // Generar nickname único usando FID (siempre único)
+      // 🎯 PASO 1: Obtener address verificada desde Neynar
+      const verifiedAddress = await getAddressFromFID(farcasterData.fid);
+
+      if (!verifiedAddress) {
+        console.log(
+          "⚠️ No se pudo obtener address verificada, usando address vacía"
+        );
+      }
+
+      // 🎯 PASO 2: Generar nickname único usando FID
       const nickname = farcasterData.username
         ? `${farcasterData.username}${farcasterData.fid}`
         : `user${farcasterData.fid}`;
 
+      // 🎯 PASO 3: Crear usuario con todos los datos
       const userData = {
         name:
           farcasterData.displayName ||
@@ -192,25 +357,28 @@ export default function WalletConnector() {
           `User ${farcasterData.fid}`,
         nickname,
         email: userParams.email || "",
-        address: userParams.evm || "",
-        address_solana: userParams.solana || "",
+        address: verifiedAddress || "", // Address desde Neynar
+        address_solana: "", // Vacío por ahora
         type: "artist", // 🎯 SIEMPRE artist para usuarios de Farcaster
-        farcaster_fid: farcasterData.fid || undefined,
-        farcaster_username: farcasterData.username || undefined,
-        farcaster_display_name: farcasterData.displayName || undefined,
-        farcaster_pfp: farcasterData.pfp || undefined,
+        farcaster_fid: farcasterData.fid,
+        farcaster_username: farcasterData.username || "",
+        farcaster_display_name: farcasterData.displayName || "",
+        farcaster_pfp: farcasterData.pfp || "",
         farcaster_bio: farcasterData.bio || "",
         farcaster_verified: true,
       };
 
+      console.log("📝 Datos para registrar:", userData);
+
       const newUser = await createUser(userData);
 
       if (newUser) {
-        console.log("✅ Usuario auto-registrado:", newUser);
+        console.log("✅ Usuario auto-registrado exitosamente:", newUser);
         setUserData(newUser);
         setIsRegistered(true);
         return newUser;
       } else {
+        console.log("❌ Falló createUser");
         setIsRegistered(false);
         setUserData(null);
         return null;
@@ -222,9 +390,9 @@ export default function WalletConnector() {
       return null;
     }
   }, [
-    farcasterConnected,
     farcasterData,
-    userParams,
+    userParams.email,
+    getAddressFromFID,
     setUserData,
     setIsRegistered,
   ]);
@@ -273,12 +441,7 @@ export default function WalletConnector() {
       })
         .then(async (user: any) => {
           // 🆕 AUTO-REGISTER: Si no existe usuario y estamos en Mini App, auto-registrar
-          if (
-            !user &&
-            isMiniAppDetected &&
-            farcasterConnected &&
-            farcasterData
-          ) {
+          if (!user && isMiniApp && farcasterData?.fid) {
             const newUser = await autoRegisterFarcasterUser();
             if (newUser) {
               userDataCache.set(addressKey, newUser);
@@ -322,62 +485,13 @@ export default function WalletConnector() {
       userParams.nickname,
       setIsRegistered,
       setUserData,
-      isMiniAppDetected,
-      farcasterConnected,
+      isMiniApp,
       farcasterData,
       autoRegisterFarcasterUser,
     ]
   );
 
-  // 🆕 AUTO-LOGIN: Effect para auto-login usando detección del flujo
-  useEffect(() => {
-    if (isReady && !isAuthenticated && isMiniAppDetected) {
-      const attemptAutoLogin = async () => {
-        try {
-          console.log("🎯 Mini App detectada. Iniciando auto-login...");
-
-          // Detectar si es Base App para usar MiniKit o Farcaster para usar Privy
-          const isInIframe =
-            typeof window !== "undefined" && window.parent !== window;
-          const hasUserAgent =
-            typeof navigator !== "undefined" && navigator.userAgent;
-          const isBaseMiniApp = isInMiniApp && (minikitContext || isFrameReady);
-
-          if (isBaseMiniApp && minikitSignIn) {
-            // 🆕 Base App: usar autenticación oficial de MiniKit
-            console.log(
-              "🎯 Base App detectada. Usando autenticación MiniKit..."
-            );
-            const result = await minikitSignIn();
-            console.log("🎉 MiniKit auto-login completado:", result);
-          } else {
-            // Farcaster App: usar Privy como antes
-            console.log("🎯 Farcaster App detectada. Usando Privy...");
-            await login({
-              loginMethods: ["farcaster"], // Solo Farcaster en Mini Apps
-              disableSignup: false, // Permitir signup pero silencioso
-            });
-            console.log("🎉 Privy auto-login completado");
-          }
-        } catch (error) {
-          console.log("ℹ️ Auto-login falló:", error);
-        }
-      };
-
-      // Delay mínimo para asegurar que el contexto esté cargado
-      const timeoutId = setTimeout(attemptAutoLogin, 500);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [
-    isReady,
-    isAuthenticated,
-    isMiniAppDetected,
-    isInMiniApp,
-    minikitContext,
-    isFrameReady,
-    minikitSignIn,
-    login,
-  ]);
+  // 🚫 AUTO-LOGIN ELIMINADO: Ya no necesitamos login, vamos directo al registro con FID
 
   // 🆕 OCULTAR MODAL PRIVY: Effect para ocultar modals solo en Base App
   useEffect(() => {
@@ -434,74 +548,7 @@ export default function WalletConnector() {
     }
   }, []);
 
-  // 🆕 AUTO-REGISTRO: Effect adicional para forzar auto-registro cuando datos estén listos
-  useEffect(() => {
-    if (
-      isAuthenticated &&
-      isMiniAppDetected &&
-      isRegistered === false &&
-      farcasterConnected &&
-      farcasterData &&
-      !verificationRef.current
-    ) {
-      console.log(
-        "🔄 Forzando auto-registro con datos de Farcaster disponibles..."
-      );
-
-      const forceAutoRegister = async () => {
-        verificationRef.current = true;
-        try {
-          // 🆕 Esperar a que las direcciones estén disponibles antes de registrar
-          let attempts = 0;
-          const maxAttempts = 10;
-
-          while (
-            attempts < maxAttempts &&
-            !userParams.evm &&
-            !userParams.solana
-          ) {
-            console.log(
-              `⏳ Esperando direcciones... intento ${
-                attempts + 1
-              }/${maxAttempts}`
-            );
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            attempts++;
-          }
-
-          if (userParams.evm || userParams.solana) {
-            console.log("✅ Direcciones disponibles:", {
-              evm: userParams.evm,
-              solana: userParams.solana,
-            });
-            const newUser = await autoRegisterFarcasterUser();
-            if (newUser) {
-              console.log("✅ Auto-registro forzado exitoso con direcciones");
-            }
-          } else {
-            console.log(
-              "⚠️ No se pudieron obtener direcciones después de esperar"
-            );
-          }
-        } catch (error) {
-          console.error("❌ Error en auto-registro forzado:", error);
-        } finally {
-          verificationRef.current = false;
-        }
-      };
-
-      forceAutoRegister();
-    }
-  }, [
-    isAuthenticated,
-    isMiniAppDetected,
-    isRegistered,
-    farcasterConnected,
-    farcasterData,
-    userParams.evm,
-    userParams.solana,
-    autoRegisterFarcasterUser,
-  ]);
+  // 🚫 AUTO-REGISTRO COMPLEJO ELIMINADO: Ya tenemos auto-registro inmediato con FID
 
   // Effect para verificación - altamente optimizado
   useEffect(() => {
@@ -563,14 +610,34 @@ export default function WalletConnector() {
     logout();
   }, [logout]);
 
-  // Render logic - optimizado para auto-login siguiendo flujo
-  if (!isReady) {
-    // En Mini Apps, no mostrar nada durante la inicialización
-    if (isMiniAppDetected) {
-      return null;
+  // 🆕 RENDER LOGIC SIMPLIFICADO: Mini Apps = UX directo sin UI
+  if (isMiniApp) {
+    // En Mini Apps, SOLO mostrar el user pill cuando esté registrado
+    if (isRegistered === true && userData) {
+      return (
+        <div className="flex items-center gap-3">
+          <CustomUserPill
+            handleLogout={handleLogout}
+            profile={userData}
+            locale={locale}
+            userNickname={userData?.nickname || null}
+          />
+        </div>
+      );
     }
 
-    // Para entornos normales, mostrar botón de carga
+    // Mientras procesa el auto-registro, no mostrar nada
+    return null;
+  }
+
+  // RESTO DEL RENDER LOGIC PARA ENTORNOS NORMALES (no Mini Apps)
+  if (!isReady) {
+    // En Mini Apps: ocultar "Join Now" - conexión automática
+    if (isMiniApp) {
+      return null; // ✅ Sin fricción
+    }
+
+    // En entornos normales: mostrar botón loading
     return (
       <Button
         disabled
@@ -586,12 +653,12 @@ export default function WalletConnector() {
   }
 
   if (!hasWalletConnected) {
-    // En Mini Apps, no mostrar botón Join Now - debe ser automático
-    if (isMiniAppDetected) {
-      return null;
+    // En Mini Apps: ocultar "Join Now" - conexión automática
+    if (isMiniApp) {
+      return null; // ✅ Sin fricción
     }
 
-    // Para entornos normales, mostrar botón Join Now
+    // En entornos normales: mostrar botón Join Now
     return (
       <Button
         onClick={login}
@@ -606,20 +673,18 @@ export default function WalletConnector() {
     );
   }
 
-  // NO mostrar nada si no sabemos el estado aún
   if (isRegistered === null) {
     return null;
   }
 
-  // Solo mostrar RegistrationForm cuando estamos 100% seguros de que NO está registrado
-  // 🆕 AUTO-REGISTER: NUNCA mostrar RegistrationForm para usuarios de Mini App
+  // 🆕 OCULTAR RegistrationForm solo en Mini Apps, mostrar en entornos normales
   if (isRegistered === false) {
-    // Si estamos en Mini App, NO mostrar formulario - debe auto-registrarse silenciosamente
-    if (isMiniAppDetected) {
-      return null; // ✅ UX directo sin formularios
+    // En Mini Apps: ocultar formulario (auto-registro en curso)
+    if (isMiniApp) {
+      return null; // ✅ UX sin fricción en Mini Apps
     }
 
-    // Para usuarios regulares (no Farcaster), mostrar formulario normal
+    // En entornos normales: mostrar formulario
     return (
       <RegistrationForm
         walletAddressEvm={userParams.evm || ""}
