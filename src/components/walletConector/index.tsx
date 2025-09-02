@@ -35,6 +35,13 @@ import {
   useAuthenticate,
 } from "@coinbase/onchainkit/minikit";
 
+// 🆕 Declarar tipo global para TypeScript
+declare global {
+  interface Window {
+    __MINIAPP_DETECTED__?: boolean;
+  }
+}
+
 // Cache global para evitar re-verificaciones innecesarias
 const userDataCache = new Map<string, any>();
 const verificationPromises = new Map<string, Promise<any>>();
@@ -147,49 +154,24 @@ export default function WalletConnector() {
     }
   }, [isInMiniApp, isFrameReady, setFrameReady]);
 
-  // 🆕 DETECCIÓN CLIENT-SIDE según documentación oficial de Base
-  const [isInFarcasterMiniApp, setIsInFarcasterMiniApp] = useState(false);
+  // 🆕 PASO 4 - USAR DETECCIÓN del layout (siguiendo flujo correcto)
+  const [isMiniAppDetected, setIsMiniAppDetected] = useState(false);
 
   useEffect(() => {
-    // ✅ Solo ejecutar en el cliente (después de hidratación)
+    // ✅ Solo ejecutar en el cliente
     if (typeof window === "undefined") return;
 
-    // Debug completo de todos los valores CLIENT-SIDE
-    const isInIframe = window.parent !== window;
-    const hasUserAgent =
-      typeof navigator !== "undefined" && navigator.userAgent;
+    // USAR la detección que ya se hizo en el layout (PASO 2)
+    const wasMiniAppDetected = window.__MINIAPP_DETECTED__ === true;
 
-    // Base App: múltiples métodos de detección
-    const isBaseMiniApp = isInMiniApp; // Hook oficial MiniKit
-    const isBaseMiniAppFallback =
-      isInIframe &&
-      hasUserAgent &&
-      (navigator.userAgent.includes("BaseMiniApp") ||
-        navigator.userAgent.includes("Base"));
-
-    // Farcaster App: detectar por SDK + iframe
-    const isFarcasterMiniApp = isInIframe && isSDKLoaded;
-
-    // Resultado final: cualquier método que detecte Mini App
-    const result = isBaseMiniApp || isBaseMiniAppFallback || isFarcasterMiniApp;
-
-    console.log("📱 Mini App Detection (CLIENT-SIDE):", {
-      isInIframe,
-      hasUserAgent,
-      userAgent: navigator?.userAgent?.substring(0, 100),
-      isInMiniApp, // Hook MiniKit
-      minikitContext: !!minikitContext,
+    console.log("📱 PASO 4 - WalletConnector usando detección del layout:", {
+      wasMiniAppDetected,
       isFrameReady,
-      isSDKLoaded,
-      // Resultados
-      isBaseMiniApp, // Hook oficial
-      isBaseMiniAppFallback, // Fallback por user agent
-      isFarcasterMiniApp,
-      result,
+      isInMiniAppHook: isInMiniApp,
     });
 
-    setIsInFarcasterMiniApp(result);
-  }, [isInMiniApp, minikitContext, isFrameReady, isSDKLoaded]);
+    setIsMiniAppDetected(wasMiniAppDetected);
+  }, [isFrameReady, isInMiniApp]);
 
   // 🆕 FARCASTER AUTO-REGISTER: Función usando lógica existente del proyecto
   const autoRegisterFarcasterUser = useCallback(async () => {
@@ -293,7 +275,7 @@ export default function WalletConnector() {
           // 🆕 AUTO-REGISTER: Si no existe usuario y estamos en Mini App, auto-registrar
           if (
             !user &&
-            isInFarcasterMiniApp &&
+            isMiniAppDetected &&
             farcasterConnected &&
             farcasterData
           ) {
@@ -340,16 +322,16 @@ export default function WalletConnector() {
       userParams.nickname,
       setIsRegistered,
       setUserData,
-      isInFarcasterMiniApp,
+      isMiniAppDetected,
       farcasterConnected,
       farcasterData,
       autoRegisterFarcasterUser,
     ]
   );
 
-  // 🆕 AUTO-LOGIN: Effect para auto-login con MiniKit (Base App) y Privy (Farcaster)
+  // 🆕 AUTO-LOGIN: Effect para auto-login usando detección del flujo
   useEffect(() => {
-    if (isReady && !isAuthenticated && isInFarcasterMiniApp) {
+    if (isReady && !isAuthenticated && isMiniAppDetected) {
       const attemptAutoLogin = async () => {
         try {
           console.log("🎯 Mini App detectada. Iniciando auto-login...");
@@ -389,7 +371,7 @@ export default function WalletConnector() {
   }, [
     isReady,
     isAuthenticated,
-    isInFarcasterMiniApp,
+    isMiniAppDetected,
     isInMiniApp,
     minikitContext,
     isFrameReady,
@@ -456,7 +438,7 @@ export default function WalletConnector() {
   useEffect(() => {
     if (
       isAuthenticated &&
-      isInFarcasterMiniApp &&
+      isMiniAppDetected &&
       isRegistered === false &&
       farcasterConnected &&
       farcasterData &&
@@ -512,7 +494,7 @@ export default function WalletConnector() {
     }
   }, [
     isAuthenticated,
-    isInFarcasterMiniApp,
+    isMiniAppDetected,
     isRegistered,
     farcasterConnected,
     farcasterData,
@@ -581,10 +563,10 @@ export default function WalletConnector() {
     logout();
   }, [logout]);
 
-  // Render logic - optimizado para auto-login de Farcaster
+  // Render logic - optimizado para auto-login siguiendo flujo
   if (!isReady) {
-    // En Mini Apps de Farcaster, no mostrar nada durante la inicialización
-    if (isInFarcasterMiniApp) {
+    // En Mini Apps, no mostrar nada durante la inicialización
+    if (isMiniAppDetected) {
       return null;
     }
 
@@ -604,8 +586,8 @@ export default function WalletConnector() {
   }
 
   if (!hasWalletConnected) {
-    // En Mini Apps de Farcaster, no mostrar botón Join Now - debe ser automático
-    if (isInFarcasterMiniApp) {
+    // En Mini Apps, no mostrar botón Join Now - debe ser automático
+    if (isMiniAppDetected) {
       return null;
     }
 
@@ -630,10 +612,10 @@ export default function WalletConnector() {
   }
 
   // Solo mostrar RegistrationForm cuando estamos 100% seguros de que NO está registrado
-  // 🆕 FARCASTER AUTO-REGISTER: NUNCA mostrar RegistrationForm para usuarios de Mini App
+  // 🆕 AUTO-REGISTER: NUNCA mostrar RegistrationForm para usuarios de Mini App
   if (isRegistered === false) {
-    // Si estamos en Mini App (Base/Farcaster), NO mostrar formulario - debe auto-registrarse silenciosamente
-    if (isInFarcasterMiniApp) {
+    // Si estamos en Mini App, NO mostrar formulario - debe auto-registrarse silenciosamente
+    if (isMiniAppDetected) {
       return null; // ✅ UX directo sin formularios
     }
 
