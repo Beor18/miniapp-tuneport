@@ -200,6 +200,23 @@ export default function WalletConnector() {
 
       const registerAfterPrivyAuth = async () => {
         try {
+          console.log("🔍 MiniKit: Verificando si usuario existe...");
+
+          // 🎯 PASO 1: Verificar si el usuario ya existe por farcaster_username
+          const existingUser = await getUserData({
+            farcaster_username: farcasterData.username || undefined,
+          });
+
+          if (existingUser) {
+            console.log("✅ MiniKit: Usuario ya existe");
+            setUserData(existingUser);
+            setIsRegistered(true);
+            return;
+          }
+
+          console.log("🆕 MiniKit: Usuario no existe, creando nuevo...");
+
+          // 🎯 PASO 2: Si no existe, crear usuario nuevo
           const verifiedAddress = await getAddressFromFID(fid);
           const nickname = farcasterData.username
             ? `${farcasterData.username}${fid}`
@@ -543,10 +560,15 @@ export default function WalletConnector() {
       farcasterData: !!farcasterData,
     });
 
-    // Si está en proceso de auto-login, mostrar estado de carga
+    // Si está en proceso de auto-login, mostrar spinner
     if (isAutoLoggingIn) {
       console.log("🔄 MiniKit: Auto-login en progreso...");
-      return <div className="text-white text-sm">🔄 Conectando...</div>;
+      return (
+        <div className="flex items-center gap-2 text-white text-sm">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          <span>Conectando...</span>
+        </div>
+      );
     }
 
     // 🔥 FORCED LOGIN BUTTON para testing
@@ -580,15 +602,25 @@ export default function WalletConnector() {
       );
     }
 
-    // Si Privy está autenticado pero no registrado, mostrar estado de carga
+    // Si Privy está autenticado pero no registrado, mostrar spinner de registro
     if (isAuthenticated && isRegistered !== true) {
       console.log("⏳ MiniKit: Privy autenticado, registrando usuario...");
-      return <div className="text-white text-sm">⏳ Registrando...</div>;
+      return (
+        <div className="flex items-center gap-2 text-white text-sm">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          <span>Registrando...</span>
+        </div>
+      );
     }
 
-    // Si Privy no está listo o no autenticado, no mostrar nada
+    // Si Privy no está listo o no autenticado, mostrar spinner
     console.log("⏳ MiniKit: Esperando autenticación de Privy...");
-    return <div className="text-white text-sm">⏳ Cargando...</div>;
+    return (
+      <div className="flex items-center gap-2 text-white text-sm">
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+        <span>Cargando...</span>
+      </div>
+    );
   }
 
   // Ya está definido arriba
@@ -605,14 +637,19 @@ export default function WalletConnector() {
     return null;
   }
 
-  // 🆕 OCULTAR RegistrationForm solo en Mini Apps, mostrar en entornos normales
+  // 🚫 OCULTAR RegistrationForm COMPLETAMENTE en Mini Apps
   if (isRegistered === false) {
-    // En Mini Apps: NO mostrar formulario (auto-registro en curso o ya hecho)
     if (isMiniApp) {
       console.log(
-        "🎯 Mini App con isRegistered=false, continuando al CustomUserPill..."
+        "🚫 Mini App: RegistrationForm bloqueado, esperando auto-registro..."
       );
-      // NO return null aquí, continuar al render final
+      // En Mini Apps: NUNCA mostrar RegistrationForm, mostrar spinner
+      return (
+        <div className="flex items-center gap-2 text-white text-sm">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          <span>Auto-registrando...</span>
+        </div>
+      );
     } else {
       // En entornos normales: mostrar formulario
       return (
