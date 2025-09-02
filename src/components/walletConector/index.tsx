@@ -16,12 +16,15 @@ import { Wallet } from "lucide-react";
 // Importar desde nuestro adaptador de Privy
 import { useAppKitAccount, useSolanaWallets } from "@Src/lib/privy";
 import { checkUser, getUserData } from "@Src/app/actions/checkUser.actions";
+import { createUser } from "@Src/app/actions/createUser.actions";
+import { useFarcaster } from "@Src/lib/hooks/useFarcaster";
 
 // Solana
 // Eliminamos la importación de WalletMultiButton y useWallet
 // import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 // import { useWallet } from "@solana/wallet-adapter-react";
 import { usePrivy } from "@privy-io/react-auth";
+import { useFarcasterMiniApp } from "../FarcasterProvider";
 import { CustomUserPill } from "../customUserPill";
 import { useLocale } from "next-intl";
 
@@ -71,6 +74,13 @@ export default function WalletConnector() {
   // Privy original para funciones como login/logout
   const { login, logout, user } = usePrivy();
 
+  // 🆕 FARCASTER: Hooks del proyecto para manejo completo de Farcaster
+  const { isSDKLoaded, context, userInfo } = useFarcasterMiniApp();
+  const {
+    isConnected: farcasterHookConnected,
+    farcasterData: farcasterHookData,
+  } = useFarcaster();
+
   // Usamos las direcciones específicas para cada cadena
   const userAddressEvm = evmWalletAddress;
   const userAddressSolana = solanaWalletAddress;
@@ -117,6 +127,69 @@ export default function WalletConnector() {
     [isConnected, address, walletAddresses.solana, walletAddresses.evm]
   );
 
+  // 🆕 FARCASTER AUTO-LOGIN: Detectar si estamos en un entorno de Mini App
+  const isInFarcasterMiniApp =
+    typeof window !== "undefined" &&
+    window.parent !== window &&
+    isSDKLoaded &&
+    (userInfo || context?.user);
+
+  // 🆕 FARCASTER AUTO-REGISTER: Función usando lógica existente del proyecto
+  const autoRegisterFarcasterUser = useCallback(async () => {
+    if (!farcasterConnected || !farcasterData) return null;
+
+    try {
+      console.log("🎨 Auto-registrando usuario de Farcaster como artist...");
+
+      // Generar nickname único usando FID (siempre único)
+      const nickname = farcasterData.username
+        ? `${farcasterData.username}${farcasterData.fid}`
+        : `user${farcasterData.fid}`;
+
+      const userData = {
+        name:
+          farcasterData.displayName ||
+          farcasterData.username ||
+          `User ${farcasterData.fid}`,
+        nickname,
+        email: userParams.email || "",
+        address: userParams.evm || "",
+        address_solana: userParams.solana || "",
+        type: "artist", // 🎯 SIEMPRE artist para usuarios de Farcaster
+        farcaster_fid: farcasterData.fid || undefined,
+        farcaster_username: farcasterData.username || undefined,
+        farcaster_display_name: farcasterData.displayName || undefined,
+        farcaster_pfp: farcasterData.pfp || undefined,
+        farcaster_bio: farcasterData.bio || "",
+        farcaster_verified: true,
+      };
+
+      const newUser = await createUser(userData);
+
+      if (newUser) {
+        console.log("✅ Usuario auto-registrado:", newUser);
+        setUserData(newUser);
+        setIsRegistered(true);
+        return newUser;
+      } else {
+        setIsRegistered(false);
+        setUserData(null);
+        return null;
+      }
+    } catch (error) {
+      console.error("❌ Error en auto-registro:", error);
+      setIsRegistered(false);
+      setUserData(null);
+      return null;
+    }
+  }, [
+    farcasterConnected,
+    farcasterData,
+    userParams,
+    setUserData,
+    setIsRegistered,
+  ]);
+
   // Función de verificación memoizada y con cache
   const verifyUser = useCallback(
     async (addressKey: string) => {
@@ -160,6 +233,14 @@ export default function WalletConnector() {
         nickname: userParams.nickname || undefined,
       })
         .then((user: any) => {
+          // 🆕 FARCASTER AUTO-REGISTER: Si no existe usuario pero tenemos datos de Farcaster, registrar automáticamente
+          if (!user && isInFarcasterMiniApp && farcasterConnected) {
+            console.log(
+              "🎯 Usuario no encontrado. Auto-registrando con datos de Farcaster..."
+            );
+            return autoRegisterFarcasterUser();
+          }
+
           // Guardar en cache
           userDataCache.set(addressKey, user);
           verificationPromises.delete(addressKey);
@@ -195,8 +276,34 @@ export default function WalletConnector() {
       userParams.nickname,
       setIsRegistered,
       setUserData,
+      isInFarcasterMiniApp,
+      farcasterConnected,
+      autoRegisterFarcasterUser,
     ]
   );
+
+  // 🆕 FARCASTER AUTO-LOGIN: Effect para auto-login automático cuando se detecta Mini App
+  useEffect(() => {
+    if (isReady && !isAuthenticated && isInFarcasterMiniApp) {
+      const attemptFarcasterAutoLogin = async () => {
+        try {
+          console.log(
+            "🎯 Mini App de Farcaster detectada. Iniciando auto-login..."
+          );
+          // Activar login automático sin mostrar UI
+          await login();
+          console.log("🎉 Auto-login completado");
+        } catch (error) {
+          console.log("ℹ️ Auto-login falló:", error);
+          // Fallar silenciosamente - el usuario puede conectar manualmente
+        }
+      };
+
+      // Delay mínimo para asegurar que el contexto esté cargado
+      const timeoutId = setTimeout(attemptFarcasterAutoLogin, 300);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isReady, isAuthenticated, isInFarcasterMiniApp, login]);
 
   // Effect para verificación - altamente optimizado
   useEffect(() => {
@@ -258,16 +365,21 @@ export default function WalletConnector() {
     logout();
   }, [logout]);
 
-  // Render logic - sin estados intermedios
+  // Render logic - optimizado para auto-login de Farcaster
   if (!isReady) {
-    // Mostrar un botón placeholder mientras se inicializa para evitar que desaparezca
+    // En Mini Apps de Farcaster, no mostrar nada durante la inicialización
+    if (isInFarcasterMiniApp) {
+      return null;
+    }
+
+    // Para entornos normales, mostrar botón de carga
     return (
       <Button
-        onClick={login}
+        disabled
         className="w-auto min-w-[70px] sm:min-w-[70px] h-9 border-zinc-700 bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-200 text-xs sm:text-sm focus:ring-zinc-600 transition-colors gap-2 flex-shrink-0 relative z-10 wallet-connector-mobile"
         style={{ display: "flex", visibility: "visible" }}
       >
-        <Wallet className="h-3.5 w-3.5 flex-shrink-0" />
+        <Wallet className="h-3.5 w-3.5 flex-shrink-0 animate-pulse" />
         <span className="text-xs text-zinc-400 whitespace-nowrap">
           Join Now
         </span>
@@ -276,6 +388,12 @@ export default function WalletConnector() {
   }
 
   if (!hasWalletConnected) {
+    // En Mini Apps de Farcaster, no mostrar botón Join Now - debe ser automático
+    if (isInFarcasterMiniApp) {
+      return null;
+    }
+
+    // Para entornos normales, mostrar botón Join Now
     return (
       <Button
         onClick={login}
@@ -296,15 +414,21 @@ export default function WalletConnector() {
   }
 
   // Solo mostrar RegistrationForm cuando estamos 100% seguros de que NO está registrado
+  // 🆕 FARCASTER AUTO-REGISTER: NUNCA mostrar RegistrationForm para usuarios de Farcaster
   if (isRegistered === false) {
+    // Si es un usuario de Farcaster en Mini App, NO mostrar nada - debe auto-registrarse silenciosamente
+    if (isInFarcasterMiniApp && farcasterConnected) {
+      return null;
+    }
+
+    // Para usuarios regulares (no Farcaster), mostrar formulario normal
     return (
       <RegistrationForm
         walletAddressEvm={userParams.evm || ""}
         walletAddressSolana={userParams.solana || ""}
         email={userParams.email}
-        // 🆕 FARCASTER: Pasar datos de Farcaster al formulario
         farcasterData={
-          farcasterConnected && farcasterData && farcasterData.fid
+          farcasterConnected && farcasterData?.fid
             ? {
                 fid: farcasterData.fid,
                 username: farcasterData.username || "",
