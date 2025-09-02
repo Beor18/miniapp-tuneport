@@ -183,7 +183,16 @@ export default function WalletConnector() {
 
   // 🎯 AUTO-REGISTRO: Solo cuando Privy ya está autenticado (no interferir con Privy login)
   useEffect(() => {
+    console.log("🔍 AUTO-REGISTRO CHECK:", {
+      isMiniApp,
+      isAuthenticated,
+      verificationInProgress: verificationRef.current,
+      farcasterData: !!farcasterData,
+      fid: farcasterData?.fid,
+    });
+
     if (!isMiniApp || !isAuthenticated || verificationRef.current) {
+      console.log("⏭️ AUTO-REGISTRO: Saltando por condiciones");
       return;
     }
 
@@ -191,10 +200,7 @@ export default function WalletConnector() {
     const fid = farcasterData?.fid;
 
     if (fid && isAuthenticated) {
-      console.log(
-        "✅ MiniKit: Privy autenticado, ejecutando auto-registro:",
-        fid
-      );
+      console.log("🚀 MiniKit: INICIANDO AUTO-REGISTRO para FID:", fid);
       verificationRef.current = true;
       setIsProcessingMiniApp(true);
 
@@ -486,9 +492,14 @@ export default function WalletConnector() {
 
   // 🚫 AUTO-REGISTRO COMPLEJO ELIMINADO: Ya tenemos auto-registro inmediato con FID
 
-  // Effect para verificación - altamente optimizado
+  // Effect para verificación - altamente optimizado (SOLO para entornos normales, NO Mini Apps)
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady || isMiniApp) {
+      console.log("⏭️ VERIFICACIÓN NORMAL: Saltando", { isReady, isMiniApp });
+      return;
+    }
+
+    console.log("🔍 VERIFICACIÓN NORMAL: Ejecutando para entorno normal");
 
     const currentAddressKey = `${userParams.evm || ""}-${
       userParams.solana || ""
@@ -524,6 +535,7 @@ export default function WalletConnector() {
     }
   }, [
     isReady,
+    isMiniApp,
     hasWalletConnected,
     userParams.evm,
     userParams.solana,
