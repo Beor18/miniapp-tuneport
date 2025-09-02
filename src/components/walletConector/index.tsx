@@ -29,8 +29,6 @@ import { useFarcasterMiniApp } from "../FarcasterProvider";
 import { CustomUserPill } from "../customUserPill";
 import { useLocale } from "next-intl";
 
-// MiniKit hooks - REMOVIDOS: Solo usar en MiniKitInitializer según documentación oficial
-
 // Tipos globales removidos - no se usan en el nuevo flujo oficial
 
 // Cache global para evitar re-verificaciones innecesarias
@@ -74,18 +72,12 @@ export default function WalletConnector() {
   const verificationRef = useRef<boolean>(false);
   const addressKeyRef = useRef<string>("");
 
+  // Debug simple para verificar estado
   useEffect(() => {
-    console.log("🔍 useUnifiedAccount:", {
-      isMiniApp,
-      isAutoRegistered,
-      isConnected,
-      address: !!address,
-      userAgent:
-        typeof navigator !== "undefined"
-          ? navigator.userAgent.substring(0, 50)
-          : "SSR",
-    });
-  }, [isMiniApp, isAutoRegistered, isConnected, address]);
+    if (isMiniApp) {
+      console.log("🎯 MiniApp detected, auto-registration should trigger");
+    }
+  }, [isMiniApp]);
 
   // Obtener específicamente las wallets de Solana para mejor detección
   const { wallets: solanaWallets, ready: solanaReady } = useSolanaWallets();
@@ -99,8 +91,6 @@ export default function WalletConnector() {
     isConnected: farcasterHookConnected,
     farcasterData: farcasterHookData,
   } = useFarcaster();
-
-  // 🆕 MINIKIT: Hooks REMOVIDOS - Solo usar en MiniKitInitializer según documentación oficial
 
   // Usamos las direcciones específicas para cada cadena
   const userAddressEvm = evmWalletAddress;

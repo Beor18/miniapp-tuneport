@@ -1,5 +1,5 @@
 import CardMusicHome from "@Src/components/cardMusicHome";
-import { MiniKitInitializer } from "@Src/components/MiniKitInitializer";
+
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -94,10 +94,5 @@ export default async function Page() {
 
   //console.log("randomSongs FER >>>>> ", randomSongs);
 
-  return (
-    <>
-      <MiniKitInitializer />
-      <CardMusicHome nftData={randomSongs} collectionData={albumData} />
-    </>
-  );
+  return <CardMusicHome nftData={randomSongs} collectionData={albumData} />;
 }

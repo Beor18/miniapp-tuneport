@@ -159,18 +159,13 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
     userData: unifiedUserData,
   } = useUnifiedAccount();
 
-  // 🎯 DETECCIÓN SIMPLE SIN MINIKIT (MiniKit se maneja en page.tsx según documentación oficial)
+  // 🎯 DETECCIÓN SEGÚN DOCUMENTACIÓN OFICIAL
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const isInIframe = window.parent !== window;
-
-    console.log("🔍 SIMPLE DETECTION:", {
-      isInIframe,
-      userAgent: navigator?.userAgent?.substring(0, 50),
-    });
-
-    setIsMiniApp(isInIframe);
+    // Solo detectar iframe - según documentación oficial
+    const isMiniApp = window.parent !== window;
+    setIsMiniApp(isMiniApp);
   }, [setIsMiniApp]);
 
   // Hook del reproductor para verificar el estado real
