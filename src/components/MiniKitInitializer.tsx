@@ -11,18 +11,21 @@ export default function MiniKitInitializer() {
   const { setFrameReady, isFrameReady } = useMiniKit();
   const { isInMiniApp } = useIsInMiniApp();
 
-  // 🆕 MINIKIT: Inicializar según documentación oficial de Base en layout
+  // 🆕 MINIKIT: Inicializar CLIENT-SIDE según documentación oficial
   useEffect(() => {
-    // Debug de los valores de MiniKit
-    const isInIframe =
-      typeof window !== "undefined" && window.parent !== window;
+    // ✅ Solo ejecutar en el cliente
+    if (typeof window === "undefined") return;
 
-    console.log("🔍 MiniKit Debug en Layout:", {
+    // Debug de los valores de MiniKit CLIENT-SIDE
+    const isInIframe = window.parent !== window;
+
+    console.log("🔍 MiniKit Debug en Layout (CLIENT-SIDE):", {
       isInMiniApp,
       isFrameReady,
       isInIframe,
-      windowParent: typeof window !== "undefined" ? window.parent : "undefined",
-      window: typeof window !== "undefined" ? window : "undefined",
+      windowParent: window.parent,
+      windowSelf: window,
+      userAgent: navigator?.userAgent?.substring(0, 100),
     });
 
     if (isInMiniApp && !isFrameReady) {

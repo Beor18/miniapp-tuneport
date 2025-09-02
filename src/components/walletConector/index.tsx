@@ -147,11 +147,15 @@ export default function WalletConnector() {
     }
   }, [isInMiniApp, isFrameReady, setFrameReady]);
 
-  // 🆕 DETECCIÓN según documentación oficial de Base
-  const isInFarcasterMiniApp = useMemo(() => {
-    // Debug completo de todos los valores
-    const isInIframe =
-      typeof window !== "undefined" && window.parent !== window;
+  // 🆕 DETECCIÓN CLIENT-SIDE según documentación oficial de Base
+  const [isInFarcasterMiniApp, setIsInFarcasterMiniApp] = useState(false);
+
+  useEffect(() => {
+    // ✅ Solo ejecutar en el cliente (después de hidratación)
+    if (typeof window === "undefined") return;
+
+    // Debug completo de todos los valores CLIENT-SIDE
+    const isInIframe = window.parent !== window;
     const hasUserAgent =
       typeof navigator !== "undefined" && navigator.userAgent;
 
@@ -169,10 +173,10 @@ export default function WalletConnector() {
     // Resultado final: cualquier método que detecte Mini App
     const result = isBaseMiniApp || isBaseMiniAppFallback || isFarcasterMiniApp;
 
-    console.log("📱 Mini App Detection (debug completo):", {
+    console.log("📱 Mini App Detection (CLIENT-SIDE):", {
       isInIframe,
       hasUserAgent,
-      userAgent: navigator?.userAgent?.substring(0, 50) + "...",
+      userAgent: navigator?.userAgent?.substring(0, 100),
       isInMiniApp, // Hook MiniKit
       minikitContext: !!minikitContext,
       isFrameReady,
@@ -184,7 +188,7 @@ export default function WalletConnector() {
       result,
     });
 
-    return result;
+    setIsInFarcasterMiniApp(result);
   }, [isInMiniApp, minikitContext, isFrameReady, isSDKLoaded]);
 
   // 🆕 FARCASTER AUTO-REGISTER: Función usando lógica existente del proyecto
