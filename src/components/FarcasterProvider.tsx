@@ -57,44 +57,53 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
 
     // 🎯 AUTO-LOGIN según documentación oficial de Privy
     const login = async () => {
+      console.log("🔍 FarcasterProvider - LOGIN CHECK:", {
+        ready,
+        authenticated,
+        isAutoLoggingIn,
+        shouldTryLogin: ready && !authenticated && !isAutoLoggingIn,
+      });
+
       if (ready && !authenticated && !isAutoLoggingIn) {
         try {
-          console.log(
-            "🎯 FarcasterProvider: Iniciando auto-login según docs oficiales"
-          );
+          console.log("🚀 FarcasterProvider: INICIANDO AUTO-LOGIN");
           setIsAutoLoggingIn(true);
 
           // Importar dinámicamente el SDK de Farcaster
           const miniappSdk = await import("@farcaster/miniapp-sdk");
+          console.log("📦 FarcasterProvider: SDK importado", miniappSdk);
 
           // Llamar ready() primero para indicar que la UI está lista
           await miniappSdk.default.actions.ready();
           console.log(
-            "🎯 FarcasterProvider: miniappSdk.actions.ready() llamado"
+            "✅ FarcasterProvider: miniappSdk.actions.ready() llamado"
           );
 
           // Initialize a new login attempt to get a nonce for the Farcaster wallet to sign
+          console.log("🔑 FarcasterProvider: Obteniendo nonce...");
           const { nonce } = await initLoginToMiniApp();
-          console.log("🎯 FarcasterProvider: Nonce obtenido:", nonce);
+          console.log("✅ FarcasterProvider: Nonce obtenido:", nonce);
 
           // Request a signature from Farcaster
+          console.log("✍️ FarcasterProvider: Solicitando signature...");
           const result = await miniappSdk.default.actions.signIn({ nonce });
-          console.log("🎯 FarcasterProvider: Signature obtenida:", result);
+          console.log("✅ FarcasterProvider: Signature obtenida:", result);
 
           // Send the received signature from Farcaster to Privy for authentication
+          console.log("🔐 FarcasterProvider: Enviando a Privy...");
           await loginToMiniApp({
             message: result.message,
             signature: result.signature,
           });
 
-          console.log(
-            "✅ FarcasterProvider: Auto-login exitoso según docs oficiales"
-          );
+          console.log("🎉 FarcasterProvider: AUTO-LOGIN EXITOSO");
         } catch (error) {
-          console.error("❌ FarcasterProvider: Error en auto-login:", error);
+          console.error("💥 FarcasterProvider: ERROR EN AUTO-LOGIN:", error);
         } finally {
           setIsAutoLoggingIn(false);
         }
+      } else {
+        console.log("⏭️ FarcasterProvider: Saltando auto-login");
       }
     };
 
