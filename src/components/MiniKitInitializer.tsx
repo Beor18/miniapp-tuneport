@@ -14,8 +14,9 @@ export default function MiniKitInitializer() {
   // 🆕 MINIKIT: Inicializar según documentación oficial de Base en layout
   useEffect(() => {
     // Debug de los valores de MiniKit
-    const isInIframe = typeof window !== "undefined" && window.parent !== window;
-    
+    const isInIframe =
+      typeof window !== "undefined" && window.parent !== window;
+
     console.log("🔍 MiniKit Debug en Layout:", {
       isInMiniApp,
       isFrameReady,

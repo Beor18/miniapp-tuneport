@@ -150,14 +150,18 @@ export default function WalletConnector() {
   // 🆕 DETECCIÓN según documentación oficial de Base
   const isInFarcasterMiniApp = useMemo(() => {
     // Debug completo de todos los valores
-    const isInIframe = typeof window !== "undefined" && window.parent !== window;
-    const hasUserAgent = typeof navigator !== "undefined" && navigator.userAgent;
-    
+    const isInIframe =
+      typeof window !== "undefined" && window.parent !== window;
+    const hasUserAgent =
+      typeof navigator !== "undefined" && navigator.userAgent;
+
     // Base App: múltiples métodos de detección
     const isBaseMiniApp = isInMiniApp; // Hook oficial MiniKit
-    const isBaseMiniAppFallback = isInIframe && hasUserAgent && 
-      (navigator.userAgent.includes("BaseMiniApp") || 
-       navigator.userAgent.includes("Base"));
+    const isBaseMiniAppFallback =
+      isInIframe &&
+      hasUserAgent &&
+      (navigator.userAgent.includes("BaseMiniApp") ||
+        navigator.userAgent.includes("Base"));
 
     // Farcaster App: detectar por SDK + iframe
     const isFarcasterMiniApp = isInIframe && isSDKLoaded;
