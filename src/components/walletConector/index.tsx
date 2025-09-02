@@ -61,10 +61,7 @@ export default function WalletConnector() {
   const { isRegistered, setIsRegistered, userData, setUserData } = useContext(
     UserRegistrationContext
   );
-
-  // 🎯 DETECCIÓN INMEDIATA (igual que CardMusicHome)
-  const isMiniApp =
-    typeof window !== "undefined" ? window.parent !== window : false;
+  const { isMiniApp } = useContext(MiniAppContext);
 
   useEffect(() => {
     // Solo para logging
