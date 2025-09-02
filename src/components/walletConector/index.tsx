@@ -61,7 +61,10 @@ export default function WalletConnector() {
   const { isRegistered, setIsRegistered, userData, setUserData } = useContext(
     UserRegistrationContext
   );
-  const { isMiniApp } = useContext(MiniAppContext);
+
+  // 🎯 SIMPLE: Solo detectar iframe
+  const isMiniApp =
+    typeof window !== "undefined" ? window.parent !== window : false;
 
   const { isReady, isAuthenticated } = useStableAuth();
   const locale = useLocale();
@@ -154,7 +157,7 @@ export default function WalletConnector() {
 
   // 🎯 LOG para debugging
   useEffect(() => {
-    console.log("🎯 WALLET CONNECTOR - isMiniApp desde contexto:", isMiniApp);
+    console.log("🚨 SIMPLE DETECTION:", isMiniApp);
   }, [isMiniApp]);
 
   // 🆕 NEYNAR API: Obtener address desde FID
@@ -589,6 +592,7 @@ export default function WalletConnector() {
       isRegistered,
       userData: !!userData,
       isProcessingMiniApp,
+      isMiniApp,
     });
 
     // En Mini Apps, SOLO mostrar el user pill cuando esté registrado
@@ -612,79 +616,90 @@ export default function WalletConnector() {
   }
 
   // RESTO DEL RENDER LOGIC PARA ENTORNOS NORMALES (no Mini Apps)
-  if (!isReady) {
-    // En Mini Apps: ocultar "Join Now" - conexión automática
-    if (isMiniApp) {
-      return null; // ✅ Sin fricción
-    }
+  console.log("🚨 RENDER - Checks:", {
+    isReady,
+    isMiniApp,
+    hasWalletConnected,
+    isRegistered,
+  });
 
-    // En entornos normales: mostrar botón loading
-    return (
-      <Button
-        disabled
-        className="w-auto min-w-[70px] sm:min-w-[70px] h-9 border-zinc-700 bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-200 text-xs sm:text-sm focus:ring-zinc-600 transition-colors gap-2 flex-shrink-0 relative z-10 wallet-connector-mobile"
-        style={{ display: "flex", visibility: "visible" }}
-      >
-        <Wallet className="h-3.5 w-3.5 flex-shrink-0 animate-pulse" />
-        <span className="text-xs text-zinc-400 whitespace-nowrap">
-          Join Now
-        </span>
-      </Button>
-    );
-  }
+  // if (!isReady) {
+  //   console.log("🚨 isReady=false, isMiniApp:", isMiniApp);
+  //   // En Mini Apps: ocultar "Join Now" - conexión automática
+  //   if (isMiniApp) {
+  //     console.log("🚨 RETORNANDO NULL por !isReady + isMiniApp");
+  //     return null; // ✅ Sin fricción
+  //   }
 
-  if (!hasWalletConnected) {
-    // En Mini Apps: ocultar "Join Now" - conexión automática
-    if (isMiniApp) {
-      return null; // ✅ Sin fricción
-    }
+  //   // En entornos normales: mostrar botón loading
+  //   return (
+  //     <Button
+  //       disabled
+  //       className="w-auto min-w-[70px] sm:min-w-[70px] h-9 border-zinc-700 bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-200 text-xs sm:text-sm focus:ring-zinc-600 transition-colors gap-2 flex-shrink-0 relative z-10 wallet-connector-mobile"
+  //       style={{ display: "flex", visibility: "visible" }}
+  //     >
+  //       <Wallet className="h-3.5 w-3.5 flex-shrink-0 animate-pulse" />
+  //       <span className="text-xs text-zinc-400 whitespace-nowrap">
+  //         Join Now
+  //       </span>
+  //     </Button>
+  //   );
+  // }
 
-    // En entornos normales: mostrar botón Join Now
-    return (
-      <Button
-        onClick={login}
-        className="w-auto min-w-[70px] sm:min-w-[70px] h-9 border-zinc-700 bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-200 text-xs sm:text-sm focus:ring-zinc-600 transition-colors gap-2 flex-shrink-0 relative z-10 wallet-connector-mobile"
-        style={{ display: "flex", visibility: "visible" }}
-      >
-        <Wallet className="h-3.5 w-3.5 flex-shrink-0" />
-        <span className="text-xs text-zinc-400 whitespace-nowrap">
-          Join Now
-        </span>
-      </Button>
-    );
-  }
+  // if (!hasWalletConnected) {
+  //   console.log("🚨 hasWalletConnected=false, isMiniApp:", isMiniApp);
+  //   // En Mini Apps: ocultar "Join Now" - conexión automática
+  //   if (isMiniApp) {
+  //     console.log("🚨 RETORNANDO NULL por !hasWalletConnected + isMiniApp");
+  //     return null; // ✅ Sin fricción
+  //   }
 
-  if (isRegistered === null) {
-    return null;
-  }
+  //   // En entornos normales: mostrar botón Join Now
+  //   return (
+  //     <Button
+  //       onClick={login}
+  //       className="w-auto min-w-[70px] sm:min-w-[70px] h-9 border-zinc-700 bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-200 text-xs sm:text-sm focus:ring-zinc-600 transition-colors gap-2 flex-shrink-0 relative z-10 wallet-connector-mobile"
+  //       style={{ display: "flex", visibility: "visible" }}
+  //     >
+  //       <Wallet className="h-3.5 w-3.5 flex-shrink-0" />
+  //       <span className="text-xs text-zinc-400 whitespace-nowrap">
+  //         Join Now
+  //       </span>
+  //     </Button>
+  //   );
+  // }
+
+  // if (isRegistered === null) {
+  //   return null;
+  // }
 
   // 🆕 OCULTAR RegistrationForm solo en Mini Apps, mostrar en entornos normales
-  if (isRegistered === false) {
-    // En Mini Apps: ocultar formulario (auto-registro en curso)
-    if (isMiniApp) {
-      return null; // ✅ UX sin fricción en Mini Apps
-    }
+  // if (isRegistered === false) {
+  //   // En Mini Apps: ocultar formulario (auto-registro en curso)
+  //   if (isMiniApp) {
+  //     return null; // ✅ UX sin fricción en Mini Apps
+  //   }
 
-    // En entornos normales: mostrar formulario
-    return (
-      <RegistrationForm
-        walletAddressEvm={userParams.evm || ""}
-        walletAddressSolana={userParams.solana || ""}
-        email={userParams.email}
-        farcasterData={
-          farcasterConnected && farcasterData?.fid
-            ? {
-                fid: farcasterData.fid,
-                username: farcasterData.username || "",
-                displayName: farcasterData.displayName || "",
-                pfp: farcasterData.pfp || "",
-                bio: farcasterData.bio || "",
-              }
-            : null
-        }
-      />
-    );
-  }
+  //   // En entornos normales: mostrar formulario
+  //   return (
+  //     <RegistrationForm
+  //       walletAddressEvm={userParams.evm || ""}
+  //       walletAddressSolana={userParams.solana || ""}
+  //       email={userParams.email}
+  //       farcasterData={
+  //         farcasterConnected && farcasterData?.fid
+  //           ? {
+  //               fid: farcasterData.fid,
+  //               username: farcasterData.username || "",
+  //               displayName: farcasterData.displayName || "",
+  //               pfp: farcasterData.pfp || "",
+  //               bio: farcasterData.bio || "",
+  //             }
+  //           : null
+  //       }
+  //     />
+  //   );
+  // }
 
   return (
     <div className="flex items-center gap-3">
