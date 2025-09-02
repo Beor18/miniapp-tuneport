@@ -16,7 +16,6 @@ import { base, baseSepolia } from "viem/chains";
 import { useState, useEffect } from "react";
 import { usePlayer } from "@Src/contexts/PlayerContext";
 import Link from "next/link";
-import { useUnifiedAccount } from "@Src/lib/hooks/useUnifiedAccount";
 
 interface CustomUserPillProps {
   handleLogout: () => void;
@@ -35,8 +34,9 @@ export function CustomUserPill({
   const { wallets } = useWallets();
   const { fundWallet } = useFundWallet();
 
-  // 🆕 FARCASTER: Obtener datos de Farcaster del usuario
-  const { farcasterConnected, farcasterData } = useUnifiedAccount();
+  // 🎯 MINIKIT: Los datos de Farcaster vienen del objeto user de Privy
+  const farcasterConnected = !!user?.farcaster;
+  const farcasterData = user?.farcaster;
 
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);

@@ -27,7 +27,7 @@ import { LikeButton } from "../ui/LikeButton";
 import { useCandyMachineMint } from "@Src/lib/hooks/solana/useCandyMachineMint";
 import { useBlockchainOperations } from "@Src/lib/hooks/common/useBlockchainOperations";
 import { toast } from "sonner";
-import { useUnifiedAccount } from "@Src/lib/hooks/useUnifiedAccount";
+import { useAppKitAccount } from "@Src/lib/privy";
 import { motion } from "framer-motion";
 import { MintModal } from "@Src/components/MintModal";
 import { TradingInterface } from "@Src/components/TradingInterface";
@@ -39,7 +39,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@Src/ui/components/ui/dialog";
-import { UserRegistrationContext } from "@Src/app/providers";
+import { UserRegistrationContext, MiniAppContext } from "@Src/app/providers";
 
 export default function CardMusicHome({ nftData, collectionData }: any) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -68,29 +68,18 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
   });
 
   // Usar hook unificado que maneja Privy + Mini Apps
-  const {
-    address,
-    isConnected,
-    status,
-    embeddedWalletInfo,
-    solanaWalletAddress,
-    evmWalletAddress,
-    isMiniApp: unifiedIsMiniApp,
-    isAutoRegistered,
-  } = useUnifiedAccount();
+  // 🎯 MINIKIT: Usar hooks simplificados
+  const { address, isConnected, solanaWalletAddress, evmWalletAddress } =
+    useAppKitAccount();
+  const { isMiniApp } = useContext(MiniAppContext);
+  const { isRegistered, userData } = useContext(UserRegistrationContext);
 
-  // Verificar si hay alguna wallet conectada (especialmente importante para Solana)
-  // 🎯 useUnifiedAccount ya maneja Mini Apps automáticamente
-  const hasWalletConnected =
-    isConnected && (!!address || !!solanaWalletAddress || !!evmWalletAddress);
-
-  console.log("🎯 CardMusicHome - hasWalletConnected:", {
-    unifiedIsMiniApp,
-    isAutoRegistered,
-    isConnected,
-    hasWallets: !!(address || solanaWalletAddress || evmWalletAddress),
-    FINAL: hasWalletConnected,
-  });
+  // Verificar si hay alguna wallet conectada
+  const hasWalletConnected = isMiniApp
+    ? (isRegistered === true && userData) ||
+      (isConnected &&
+        (!!address || !!solanaWalletAddress || !!evmWalletAddress))
+    : isConnected && (!!address || !!solanaWalletAddress || !!evmWalletAddress);
 
   // Estado de minting combinado para ambas redes
   const isMintingAny = isMinting || baseOperations.isMinting;

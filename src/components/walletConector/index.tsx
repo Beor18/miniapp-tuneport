@@ -13,12 +13,12 @@ import RegistrationForm from "@Src/components/registrationForm";
 import { Button } from "@Src/ui/components/ui/button";
 import { Wallet } from "lucide-react";
 
-// Importar hook unificado y Solana wallets
-import { useUnifiedAccount } from "@Src/lib/hooks/useUnifiedAccount";
+// 🎯 MINIKIT: Solo hooks necesarios
 import { useSolanaWallets } from "@Src/lib/privy";
 import { checkUser, getUserData } from "@Src/app/actions/checkUser.actions";
 import { createUser } from "@Src/app/actions/createUser.actions";
 import { useFarcaster } from "@Src/lib/hooks/useFarcaster";
+import { useAppKitAccount } from "@Src/lib/privy";
 
 // Solana
 // Eliminamos la importación de WalletMultiButton y useWallet
@@ -50,40 +50,29 @@ export default function WalletConnector() {
   const { isRegistered, setIsRegistered, userData, setUserData } = useContext(
     UserRegistrationContext
   );
-  // Hook unificado que maneja Privy + Mini Apps automáticamente
+  // Privy original para funciones como login/logout
+  const { login, logout, user } = usePrivy();
+
+  // 🎯 MINIKIT: Usar hooks simplificados
   const {
     address,
     isConnected,
-    caipAddress,
-    status,
-    embeddedWalletInfo,
     evmWalletAddress,
     solanaWalletAddress,
     wallets,
-    farcasterConnected,
-    farcasterData,
-    isMiniApp,
-    isAutoRegistered,
-    userData: unifiedUserData,
-  } = useUnifiedAccount();
+    embeddedWalletInfo,
+  } = useAppKitAccount();
+  const { isMiniApp } = useContext(MiniAppContext);
+  const farcasterConnected = !!user?.farcaster;
+  const farcasterData = user?.farcaster;
 
   const { isReady, isAuthenticated } = useStableAuth();
   const locale = useLocale();
   const verificationRef = useRef<boolean>(false);
   const addressKeyRef = useRef<string>("");
 
-  // Debug simple para verificar estado
-  useEffect(() => {
-    if (isMiniApp) {
-      console.log("🎯 MiniApp detected, auto-registration should trigger");
-    }
-  }, [isMiniApp]);
-
   // Obtener específicamente las wallets de Solana para mejor detección
   const { wallets: solanaWallets, ready: solanaReady } = useSolanaWallets();
-
-  // Privy original para funciones como login/logout
-  const { login, logout, user } = usePrivy();
 
   // 🎯 MINIKIT: Solo usar datos de Privy (farcasterData viene de Privy automáticamente)
   // Remover hooks innecesarios que causan conflictos
@@ -566,52 +555,6 @@ export default function WalletConnector() {
     isRegistered,
   });
 
-  // if (!isReady) {
-  //   console.log("🚨 isReady=false, isMiniApp:", isMiniApp);
-  //   // En Mini Apps: ocultar "Join Now" - conexión automática
-  //   if (isMiniApp) {
-  //     console.log("🚨 RETORNANDO NULL por !isReady + isMiniApp");
-  //     return null; // ✅ Sin fricción
-  //   }
-
-  //   // En entornos normales: mostrar botón loading
-  //   return (
-  //     <Button
-  //       disabled
-  //       className="w-auto min-w-[70px] sm:min-w-[70px] h-9 border-zinc-700 bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-200 text-xs sm:text-sm focus:ring-zinc-600 transition-colors gap-2 flex-shrink-0 relative z-10 wallet-connector-mobile"
-  //       style={{ display: "flex", visibility: "visible" }}
-  //     >
-  //       <Wallet className="h-3.5 w-3.5 flex-shrink-0 animate-pulse" />
-  //       <span className="text-xs text-zinc-400 whitespace-nowrap">
-  //         Join Now
-  //       </span>
-  //     </Button>
-  //   );
-  // }
-
-  // if (!hasWalletConnected) {
-  //   console.log("🚨 hasWalletConnected=false, isMiniApp:", isMiniApp);
-  //   // En Mini Apps: ocultar "Join Now" - conexión automática
-  //   if (isMiniApp) {
-  //     console.log("🚨 RETORNANDO NULL por !hasWalletConnected + isMiniApp");
-  //     return null; // ✅ Sin fricción
-  //   }
-
-  //   // En entornos normales: mostrar botón Join Now
-  //   return (
-  //     <Button
-  //       onClick={login}
-  //       className="w-auto min-w-[70px] sm:min-w-[70px] h-9 border-zinc-700 bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-200 text-xs sm:text-sm focus:ring-zinc-600 transition-colors gap-2 flex-shrink-0 relative z-10 wallet-connector-mobile"
-  //       style={{ display: "flex", visibility: "visible" }}
-  //     >
-  //       <Wallet className="h-3.5 w-3.5 flex-shrink-0" />
-  //       <span className="text-xs text-zinc-400 whitespace-nowrap">
-  //         Join Now
-  //       </span>
-  //     </Button>
-  //   );
-  // }
-
   if (isRegistered === null) {
     return null;
   }
@@ -651,7 +594,6 @@ export default function WalletConnector() {
     isRegistered,
     userData: !!userData,
     isMiniApp,
-    isAutoRegistered,
     isConnected,
     address: !!address,
     hasWalletConnected,
