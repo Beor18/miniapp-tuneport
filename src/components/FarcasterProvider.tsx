@@ -57,19 +57,27 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
 
         // Extraer información del usuario del contexto
         if (appContext?.user) {
-          setUserInfo({
+          const userInfoData = {
             fid: appContext.user.fid,
             username: appContext.user.username,
             displayName: appContext.user.displayName,
             pfpUrl: appContext.user.pfpUrl,
-          });
+          };
+          setUserInfo(userInfoData);
+
+          console.log(
+            "🎯 FarcasterProvider: User info extracted",
+            userInfoData
+          );
+        } else {
+          console.log("⚠️ FarcasterProvider: No user info in context");
         }
 
         setIsSDKLoaded(true);
 
-        console.log("Farcaster SDK loaded successfully:", appContext);
-        console.log("Wallet context:", appWalletContext);
-        console.log("User info:", appContext?.user);
+        console.log("✅ Farcaster SDK loaded successfully:", appContext);
+        console.log("✅ Wallet context:", appWalletContext);
+        console.log("✅ User info:", appContext?.user);
       } catch (error) {
         console.error("Error loading Farcaster SDK:", error);
         // Para desarrollo, marcar como listo de todas formas

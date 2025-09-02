@@ -17,8 +17,24 @@ export function useUnifiedAccount() {
   const { isMiniApp } = useContext(MiniAppContext);
   const { isRegistered, userData } = useContext(UserRegistrationContext);
 
+  console.log("🔧 useUnifiedAccount inputs:", {
+    isMiniApp,
+    isRegistered,
+    userData: !!userData,
+    privyAddress: !!privyAccount.address,
+    privyIsConnected: privyAccount.isConnected,
+  });
+
   // En Mini Apps registrados, usar datos del contexto como fallback
   if (isMiniApp && isRegistered === true && userData) {
+    console.log("🎯 useUnifiedAccount: Mini App registrada detectada", {
+      isMiniApp,
+      isRegistered,
+      userData: !!userData,
+      userDataNickname: userData?.nickname,
+      userDataAddress: userData?.address,
+    });
+
     return {
       // Privy data (puede estar disponible o no)
       ...privyAccount,
@@ -45,9 +61,17 @@ export function useUnifiedAccount() {
   }
 
   // En entornos normales o Mini Apps no registrados, usar Privy directamente
+  console.log("📋 useUnifiedAccount: Usando Privy directamente", {
+    isMiniApp,
+    isRegistered,
+    userData: !!userData,
+    privyAddress: !!privyAccount.address,
+    privyIsConnected: privyAccount.isConnected,
+  });
+
   return {
     ...privyAccount,
-    isMiniApp: false,
+    isMiniApp: isMiniApp, // Mantener el valor real de isMiniApp
     isAutoRegistered: false,
     userData: null,
   };

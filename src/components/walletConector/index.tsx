@@ -198,12 +198,33 @@ export default function WalletConnector() {
 
   // 🎯 AUTO-REGISTRO INMEDIATO: Detectar cualquier fuente de Farcaster y registrar
   useEffect(() => {
-    if (!isMiniApp || verificationRef.current) return;
+    console.log("🔥 AUTO-REGISTRO useEffect triggered:", {
+      isMiniApp,
+      verificationRef: verificationRef.current,
+      farcasterData: !!farcasterData,
+      userInfo: !!userInfo,
+      farcasterHookData: !!farcasterHookData,
+    });
+
+    if (!isMiniApp || verificationRef.current) {
+      console.log("❌ Auto-registro skipped:", {
+        isMiniApp,
+        verificationRef: verificationRef.current,
+      });
+      return;
+    }
 
     // 🎯 PRIORIZAR por tipo de Mini App:
     // - Farcaster Apps: userInfo (FarcasterProvider) tiene prioridad
     // - Base Apps: farcasterData (Privy) tiene prioridad
     const fid = farcasterData?.fid || userInfo?.fid || farcasterHookData?.fid;
+
+    console.log("🔍 FID check:", {
+      farcasterDataFid: farcasterData?.fid,
+      userInfoFid: userInfo?.fid,
+      farcasterHookDataFid: farcasterHookData?.fid,
+      finalFid: fid,
+    });
 
     if (fid) {
       console.log(
@@ -588,20 +609,27 @@ export default function WalletConnector() {
     console.log("🎯 Mini App render:", {
       isRegistered,
       userData: !!userData,
+      isAutoRegistered,
+      unifiedUserData: !!unifiedUserData,
       isProcessingMiniApp,
       isMiniApp,
     });
 
     // En Mini Apps, SOLO mostrar el user pill cuando esté registrado
-    if (isRegistered === true && userData) {
+    // Usar isAutoRegistered del hook unificado O isRegistered del contexto
+    if (
+      (isRegistered === true && userData) ||
+      (isAutoRegistered && unifiedUserData)
+    ) {
       console.log("✅ Mostrando CustomUserPill en Mini App");
+      const profileData = userData || unifiedUserData;
       return (
         <div className="flex items-center gap-3">
           <CustomUserPill
             handleLogout={handleLogout}
-            profile={userData}
+            profile={profileData}
             locale={locale}
-            userNickname={userData?.nickname || null}
+            userNickname={profileData?.nickname || null}
           />
         </div>
       );
