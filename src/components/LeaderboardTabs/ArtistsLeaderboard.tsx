@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useContext } from "react";
 import { useUserQuality } from "@Src/lib/hooks/useUserQuality";
 import { useTranslations, useLocale } from "next-intl";
 import { Users, Zap } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useFarcasterMiniApp } from "@Src/components/FarcasterProvider";
-import { useUserRegistrationContext } from "@Src/contexts/UserRegistrationContext";
+import { UserRegistrationContext } from "@Src/app/providers";
 import { usePrivy } from "@privy-io/react-auth";
 import { toast } from "sonner";
 import { Button } from "@/ui/components/ui/button";
@@ -36,7 +36,7 @@ export default function ArtistsLeaderboard({
 }: ArtistsLeaderboardProps) {
   const { getBatchUserQualityScores, contractReady } = useUserQuality();
   const { tipContext } = useFarcasterMiniApp();
-  const { isRegistered } = useUserRegistrationContext();
+  const { isRegistered } = useContext(UserRegistrationContext);
   const { authenticated } = usePrivy();
   const t = useTranslations("farcaster");
   const tLeaderboard = useTranslations("farcaster.leaderboard");
