@@ -7,6 +7,8 @@ import { Users, Zap } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useFarcasterMiniApp } from "@Src/components/FarcasterProvider";
+import { useUserRegistrationContext } from "@Src/contexts/UserRegistrationContext";
+import { usePrivy } from "@privy-io/react-auth";
 import { toast } from "sonner";
 import { Button } from "@/ui/components/ui/button";
 
@@ -34,9 +36,22 @@ export default function ArtistsLeaderboard({
 }: ArtistsLeaderboardProps) {
   const { getBatchUserQualityScores, contractReady } = useUserQuality();
   const { tipContext } = useFarcasterMiniApp();
+  const { isRegistered } = useUserRegistrationContext();
+  const { authenticated } = usePrivy();
   const t = useTranslations("farcaster");
   const tLeaderboard = useTranslations("farcaster.leaderboard");
   const locale = useLocale();
+
+  // Debug logs para entender el estado
+  useEffect(() => {
+    console.log("🎯 ArtistsLeaderboard - Estados:", {
+      authenticated,
+      isRegistered,
+      tipContext: !!tipContext,
+      sendToken: !!tipContext?.sendToken,
+      contractReady,
+    });
+  }, [authenticated, isRegistered, tipContext, contractReady]);
 
   const [leaderboard, setLeaderboard] = useState<UserData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,9 +64,22 @@ export default function ArtistsLeaderboard({
   // Función para apoyar a un artista usando Farcaster Mini App SDK
   const handleSupportArtist = useCallback(
     async (artistAddress: string, artistFid?: number) => {
+      // Verificar todos los requisitos
+      if (!authenticated) {
+        console.error("User not authenticated");
+        toast.error("Debes conectar tu wallet");
+        return;
+      }
+
+      if (!isRegistered) {
+        console.error("User not registered");
+        toast.error("Debes registrarte en la plataforma");
+        return;
+      }
+
       if (!tipContext?.sendToken) {
         console.error("No Farcaster sendToken action available");
-        toast.error("Mini App no disponible");
+        toast.error("Mini App no disponible para tips");
         return;
       }
 
@@ -100,7 +128,7 @@ export default function ArtistsLeaderboard({
         });
       }
     },
-    [tipContext, tLeaderboard]
+    [tipContext, tLeaderboard, authenticated, isRegistered]
   );
 
   // Función para procesar datos de Farcaster con quality scores
@@ -437,7 +465,9 @@ export default function ArtistsLeaderboard({
                       }
                       disabled={
                         supportingArtists.has(user.address) ||
-                        !tipContext?.sendToken
+                        !tipContext?.sendToken ||
+                        !authenticated ||
+                        !isRegistered
                       }
                       size="sm"
                       variant="outline"

@@ -107,6 +107,38 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    // 🎯 CONFIGURAR CONTEXTOS DEL SDK
+    const setupSDKContexts = async () => {
+      try {
+        console.log("🔧 FarcasterProvider: Configurando contextos del SDK");
+        const miniappSdk = await import("@farcaster/miniapp-sdk");
+
+        // Las acciones están directamente disponibles en el SDK
+        const actionsCtx = miniappSdk.default.actions;
+
+        console.log("📱 FarcasterProvider: Contextos obtenidos:", {
+          actions: !!actionsCtx,
+          sendToken: !!actionsCtx?.sendToken,
+          ready: !!actionsCtx?.ready,
+          signIn: !!actionsCtx?.signIn,
+        });
+
+        // Solo necesitamos las acciones para el tipContext
+        setTipContext(actionsCtx);
+        setContext(miniappSdk.default);
+        setIsSDKLoaded(true);
+      } catch (error) {
+        console.error(
+          "💥 FarcasterProvider: Error configurando contextos:",
+          error
+        );
+        // Si hay error, establecer contexto vacío pero funcional
+        setTipContext(null);
+        setContext(null);
+        setIsSDKLoaded(false);
+      }
+    };
+
     // 🔥 FORCE EXECUTION: Ejecutar siempre para debugging
     console.log(
       "🔄 FarcasterProvider: EJECUTANDO SIEMPRE - ready:",
@@ -122,7 +154,9 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
       } else {
         console.log("✅ FarcasterProvider: Usuario ya autenticado");
       }
-      setIsSDKLoaded(true);
+
+      // Configurar contextos independientemente de la autenticación
+      setupSDKContexts();
     } else {
       console.log("⏸️ FarcasterProvider: Privy not ready yet");
     }
