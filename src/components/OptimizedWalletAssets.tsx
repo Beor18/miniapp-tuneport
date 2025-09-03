@@ -97,7 +97,7 @@ const NFTCard = ({ nft }: { nft: EnhancedUserNFT }) => {
               variant="outline"
               className="text-[10px] py-0 px-2 bg-blue-900/80 text-blue-200 border-blue-700"
             >
-              Base testnet
+              Base
             </Badge>
           </div>
 
