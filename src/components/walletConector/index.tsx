@@ -262,7 +262,15 @@ export default function WalletConnector() {
 
       registerAfterPrivyAuth();
     }
-  }, [isMiniApp, isAuthenticated, farcasterData]);
+  }, [
+    isMiniApp,
+    isAuthenticated,
+    farcasterData,
+    getAddressFromFID,
+    userParams.email,
+    setUserData,
+    setIsRegistered,
+  ]);
 
   // 🚫 FUNCIÓN DUPLICADA ELIMINADA: getAddressFromFID ya está definida arriba
 
@@ -637,8 +645,9 @@ export default function WalletConnector() {
 
   // Ya está definido arriba
 
-  // RESTO DEL RENDER LOGIC PARA ENTORNOS NORMALES (no Mini Apps)
-  console.log("🚨 RENDER - Checks:", {
+  // RESTO DEL RENDER LOGIC SOLO PARA ENTORNOS NORMALES (no Mini Apps)
+  // ❗ IMPORTANTE: Mini Apps ya están completamente manejados arriba (líneas 565-636)
+  console.log("🚨 RENDER NORMAL - Checks:", {
     isReady,
     isMiniApp,
     hasWalletConnected,
@@ -649,40 +658,32 @@ export default function WalletConnector() {
     return null;
   }
 
-  // 🚫 OCULTAR RegistrationForm COMPLETAMENTE en Mini Apps
+  // 🚫 BLOQUEO TOTAL: Si es Mini App, no debe llegar aquí - debe manejarse arriba
+  if (isMiniApp) {
+    console.error("🚨 ERROR: Mini App llegó a lógica normal - esto es un bug!");
+    return null; // Bloquear completamente
+  }
+
+  // Solo para entornos NORMALES: mostrar formulario si no está registrado
   if (isRegistered === false) {
-    if (isMiniApp) {
-      console.log(
-        "🚫 Mini App: RegistrationForm bloqueado, esperando auto-registro..."
-      );
-      // En Mini Apps: NUNCA mostrar RegistrationForm, mostrar spinner
-      return (
-        <div className="flex items-center gap-2 text-white text-sm">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-          <span>Auto-registrando...</span>
-        </div>
-      );
-    } else {
-      // En entornos normales: mostrar formulario
-      return (
-        <RegistrationForm
-          walletAddressEvm={userParams.evm || ""}
-          walletAddressSolana={userParams.solana || ""}
-          email={userParams.email}
-          farcasterData={
-            farcasterConnected && farcasterData?.fid
-              ? {
-                  fid: farcasterData.fid,
-                  username: farcasterData.username || "",
-                  displayName: farcasterData.displayName || "",
-                  pfp: farcasterData.pfp || "",
-                  bio: farcasterData.bio || "",
-                }
-              : null
-          }
-        />
-      );
-    }
+    return (
+      <RegistrationForm
+        walletAddressEvm={userParams.evm || ""}
+        walletAddressSolana={userParams.solana || ""}
+        email={userParams.email}
+        farcasterData={
+          farcasterConnected && farcasterData?.fid
+            ? {
+                fid: farcasterData.fid,
+                username: farcasterData.username || "",
+                displayName: farcasterData.displayName || "",
+                pfp: farcasterData.pfp || "",
+                bio: farcasterData.bio || "",
+              }
+            : null
+        }
+      />
+    );
   }
 
   console.log("🎯 RENDER FINAL - CustomUserPill:", {
