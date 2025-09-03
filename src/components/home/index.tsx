@@ -164,14 +164,6 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
     // Usar cualquiera de los dos métodos
     const isMiniApp = isInIframe || isMiniAppDomain;
 
-    // 🔍 LOG TEMPORAL para confirmar detección
-    if (isMiniAppDomain) {
-      console.log(
-        "✅ MINI APP DETECTADA por hostname:",
-        window.location.hostname
-      );
-    }
-
     setIsMiniApp(isMiniApp);
   }, [setIsMiniApp]);
 

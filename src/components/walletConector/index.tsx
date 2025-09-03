@@ -53,16 +53,6 @@ export default function WalletConnector() {
   // Privy original para funciones como login/logout
   const { login, logout, user } = usePrivy();
 
-  // 🔥 TESTING: Función de login manual para testing
-  const testFarcasterLogin = async () => {
-    try {
-      console.log("🧪 TEST: Manual Farcaster login");
-      await login(); // Sin parámetros - abrirá el modal de Privy
-    } catch (error) {
-      console.error("🧪 TEST: Error en login manual:", error);
-    }
-  };
-
   // 🎯 MINIKIT: Usar hooks simplificados
   const {
     address,
@@ -580,29 +570,20 @@ export default function WalletConnector() {
       farcasterData: !!farcasterData,
     });
 
-    // Si está en proceso de auto-login, mostrar spinner
+    // Si está en proceso de auto-login, mostrar spinner limpio
     if (isAutoLoggingIn) {
-      console.log("🔄 MiniKit: Auto-login en progreso...");
       return (
         <div className="flex items-center gap-2 text-white text-sm">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-          <span>Conectando...</span>
         </div>
       );
     }
 
-    // 🔥 FORCED LOGIN BUTTON para testing
+    // Si no está autenticado, mostrar spinner limpio
     if (!isAuthenticated) {
-      console.log("❌ MiniKit: NO AUTENTICADO - Mostrando botón manual");
       return (
-        <div className="flex items-center gap-2">
-          <button
-            onClick={testFarcasterLogin}
-            className="bg-purple-600 text-white px-3 py-1 rounded text-sm"
-          >
-            🧪 Test Login
-          </button>
-          <div className="text-white text-xs">Not authenticated</div>
+        <div className="flex items-center gap-2 text-white text-sm">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
         </div>
       );
     }
@@ -622,23 +603,19 @@ export default function WalletConnector() {
       );
     }
 
-    // Si Privy está autenticado pero no registrado, mostrar spinner de registro
+    // Si Privy está autenticado pero no registrado, mostrar spinner limpio
     if (isAuthenticated && isRegistered !== true) {
-      console.log("⏳ MiniKit: Privy autenticado, registrando usuario...");
       return (
         <div className="flex items-center gap-2 text-white text-sm">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-          <span>Registrando...</span>
         </div>
       );
     }
 
-    // Si Privy no está listo o no autenticado, mostrar spinner
-    console.log("⏳ MiniKit: Esperando autenticación de Privy...");
+    // Si Privy no está listo, mostrar spinner limpio
     return (
       <div className="flex items-center gap-2 text-white text-sm">
         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-        <span>Cargando...</span>
       </div>
     );
   }
