@@ -151,12 +151,27 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   // 🎯 MINIKIT: Simplificar - solo usar useAppKitAccount directamente
   const { address, isConnected } = useAppKitAccount();
 
-  // 🎯 DETECCIÓN SEGÚN DOCUMENTACIÓN OFICIAL
+  // 🎯 DETECCIÓN SEGÚN DOCUMENTACIÓN OFICIAL + COMPATIBILITY
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Solo detectar iframe - según documentación oficial
-    const isMiniApp = window.parent !== window;
+    // Método 1: iframe (funciona en web)
+    const isInIframe = window.parent !== window;
+
+    // Método 2: hostname miniapp (para móvil donde iframe no funciona)
+    const isMiniAppDomain = window.location.hostname.includes("miniapp");
+
+    // Usar cualquiera de los dos métodos
+    const isMiniApp = isInIframe || isMiniAppDomain;
+
+    // 🔍 LOG TEMPORAL para confirmar detección
+    if (isMiniAppDomain) {
+      console.log(
+        "✅ MINI APP DETECTADA por hostname:",
+        window.location.hostname
+      );
+    }
+
     setIsMiniApp(isMiniApp);
   }, [setIsMiniApp]);
 
