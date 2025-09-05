@@ -132,7 +132,7 @@ export default function WalletConnector() {
     console.log("🚨 SIMPLE DETECTION:", isMiniApp);
   }, [isMiniApp]);
 
-  // 🆕 NEYNAR API: Obtener address desde FID
+  // 🆕 NEYNAR API: Obtener address desde FID (mejorada para ENS)
   const getAddressFromFID = useCallback(
     async (fid: number): Promise<string | null> => {
       try {
@@ -155,13 +155,62 @@ export default function WalletConnector() {
         const data = await response.json();
         const user = data.users?.[0];
 
+        console.log(
+          "📋 Respuesta completa de Neynar para FID",
+          fid,
+          ":",
+          JSON.stringify(user, null, 2)
+        );
+
+        if (!user) {
+          console.log("❌ No se encontró usuario para FID:", fid);
+          return null;
+        }
+
+        // 🎯 PRIORIDAD 1: Direcciones ETH verificadas
         if (user?.verified_addresses?.eth_addresses?.[0]) {
           const ethAddress = user.verified_addresses.eth_addresses[0];
-          console.log("✅ Address obtenida desde Neynar:", ethAddress);
+          console.log("✅ Address ETH verificada encontrada:", ethAddress);
           return ethAddress;
         }
 
-        console.log("⚠️ No se encontró address verificada para FID:", fid);
+        // 🎯 PRIORIDAD 2: Dirección custodial (para usuarios con wallets embedded)
+        if (user?.custodial_address) {
+          console.log(
+            "✅ Address custodial encontrada:",
+            user.custodial_address
+          );
+          return user.custodial_address;
+        }
+
+        // 🎯 PRIORIDAD 3: Buscar en connected_addresses si existe
+        if (user?.connected_addresses?.length > 0) {
+          const connectedAddress = user.connected_addresses[0]?.address;
+          if (connectedAddress) {
+            console.log("✅ Address conectada encontrada:", connectedAddress);
+            return connectedAddress;
+          }
+        }
+
+        // 🎯 PRIORIDAD 4: Si tiene ENS, intentar resolver desde Privy
+        if (
+          user?.username?.endsWith(".eth") ||
+          user?.display_name?.endsWith(".eth")
+        ) {
+          const ensName = user.username?.endsWith(".eth")
+            ? user.username
+            : user.display_name;
+          console.log(
+            "🔗 Usuario tiene ENS:",
+            ensName,
+            "- usando address vacía temporalmente"
+          );
+          // Por ahora retornamos null, pero podríamos implementar resolución ENS aquí
+          return null;
+        }
+
+        console.log("⚠️ No se encontró ninguna address para FID:", fid);
+        console.log("📋 Campos disponibles:", Object.keys(user));
         return null;
       } catch (error) {
         console.error("❌ Error obteniendo address desde Neynar:", error);
@@ -214,6 +263,16 @@ export default function WalletConnector() {
 
           // 🎯 PASO 2: Si no existe, crear usuario nuevo
           const verifiedAddress = await getAddressFromFID(fid);
+
+          // 🔧 FALLBACK: Si no hay address desde Neynar, usar la de Privy si está disponible
+          const finalAddress = verifiedAddress || evmWalletAddress || "";
+
+          console.log("🏠 Direcciones disponibles:", {
+            neynarAddress: verifiedAddress,
+            privyEvmAddress: evmWalletAddress,
+            finalAddress: finalAddress,
+          });
+
           const nickname = farcasterData.username
             ? `${farcasterData.username}${fid}`
             : `user${fid}`;
@@ -225,8 +284,8 @@ export default function WalletConnector() {
               `User ${fid}`,
             nickname,
             email: userParams.email || "",
-            address: verifiedAddress || "",
-            address_solana: "",
+            address: finalAddress,
+            address_solana: solanaWalletAddress || "",
             type: "artist",
             farcaster_fid: fid,
             farcaster_username: farcasterData.username || "",
@@ -280,11 +339,14 @@ export default function WalletConnector() {
       // 🎯 PASO 1: Obtener address verificada desde Neynar
       const verifiedAddress = await getAddressFromFID(farcasterData.fid);
 
-      if (!verifiedAddress) {
-        console.log(
-          "⚠️ No se pudo obtener address verificada, usando address vacía"
-        );
-      }
+      // 🔧 FALLBACK: Si no hay address desde Neynar, usar la de Privy si está disponible
+      const finalAddress = verifiedAddress || userParams.evm || "";
+
+      console.log("🏠 Direcciones disponibles (backup):", {
+        neynarAddress: verifiedAddress,
+        privyEvmAddress: userParams.evm,
+        finalAddress: finalAddress,
+      });
 
       // 🎯 PASO 2: Generar nickname único usando FID
       const nickname = farcasterData.username
@@ -299,8 +361,8 @@ export default function WalletConnector() {
           `User ${farcasterData.fid}`,
         nickname,
         email: userParams.email || "",
-        address: verifiedAddress || "", // Address desde Neynar
-        address_solana: "", // Vacío por ahora
+        address: finalAddress, // Address desde Neynar o Privy
+        address_solana: userParams.solana || "", // Desde Privy
         type: "artist", // 🎯 SIEMPRE artist para usuarios de Farcaster
         farcaster_fid: farcasterData.fid,
         farcaster_username: farcasterData.username || "",
