@@ -32,6 +32,7 @@ import {
   ShareIcon,
   MedalIcon,
   Trophy,
+  MessageCircle,
 } from "lucide-react";
 import BaseAlbumNewForm from "@Src/components/BaseAlbumNewForm";
 import { useAppKitAccount } from "@Src/lib/privy";
@@ -125,6 +126,14 @@ const getNavItems = (
       type: "create",
     });
   }
+
+  // Añadir feedback antes del perfil
+  baseItems.push({
+    href: "https://t.me/+G6OwWKboQYA0ZjRh",
+    icon: MessageCircle,
+    label: "Feedback",
+    type: "external",
+  });
 
   // Siempre añadir el perfil al final
   baseItems.push({
@@ -485,6 +494,29 @@ function NavLink({
     );
   }
 
+  if (type === "external") {
+    return (
+      <Link
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`
+          flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors
+          ${isCollapsed ? "justify-center" : "gap-3"}
+          text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100
+        `}
+        title={isCollapsed ? label : undefined}
+      >
+        <Icon
+          className={`h-5 w-5 text-zinc-400 ${
+            isCollapsed ? "flex-shrink-0" : ""
+          }`}
+        />
+        {!isCollapsed && <span>{label}</span>}
+      </Link>
+    );
+  }
+
   return (
     <Link
       href={href}
@@ -527,7 +559,7 @@ function MobileNavLink({
 }) {
   const pathname = usePathname();
   const isActive = pathname === href && type === "link";
-  const isDisabled = !isConnected;
+  const isDisabled = !isConnected && type !== "external";
 
   if (type === "create") {
     return (
@@ -563,6 +595,27 @@ function MobileNavLink({
           {label}
         </span>
       </button>
+    );
+  }
+
+  if (type === "external") {
+    return (
+      <Link
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`
+          flex flex-col items-center justify-center px-2 py-1 min-w-0 flex-1 transition-all duration-200
+          text-zinc-400 hover:text-zinc-200 active:scale-95 touch-manipulation
+        `}
+      >
+        <div className="p-2 rounded-lg transition-all duration-200 hover:bg-zinc-800/50">
+          <Icon className="h-5 w-5 text-zinc-300" />
+        </div>
+        <span className="text-[10px] font-medium truncate max-w-full mt-1 leading-none text-zinc-400">
+          {label}
+        </span>
+      </Link>
     );
   }
 
