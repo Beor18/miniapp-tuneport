@@ -24,7 +24,7 @@ import { useAppKitAccount } from "@Src/lib/privy";
 // Eliminamos la importación de WalletMultiButton y useWallet
 // import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 // import { useWallet } from "@solana/wallet-adapter-react";
-import { usePrivy } from "@privy-io/react-auth";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { useFarcasterMiniApp } from "../FarcasterProvider";
 import { CustomUserPill } from "../customUserPill";
 import { useLocale } from "next-intl";
@@ -53,13 +53,15 @@ export default function WalletConnector() {
   // Privy original para funciones como login/logout
   const { login, logout, user } = usePrivy();
 
+  const { wallets } = useWallets();
+
   // 🎯 MINIKIT: Usar hooks simplificados
   const {
     address,
     isConnected,
     evmWalletAddress,
     solanaWalletAddress,
-    wallets,
+    //wallets,
     embeddedWalletInfo,
   } = useAppKitAccount();
   const { isMiniApp } = useContext(MiniAppContext);
@@ -72,7 +74,7 @@ export default function WalletConnector() {
   const addressKeyRef = useRef<string>("");
 
   // Obtener específicamente las wallets de Solana para mejor detección
-  const { wallets: solanaWallets, ready: solanaReady } = useSolanaWallets();
+  //const { wallets: solanaWallets, ready: solanaReady } = useSolanaWallets();
 
   // 🎯 MINIKIT: Solo usar datos de Privy (farcasterData viene de Privy automáticamente)
   // Remover hooks innecesarios que causan conflictos
@@ -284,7 +286,7 @@ export default function WalletConnector() {
               `User ${fid}`,
             nickname,
             email: userParams.email || "",
-            address: finalAddress,
+            address: finalAddress || wallets[0].address || "",
             address_solana: solanaWalletAddress || "",
             type: "artist",
             farcaster_fid: fid,
