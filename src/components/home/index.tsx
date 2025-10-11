@@ -345,6 +345,31 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
         </div>
       </header>
 
+      {/* Banner informativo - Live announcement */}
+      <div className="bg-gradient-to-r from-blue-600/90 to-purple-600/90 text-white px-4 py-2.5 text-center border-b border-blue-500/30 shadow-lg">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2">
+          <span className="flex items-center gap-1.5 text-xs sm:text-sm font-medium">
+            <span className="relative flex h-2 w-2 flex-shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+            </span>
+            <span className="hidden sm:inline">We&apos;re now live!</span>
+            <span className="sm:hidden">Live now!</span>
+          </span>
+          <span className="text-xs sm:text-sm font-normal">
+            Visit{" "}
+            <a
+              href="https://app.tuneport.xyz"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold underline underline-offset-2 hover:text-blue-100 transition-colors"
+            >
+              app.tuneport.xyz
+            </a>
+          </span>
+        </div>
+      </div>
+
       <div className="flex flex-1 overflow-hidden">
         {/* Navegación de escritorio - solo mostrar en páginas de perfil */}
         {layoutFlags.showNavigation && (
