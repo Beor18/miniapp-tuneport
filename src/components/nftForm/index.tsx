@@ -315,14 +315,14 @@ export default function NftForm({
               <Music className="w-4 h-4 mr-2" />
               {tNft("basicInfo")}
             </TabsTrigger>
-            <TabsTrigger
+            {/* <TabsTrigger
               value="premium"
               className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white"
               disabled={album?.isPremiumAlbum}
             >
               <Lock className="w-4 h-4 mr-2" />
               Premium
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
           <ScrollArea className="flex-grow px-6 py-4">
             <form className="space-y-6">
@@ -636,7 +636,6 @@ export default function NftForm({
               {/* PESTAÑA PREMIUM x402 */}
               <TabsContent value="premium" className="mt-0">
                 <div className="space-y-4">
-                  {/* Mensaje si el álbum ya es premium */}
                   {album?.isPremiumAlbum ? (
                     <div className="bg-blue-900/20 border border-blue-600 p-6 rounded-lg text-center">
                       <Lock className="h-12 w-12 text-blue-400 mx-auto mb-4" />
@@ -665,7 +664,6 @@ export default function NftForm({
                         </p>
                       </div>
 
-                      {/* Toggle Premium */}
                       <div className="flex items-center justify-between p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg">
                         <div className="space-y-0.5">
                           <Label
@@ -685,7 +683,6 @@ export default function NftForm({
                         />
                       </div>
 
-                      {/* Configuración (solo visible si isPremiumTrack) */}
                       {isPremiumTrack && (
                         <div className="space-y-4 p-4 border border-zinc-700 rounded-lg bg-zinc-800/30">
                           {/* Precio */}
@@ -719,7 +716,6 @@ export default function NftForm({
                             </p>
                           </div>
 
-                          {/* Descripción */}
                           <div className="space-y-2">
                             <Label
                               htmlFor="premium-description"
@@ -742,7 +738,6 @@ export default function NftForm({
                             </p>
                           </div>
 
-                          {/* Preview */}
                           <div className="p-3 bg-zinc-900 border border-zinc-700 rounded-md">
                             <p className="text-sm font-medium text-zinc-300 mb-2">
                               Vista previa:
@@ -757,7 +752,6 @@ export default function NftForm({
                             </div>
                           </div>
 
-                          {/* Info adicional */}
                           <div className="text-xs text-zinc-400 space-y-1 p-3 bg-zinc-900/50 rounded-md border border-zinc-700">
                             <p>💰 Los usuarios pagarán con USDC</p>
                             <p>⚡ El pago se procesa automáticamente</p>
