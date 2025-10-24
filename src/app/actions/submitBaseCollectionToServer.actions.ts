@@ -27,6 +27,15 @@ type BaseCollectionData = {
   is_premium?: boolean;
   nickname?: string;
   coin_address?: string; // Dirección del token creado con Zora SDK
+  // ✅ Configuración Premium x402
+  isPremiumAlbum?: boolean;
+  x402Config?: {
+    isLocked: boolean;
+    price?: string;
+    network?: "base" | "base-sepolia";
+    description?: string;
+    currency?: "USDC";
+  };
 };
 
 export async function submitBaseCollectionToServer(

@@ -483,6 +483,11 @@ export const useCreateERC1155Collection = (
 
         // Guardar en la base de datos
         try {
+          console.log("📊 Premium Config being sent:", {
+            isPremiumAlbum: params.isPremiumAlbum,
+            x402Config: params.x402Config,
+          });
+
           // Datos ampliados para almacenar en la base de datos
           const backendResponse = await submitBaseCollectionToServer({
             name: params.name,
@@ -518,6 +523,9 @@ export const useCreateERC1155Collection = (
             is_premium: true,
             nickname: params.nickname, // Pasar el nickname para revalidar el perfil
             coin_address: coinAddress || undefined, // Dirección del token creado con Zora SDK
+            // ✅ Configuración Premium x402 desde el formulario
+            isPremiumAlbum: params.isPremiumAlbum || false,
+            x402Config: params.x402Config || undefined,
           });
 
           console.log("Collection saved to database:", backendResponse);

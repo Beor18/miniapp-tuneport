@@ -41,6 +41,22 @@ async function fetchAlbumData() {
   return res.json();
 }
 
+// Obtener configuración x402 de un álbum
+async function fetchX402Config(albumId: string) {
+  try {
+    const res = await fetch(
+      `${process.env.API_ELEI}/api/x402/config/${albumId}`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.config === null ? null : data;
+  } catch (error) {
+    console.error("Error fetching x402 config:", error);
+    return null;
+  }
+}
+
 function shuffleArray(array: any[]) {
   return array.sort(() => Math.random() - 0.5);
 }
@@ -62,6 +78,19 @@ async function PageContent() {
   ]);
   //console.log("nftData FER >>>>> ", nftData);
 
+  // Obtener configuraciones x402 para todos los álbumes en paralelo
+  const x402Configs = await Promise.all(
+    albumData.map((album: any) => fetchX402Config(album._id))
+  );
+
+  // Crear mapa de configuraciones x402
+  const x402ConfigMap = new Map(
+    albumData.map((album: any, index: number) => [
+      album._id,
+      x402Configs[index],
+    ])
+  );
+
   // Crear mapas para búsqueda eficiente
   const nftMap = new Map(nftData.map((nft: any) => [nft._id, nft]));
   const userMap = new Map(
@@ -80,6 +109,9 @@ async function PageContent() {
       .map((nftId: string) => nftMap.get(nftId))
       .filter(Boolean);
 
+    // Obtener configuración x402 del álbum
+    const x402Config = x402ConfigMap.get(album._id);
+
     return albumNfts.map((nft: any) => ({
       ...nft,
       slug: album.slug,
@@ -95,6 +127,8 @@ async function PageContent() {
       coin_address: album.coin_address,
       // Agregar dirección para quality filter
       artist_wallet: album.address_creator_collection,
+      // ✅ Agregar configuración x402 a cada canción
+      x402Config: x402Config,
     }));
   });
 

@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@allfeat/types": "https://github.com/Allfeat/js-types",
+    "@coinbase/cdp-sdk": "^1.38.4",
     "@coinbase/onchainkit": "^0.38.19",
+    "@coinbase/x402": "^0.6.6",
     "@coral-xyz/anchor": "0.27.0",
     "@farcaster/frame-wagmi-connector": "^1.0.0",
     "@farcaster/miniapp-sdk": "^0.1.7",
@@ -85,6 +87,8 @@
     "tailwindcss-animate": "^1.0.7",
     "viem": "^2.29.3",
     "wagmi": "^2.5.19",
+    "x402-fetch": "^0.6.6",
+    "x402-next": "^0.6.5",
     "yup": "^1.4.0"
   },
   "devDependencies": {

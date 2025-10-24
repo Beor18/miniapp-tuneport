@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@Src/ui/components/ui/select";
-import { Music, Upload, X, Play, Pause, Info } from "lucide-react";
+import { Music, Upload, X, Play, Pause, Info, Lock } from "lucide-react";
 import { useAddItemsToCandyMachine } from "@Src/lib/hooks/solana/useAddItemsToCandyMachine";
 import { useBlockchainOperations } from "@Src/lib/hooks/common/useBlockchainOperations";
 import {
@@ -37,6 +37,7 @@ import {
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { Switch } from "@Src/ui/components/ui/switch";
 
 interface NftAttribute {
   trait_type: string;
@@ -79,6 +80,12 @@ export default function NftForm({
 
   const [mintPaymentAddress, setMintPaymentAddress] = useState<string>("");
 
+  // Estados para configuración Premium x402
+  const [isPremiumTrack, setIsPremiumTrack] = useState(false);
+  const [premiumPrice, setPremiumPrice] = useState("0.01");
+  const [premiumNetwork] = useState<"base" | "base-sepolia">("base"); // Siempre Base Mainnet
+  const [premiumDescription, setPremiumDescription] = useState("");
+
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const { addItemsToCandyMachine, loading } = useAddItemsToCandyMachine();
@@ -100,6 +107,11 @@ export default function NftForm({
       setMintPaymentAddress("");
       setCopies(0);
       setPrice(0);
+      // Reset premium states
+      setIsPremiumTrack(false);
+      setPremiumPrice("0.01");
+      // premiumNetwork siempre es "base" (constante)
+      setPremiumDescription("");
     }
   }, [open, album]);
 
@@ -174,6 +186,17 @@ export default function NftForm({
         (attr) => attr.trait_type.trim() !== "" && attr.value.trim() !== ""
       );
 
+      // Construir x402Config si está marcado como premium
+      const x402Config = isPremiumTrack
+        ? {
+            isLocked: true,
+            price: `$${premiumPrice}`,
+            network: premiumNetwork,
+            description: premiumDescription || `Track premium: ${trackName}`,
+            currency: "USDC" as const,
+          }
+        : undefined;
+
       if (album?.network === "solana") {
         await addItemsToCandyMachine({
           collectionId: album?.id,
@@ -188,6 +211,8 @@ export default function NftForm({
           currency: album?.currency,
           royaltyReceivers: [],
           copies: copies,
+          // x402 premium config - will be saved to DB after creation
+          // TODO: Update useAddItemsToCandyMachine to accept x402Config
         });
       } else {
         await createNFTItem({
@@ -201,6 +226,9 @@ export default function NftForm({
           currency: album?.mintCurrency,
           attributes: filteredAttributes,
           //artist_address_mint: paymentAddress,
+          isPremium: isPremiumTrack,
+          premiumPrice: isPremiumTrack ? `$${premiumPrice}` : undefined,
+          x402Config,
         });
       }
       toast.success(tNft("trackAdded"), {
@@ -286,6 +314,14 @@ export default function NftForm({
             >
               <Music className="w-4 h-4 mr-2" />
               {tNft("basicInfo")}
+            </TabsTrigger>
+            <TabsTrigger
+              value="premium"
+              className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white"
+              disabled={album?.isPremiumAlbum}
+            >
+              <Lock className="w-4 h-4 mr-2" />
+              Premium
             </TabsTrigger>
           </TabsList>
           <ScrollArea className="flex-grow px-6 py-4">
@@ -594,6 +630,147 @@ export default function NftForm({
                       + {tNft("addAttribute")}
                     </Button>
                   </div>
+                </div>
+              </TabsContent>
+
+              {/* PESTAÑA PREMIUM x402 */}
+              <TabsContent value="premium" className="mt-0">
+                <div className="space-y-4">
+                  {/* Mensaje si el álbum ya es premium */}
+                  {album?.isPremiumAlbum ? (
+                    <div className="bg-blue-900/20 border border-blue-600 p-6 rounded-lg text-center">
+                      <Lock className="h-12 w-12 text-blue-400 mx-auto mb-4" />
+                      <h4 className="font-semibold text-blue-400 text-lg mb-2">
+                        Álbum Premium
+                      </h4>
+                      <p className="text-sm text-blue-300">
+                        Este álbum está marcado como premium. Todos los tracks
+                        heredan automáticamente esta configuración.
+                      </p>
+                      <p className="text-xs text-zinc-400 mt-3">
+                        No necesitas configurar este track como premium
+                        individualmente.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="bg-purple-900/20 border border-purple-600 p-4 rounded-lg">
+                        <h4 className="font-semibold text-purple-400 flex items-center gap-2">
+                          <Lock className="h-5 w-5" />
+                          Bloquear contenido
+                        </h4>
+                        <p className="text-sm text-purple-300 mt-1">
+                          Marca este contenido como premium. Los fans pagarán en
+                          USDC para desbloquearlo.
+                        </p>
+                      </div>
+
+                      {/* Toggle Premium */}
+                      <div className="flex items-center justify-between p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg">
+                        <div className="space-y-0.5">
+                          <Label
+                            htmlFor="premium-toggle"
+                            className="text-base font-medium text-zinc-100"
+                          >
+                            Bloquear contenido
+                          </Label>
+                          <p className="text-sm text-zinc-400">
+                            Requiere pago en USDC para acceder a este contenido
+                          </p>
+                        </div>
+                        <Switch
+                          id="premium-toggle"
+                          checked={isPremiumTrack}
+                          onCheckedChange={setIsPremiumTrack}
+                        />
+                      </div>
+
+                      {/* Configuración (solo visible si isPremiumTrack) */}
+                      {isPremiumTrack && (
+                        <div className="space-y-4 p-4 border border-zinc-700 rounded-lg bg-zinc-800/30">
+                          {/* Precio */}
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="premium-price"
+                              className="text-zinc-100"
+                            >
+                              💰 Precio en USDC
+                            </Label>
+                            <div className="flex gap-2">
+                              <span className="flex items-center px-3 bg-zinc-700 rounded-l-md border border-zinc-600 text-zinc-100">
+                                $
+                              </span>
+                              <Input
+                                id="premium-price"
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                value={premiumPrice}
+                                onChange={(e) =>
+                                  setPremiumPrice(e.target.value)
+                                }
+                                placeholder="0.01"
+                                className="flex-1 rounded-l-none bg-zinc-800 border-zinc-700 text-zinc-100"
+                              />
+                            </div>
+                            <p className="text-xs text-zinc-400">
+                              Precio sugerido: $0.01 - $0.50 para contenidos
+                              individuales
+                            </p>
+                          </div>
+
+                          {/* Descripción */}
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="premium-description"
+                              className="text-zinc-100"
+                            >
+                              📝 Descripción
+                            </Label>
+                            <Textarea
+                              id="premium-description"
+                              value={premiumDescription}
+                              onChange={(e) =>
+                                setPremiumDescription(e.target.value)
+                              }
+                              placeholder="Ej: Track exclusivo de mi nuevo álbum"
+                              maxLength={100}
+                              className="bg-zinc-800 border-zinc-700 text-zinc-100"
+                            />
+                            <p className="text-xs text-zinc-400">
+                              Se muestra al usuario antes de pagar
+                            </p>
+                          </div>
+
+                          {/* Preview */}
+                          <div className="p-3 bg-zinc-900 border border-zinc-700 rounded-md">
+                            <p className="text-sm font-medium text-zinc-300 mb-2">
+                              Vista previa:
+                            </p>
+                            <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-md">
+                              <p className="text-2xl font-bold text-purple-400">
+                                ${premiumPrice}
+                              </p>
+                              <p className="text-xs text-zinc-400 mt-1">
+                                Pago único en USDC
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Info adicional */}
+                          <div className="text-xs text-zinc-400 space-y-1 p-3 bg-zinc-900/50 rounded-md border border-zinc-700">
+                            <p>💰 Los usuarios pagarán con USDC</p>
+                            <p>⚡ El pago se procesa automáticamente</p>
+                            <p>✅ Una vez pagado, el acceso es permanente</p>
+                            <p>
+                              📊 Pagos + fee: 99% artista/colaboradores + 1%
+                              plataforma
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </TabsContent>
             </form>

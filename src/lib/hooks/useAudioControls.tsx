@@ -32,6 +32,7 @@ export default function useAudioControls() {
     audioRef, // Usamos la referencia del contexto
     countActiveAudioInstances,
     lastNavigationPath,
+    setIsContentLocked, // ✅ Setter para estado de bloqueo
     // Nuevos métodos para playlist
     userPlaylist,
     addToPlaylist,
@@ -365,6 +366,7 @@ export default function useAudioControls() {
     setIsMuted,
     setShowFloatingPlayer,
     setNftData,
+    setIsContentLocked, // ✅ Exponer setter de bloqueo
 
     // Exponer métodos del contexto directamente
     addToPlaylist,

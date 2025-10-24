@@ -6,6 +6,10 @@ import path from "path";
 import { PassThrough } from "stream";
 import { IncomingMessage } from "http";
 
+// Configurar límites de tamaño para archivos grandes usando route segment config
+export const runtime = "nodejs";
+export const maxDuration = 300; // 5 minutos para archivos grandes
+
 export async function POST(req: NextRequest) {
   try {
     const contentType = req.headers.get("content-type");

@@ -49,6 +49,7 @@ import {
   Plus,
   Trash2,
   X,
+  Lock,
 } from "lucide-react";
 import { useWallets } from "@Src/lib/privy";
 import { ethers } from "ethers";
@@ -141,6 +142,12 @@ export default function BaseAlbumNewForm({
   // PASO 4: Configurar DAI
   const [enableDAI, setEnableDAI] = useState(false);
   const [paymentToken, setPaymentToken] = useState("ETH");
+
+  // PASO 5: Configuración Premium x402
+  const [isPremiumAlbum, setIsPremiumAlbum] = useState(false);
+  const [premiumPrice, setPremiumPrice] = useState("0.01");
+  const [premiumNetwork] = useState<"base" | "base-sepolia">("base"); // Siempre Base Mainnet
+  const [premiumDescription, setPremiumDescription] = useState("");
 
   // Obtener dirección EVM
   const [evmAddress, setEvmAddress] = useState("");
@@ -434,6 +441,17 @@ export default function BaseAlbumNewForm({
           royaltyPercentage: c.royaltyPercentage,
           name: c.name,
         })),
+        // Configuración Premium x402
+        isPremiumAlbum,
+        x402Config: isPremiumAlbum
+          ? {
+              isLocked: true,
+              price: `$${premiumPrice}`,
+              network: premiumNetwork,
+              description: premiumDescription || `Álbum premium: ${name}`,
+              currency: "USDC" as const,
+            }
+          : undefined,
       };
 
       setTransactionPending(true);
@@ -490,6 +508,10 @@ export default function BaseAlbumNewForm({
     getTotalRoyaltyPercentage,
     nickname,
     paymentToken,
+    isPremiumAlbum,
+    premiumPrice,
+    premiumNetwork,
+    premiumDescription,
     tCommon,
     tForms,
     tPlayer,
@@ -521,7 +543,7 @@ export default function BaseAlbumNewForm({
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="w-[95vw] sm:w-[500px] md:w-[700px] lg:w-[800px] max-h-[90vh] flex flex-col p-0 bg-zinc-900 border border-zinc-700/30 shadow-xl shadow-zinc-900/10 rounded-xl">
+        <DialogContent className="w-[95vw] sm:w-[600px] md:w-[750px] lg:w-[900px] max-h-[90vh] flex flex-col p-0 bg-zinc-900 border border-zinc-700/30 shadow-xl shadow-zinc-900/10 rounded-xl">
           <DialogHeader className="px-6 py-4 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-900/90 relative">
             <DialogTitle className="text-xl font-semibold text-zinc-100 pr-10">
               {getDialogTitle()}
@@ -586,42 +608,41 @@ export default function BaseAlbumNewForm({
               onValueChange={setActiveTab}
               className="flex-grow flex flex-col min-h-0"
             >
-              <TabsList className="px-4 pt-2 justify-start bg-zinc-900 w-full overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-zinc-900">
+              <TabsList className="px-4 pt-2 pb-2 justify-start bg-zinc-900 w-full overflow-x-auto gap-1 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-900">
                 <TabsTrigger
                   value="collection"
-                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap px-3 py-2"
+                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-xs whitespace-nowrap px-2 py-2 flex-shrink-0"
                 >
-                  <Music2Icon className="w-4 h-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">
-                    {tAlbum("collection")}
-                  </span>
-                  <span className="sm:hidden">{tAlbum("collection")}</span>
+                  <Music2Icon className="w-4 h-4 md:mr-1.5" />
+                  <span className="hidden md:inline">Info</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="payments"
-                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap px-3 py-2"
+                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-xs whitespace-nowrap px-2 py-2 flex-shrink-0"
                 >
-                  <Zap className="w-4 h-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">{tAlbum("payments")}</span>
-                  <span className="sm:hidden">{tAlbum("payments")}</span>
+                  <Zap className="w-4 h-4 md:mr-1.5" />
+                  <span className="hidden md:inline">Pagos</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="collaborators"
-                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap px-3 py-2"
+                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-xs whitespace-nowrap px-2 py-2 flex-shrink-0"
                 >
-                  <Users className="w-4 h-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">
-                    {tAlbum("collaborators")}
-                  </span>
-                  <span className="sm:hidden">{tAlbum("collaborators")}</span>
+                  <Users className="w-4 h-4 md:mr-1.5" />
+                  <span className="hidden md:inline">Colabs</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="payment"
-                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap px-3 py-2"
+                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-xs whitespace-nowrap px-2 py-2 flex-shrink-0"
                 >
-                  <DollarSign className="w-4 h-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">{tAlbum("currency")}</span>
-                  <span className="sm:hidden">{tAlbum("currency")}</span>
+                  <DollarSign className="w-4 h-4 md:mr-1.5" />
+                  <span className="hidden md:inline">Moneda</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="premium"
+                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-xs whitespace-nowrap px-2 py-2 flex-shrink-0"
+                >
+                  <Lock className="w-4 h-4 md:mr-1.5" />
+                  <span className="hidden md:inline">Premium</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -1272,12 +1293,12 @@ export default function BaseAlbumNewForm({
                             >
                               {tAlbum("ethEthereum")}
                             </SelectItem>
-                            <SelectItem
+                            {/* <SelectItem
                               value={symbol || "ALBUM_COIN"}
                               className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100"
                             >
                               🪙 ${symbol} ({tAlbum("albumToken")})
-                            </SelectItem>
+                            </SelectItem> */}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1340,6 +1361,134 @@ export default function BaseAlbumNewForm({
                           {tAlbum("automaticSplitNote")}
                         </div>
                       </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* PASO 5: Configuración Premium x402 */}
+                  <TabsContent
+                    value="premium"
+                    className="mt-0 focus-visible:outline-none space-y-4"
+                  >
+                    <div className="space-y-4">
+                      <div className="bg-purple-900/20 border border-purple-600 p-4 rounded-lg">
+                        <h4 className="font-semibold text-purple-400 flex items-center gap-2">
+                          <Lock className="h-5 w-5" />
+                          Bloquear contenido
+                        </h4>
+                        <p className="text-sm text-purple-300 mt-1">
+                          Marca todo este proyecto como premium. Los fans
+                          pagarán en USDC para acceder a todos los contenidos.
+                        </p>
+                      </div>
+
+                      {/* Toggle Premium */}
+                      <div className="flex items-center justify-between p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg">
+                        <div className="space-y-0.5">
+                          <Label
+                            htmlFor="album-premium-toggle"
+                            className="text-base font-medium text-zinc-100"
+                          >
+                            Bloquear contenido
+                          </Label>
+                          <p className="text-sm text-zinc-400">
+                            Requiere pago en USDC para acceder a todos los
+                            contenidos
+                          </p>
+                        </div>
+                        <Switch
+                          id="album-premium-toggle"
+                          checked={isPremiumAlbum}
+                          onCheckedChange={setIsPremiumAlbum}
+                        />
+                      </div>
+
+                      {/* Configuración (solo visible si isPremiumAlbum) */}
+                      {isPremiumAlbum && (
+                        <div className="space-y-4 p-4 border border-zinc-700 rounded-lg bg-zinc-800/30">
+                          {/* Precio */}
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="album-premium-price"
+                              className="text-zinc-100"
+                            >
+                              💰 Precio en USDC
+                            </Label>
+                            <div className="flex gap-2">
+                              <span className="flex items-center px-3 bg-zinc-700 rounded-l-md border border-zinc-600 text-zinc-100">
+                                $
+                              </span>
+                              <Input
+                                id="album-premium-price"
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                value={premiumPrice}
+                                onChange={(e) =>
+                                  setPremiumPrice(e.target.value)
+                                }
+                                placeholder="0.01"
+                                className="flex-1 rounded-l-none bg-zinc-800 border-zinc-700 text-zinc-100"
+                              />
+                            </div>
+                            <p className="text-xs text-zinc-400">
+                              Precio sugerido: $0.01 - $1.00 para proyectos
+                              completos
+                            </p>
+                          </div>
+
+                          {/* Descripción */}
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="album-premium-description"
+                              className="text-zinc-100"
+                            >
+                              📝 Descripción
+                            </Label>
+                            <Textarea
+                              id="album-premium-description"
+                              value={premiumDescription}
+                              onChange={(e) =>
+                                setPremiumDescription(e.target.value)
+                              }
+                              placeholder="Ej: Álbum exclusivo para mis fans"
+                              maxLength={100}
+                              className="bg-zinc-800 border-zinc-700 text-zinc-100"
+                            />
+                            <p className="text-xs text-zinc-400">
+                              Se muestra al usuario antes de pagar
+                            </p>
+                          </div>
+
+                          {/* Preview */}
+                          <div className="p-3 bg-zinc-900 border border-zinc-700 rounded-md">
+                            <p className="text-sm font-medium text-zinc-300 mb-2">
+                              Vista previa:
+                            </p>
+                            <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-md">
+                              <p className="text-2xl font-bold text-purple-400">
+                                ${premiumPrice}
+                              </p>
+                              <p className="text-xs text-zinc-400 mt-1">
+                                Pago único en USDC
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Info adicional */}
+                          <div className="text-xs text-zinc-400 space-y-1 p-3 bg-zinc-900/50 rounded-md border border-zinc-700">
+                            <p>💰 Los usuarios pagarán con USDC</p>
+                            <p>⚡ El pago se procesa automáticamente</p>
+                            <p>
+                              ✅ Una vez pagado, el acceso es permanente para
+                              todos los contenidos
+                            </p>
+                            <p>
+                              📊 Pagos + fee: 99% artista/colaboradores + 1%
+                              plataforma
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
                 </form>

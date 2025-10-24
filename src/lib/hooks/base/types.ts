@@ -29,6 +29,15 @@ export interface CreateCollectionParams {
   createRevenueShare?: boolean;
   existingRevenueShareAddress?: string;
   currency?: string;
+  // x402 Premium Album Configuration
+  isPremiumAlbum?: boolean;
+  x402Config?: {
+    isLocked: boolean;
+    price?: string;
+    network?: "base" | "base-sepolia";
+    description?: string;
+    currency?: "USDC";
+  };
 }
 
 export interface NFTMetadata {
@@ -149,4 +158,14 @@ export interface NFTItemParams {
     trait_type: string;
     value: string | number;
   }>;
+  // x402 Premium Content Configuration
+  isPremium?: boolean;
+  premiumPrice?: string;
+  x402Config?: {
+    isLocked: boolean;
+    price?: string;
+    network?: "base" | "base-sepolia";
+    description?: string;
+    currency?: "USDC";
+  };
 }

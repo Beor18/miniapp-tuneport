@@ -22,6 +22,15 @@ interface Album {
   artist_name: string;
   nfts: string[];
   image_cover?: string; // Añadimos esta propiedad
+  // x402 Premium Configuration
+  isPremiumAlbum?: boolean;
+  x402Config?: {
+    isLocked: boolean;
+    price?: string;
+    network?: "base" | "base-sepolia";
+    description?: string;
+    currency?: "USDC";
+  };
 }
 
 async function fetchNFTData() {
@@ -120,7 +129,11 @@ export default async function Page({ params }: PageProps) {
 
   return (
     <div className="h-full w-full">
-      <CardAlbumMusic nftsData={albumNfts} albumData={album} />
+      <CardAlbumMusic 
+        key={album._id} 
+        nftsData={albumNfts} 
+        albumData={album} 
+      />
     </div>
   );
 }

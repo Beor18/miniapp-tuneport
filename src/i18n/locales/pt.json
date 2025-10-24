@@ -574,5 +574,29 @@
       "verified": "Verificado",
       "tip": "TIP"
     }
+  },
+  "x402": {
+    "premiumContent": "Conteúdo Premium",
+    "unlockDescription": "Desbloqueie {albumName} para acessar todas as faixas",
+    "oneTimePayment": "Pagamento único em {network}",
+    "unlockWithUsdc": "Desbloquear com USDC",
+    "includes": "✨ Inclui:",
+    "unlimitedAccess": "• Acesso ilimitado a todas as faixas",
+    "highQualityStreaming": "• Streaming de alta qualidade",
+    "directArtistSupport": "• Suporte direto ao artista",
+    "noSubscription": "• Sem assinaturas, pagamento único",
+    "baseMainnet": "Base Mainnet",
+    "baseSepolia": "Base Sepolia",
+    "errors": {
+      "connectWallet": "Conecte sua carteira",
+      "connectWalletDescription": "Você precisa conectar sua carteira para desbloquear este conteúdo premium",
+      "evmWalletRequired": "Carteira EVM necessária",
+      "evmWalletRequiredDescription": "x402 requer uma carteira Base/Ethereum. Conecte uma carteira compatível.",
+      "invalidConfiguration": "Configuração inválida",
+      "priceNotConfigured": "O preço do conteúdo não está configurado corretamente",
+      "unlockError": "Erro ao desbloquear conteúdo",
+      "contentLocked": "Conteúdo Bloqueado",
+      "unlockToPlay": "Desbloqueie este conteúdo premium para reproduzir"
+    }
   }
 }

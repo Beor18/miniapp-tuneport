@@ -23,6 +23,7 @@ import {
   MinusIcon,
   Music,
   Coins,
+  Lock,
 } from "lucide-react";
 import { LikeButton } from "../ui/LikeButton";
 import PlayerHome from "../playerHome";
@@ -31,6 +32,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import useAudioControls from "../../lib/hooks/useAudioControls";
 import { useCandyMachineMint } from "@Src/lib/hooks/solana/useCandyMachineMint";
 import { useBlockchainOperations } from "@Src/lib/hooks/common/useBlockchainOperations";
+import { useX402Payment } from "@Src/lib/hooks/base/useX402Payment";
 import { toast } from "sonner";
 import { useAppKitAccount } from "@Src/lib/privy";
 import { TradingInterface } from "@Src/components/TradingInterface";
@@ -41,6 +43,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@Src/ui/components/ui/dialog";
+import { useTranslations } from "next-intl";
 
 // Componente de skeleton para el álbum con diseño mejorado
 const AlbumSkeleton = () => (
@@ -156,6 +159,15 @@ interface Album {
   base_url_image: string;
   network: string;
   coin_address: string;
+  // x402 Premium Configuration
+  isPremiumAlbum?: boolean;
+  x402Config?: {
+    isLocked: boolean;
+    price?: string;
+    network?: "base" | "base-sepolia";
+    description?: string;
+    currency?: "USDC";
+  };
 }
 
 interface CardAlbumMusicProps {
@@ -176,11 +188,19 @@ export default function CardAlbumMusic({
   const [isTradingModalOpen, setIsTradingModalOpen] = useState(false);
   const [isMintModalOpen, setIsMintModalOpen] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // x402 Premium States
+  const [isContentUnlocked, setIsContentUnlocked] = useState(true); // ✅ Optimistic: asumimos desbloqueado hasta que se verifique lo contrario
+  const [isCheckingUnlock, setIsCheckingUnlock] = useState(true);
+  const [x402Config, setX402Config] = useState<any>(undefined); // undefined = no obtenida aún, null = no premium
   const containerRef = useRef<HTMLDivElement>(null);
   const claimButtonRef = useRef<HTMLButtonElement>(null);
 
   const { mint, isMinting } = useCandyMachineMint();
   const [mintedNft, setMintedNft] = useState<string | null>(null);
+
+  // Traducciones
+  const tX402 = useTranslations("x402");
 
   // Hook para operaciones blockchain con Base (ERC1155)
   const baseOperations = useBlockchainOperations({
@@ -197,6 +217,18 @@ export default function CardAlbumMusic({
     solanaWalletAddress,
     evmWalletAddress,
   } = useAppKitAccount();
+
+  // ✅ Hook x402 debe llamarse en el nivel superior del componente
+  const { unlockContent: x402UnlockContent } = useX402Payment({
+    onSuccess: (contentId, txHash) => {
+      console.log("✅ Content unlocked:", contentId, txHash);
+      setIsContentUnlocked(true);
+      setIsContentLocked(false); // ✅ Actualizar contexto global
+    },
+    onError: (error) => {
+      console.error("❌ Failed to unlock:", error);
+    },
+  });
 
   // Verificar si hay alguna wallet conectada (especialmente importante para Solana)
   const hasWalletConnected =
@@ -217,15 +249,13 @@ export default function CardAlbumMusic({
     setActivePlayerId,
     setShowFloatingPlayer,
     setNftData,
+    setIsContentLocked, // ✅ Setter para estado de bloqueo
     handlePlayPause,
     isInPlaylist,
     handleTogglePlaylist,
     handleNextSong,
     handlePrevSong,
   } = useAudioControls();
-
-  // Añadir una referencia para controlar la inicialización
-  const isInitializedRef = useRef(false);
 
   // Preparar los datos una única vez, fuera de efectos secundarios
   const albumNFTs = React.useMemo(() => {
@@ -241,13 +271,9 @@ export default function CardAlbumMusic({
 
   console.log("albumNFTs: ", albumNFTs);
 
-  // Efecto para configurar la carga inicial - SOLO SE EJECUTA UNA VEZ
+  // Efecto para configurar la carga inicial (se ejecuta cada vez que se monta el componente)
   useEffect(() => {
-    // Evitar ejecuciones múltiples
-    if (isInitializedRef.current) return;
-
-    // Marcar como inicializado
-    isInitializedRef.current = true;
+    console.log("🎵 Componente montado - Álbum:", albumData._id);
 
     // Ocultar el reproductor flotante
     setShowFloatingPlayer(false);
@@ -258,25 +284,17 @@ export default function CardAlbumMusic({
     // Simulamos un tiempo de carga para mostrar skeletons
     const loadingTimer = setTimeout(() => {
       setIsLoading(false);
-
-      // Al terminar de cargar, reproducir automáticamente la primera canción del álbum
-      if (albumNFTs.length > 0) {
-        console.log(
-          "Reproduciendo automáticamente la primera canción del álbum:",
-          albumNFTs[0].name
-        );
-        setCurrentSong(albumNFTs[0]);
-        setActivePlayerId(albumNFTs[0]._id);
-        setCurrentTrackIndex(0);
-        setIsPlaying(true);
-      }
     }, 1500);
 
     return () => {
       clearTimeout(loadingTimer);
 
-      // Mostrar el reproductor flotante al salir con un pequeño delay
-      // para asegurar que se ejecute después de que CardMusicHome se monte
+      // ✅ Al salir del álbum, RESETEAR el estado de bloqueo
+      // Esto permite que canciones/álbumes fuera de este contexto funcionen normalmente
+      setIsContentLocked(false);
+      console.log("🔓 Saliendo del álbum - Estado de bloqueo reseteado");
+
+      // Mostrar el reproductor flotante al salir
       setTimeout(() => {
         // Verificar si hay música reproduciéndose
         const audio = document.querySelector("audio");
@@ -286,17 +304,43 @@ export default function CardAlbumMusic({
           setShowFloatingPlayer(true);
         }
       }, 100);
-
-      // Resetear la referencia al desmontar para futuros montajes
-      isInitializedRef.current = false;
     };
   }, [
+    albumData._id, // Dependencia clave para forzar re-ejecución cuando cambia el álbum
     setShowFloatingPlayer,
+    setNftData,
+    setIsContentLocked,
+    albumNFTs,
+  ]);
+
+  // ✅ Efecto para manejar reproducción automática SOLO si está desbloqueado
+  useEffect(() => {
+    // Esperar a que termine de cargar y se verifique el unlock status
+    if (isLoading || isCheckingUnlock) return;
+
+    // Solo reproducir si hay tracks Y el contenido está desbloqueado
+    if (albumNFTs.length > 0 && isContentUnlocked) {
+      console.log(
+        "▶️ Reproduciendo automáticamente (contenido desbloqueado):",
+        albumNFTs[0].name
+      );
+      setCurrentSong(albumNFTs[0]);
+      setActivePlayerId(albumNFTs[0]._id);
+      setCurrentTrackIndex(0);
+      setIsPlaying(true);
+    } else if (!isContentUnlocked && albumNFTs.length > 0) {
+      console.log("🔒 Reproducción bloqueada - contenido premium");
+      // Asegurar que no se reproduzca nada
+      setIsPlaying(false);
+    }
+  }, [
+    isLoading,
+    isCheckingUnlock,
+    isContentUnlocked,
+    albumNFTs,
     setCurrentSong,
     setActivePlayerId,
     setIsPlaying,
-    setNftData,
-    albumNFTs,
   ]);
 
   // Efecto para actualizar el índice de la canción actual sin crear ciclos
@@ -377,8 +421,196 @@ export default function CardAlbumMusic({
     isProgrammaticScroll,
   ]);
 
-  // Función simplificada para el botón play/pause - CORREGIDA
+  // x402 Premium - Obtener configuración desde el backend
+  useEffect(() => {
+    const fetchX402Config = async () => {
+      try {
+        console.log("📡 Fetching x402 config para álbum:", albumData._id);
+        // Usar ruta proxy de Next.js (evita CORS)
+        const response = await fetch(`/api/x402/config/${albumData._id}`);
+
+        if (response.ok) {
+          const config = await response.json();
+          console.log("🔍 x402 Config recibida del backend:", config);
+
+          // Si el backend devuelve config: null, significa que no es premium
+          if (config.config === null || !config.recipientAddress) {
+            // Fallback a la config del álbum si existe
+            setX402Config(albumData?.x402Config || null);
+          } else {
+            setX402Config(config);
+          }
+        } else {
+          // Si no hay config en el backend, usar la del álbum si existe
+          setX402Config(albumData?.x402Config || null);
+        }
+      } catch (error) {
+        console.error("Error fetching x402 config:", error);
+        // Fallback a la config del álbum
+        setX402Config(albumData?.x402Config || null);
+      }
+    };
+
+    fetchX402Config();
+  }, [albumData._id, albumData?.x402Config]);
+
+  // x402 Premium - Verificar si el contenido está desbloqueado
+  useEffect(() => {
+    // NO ejecutar mientras x402Config sea undefined (todavía no se obtuvo del backend)
+    if (x402Config === undefined) {
+      console.log("⏳ Esperando config del backend...");
+      return;
+    }
+
+    const checkUnlockStatus = async () => {
+      console.log("🔍 Verificando unlock status:", {
+        x402Config,
+        hasPrice: !!x402Config?.price,
+        hasRecipient: !!x402Config?.recipientAddress,
+      });
+
+      // Si x402Config es null o no tiene precio/recipient, NO es premium
+      if (!x402Config || !x402Config.price || !x402Config.recipientAddress) {
+        console.log("✅ Contenido desbloqueado (no premium o sin config)");
+        setIsContentUnlocked(true);
+        setIsContentLocked(false); // ✅ Actualizar contexto global
+        setIsCheckingUnlock(false);
+        return;
+      }
+
+      // Si no hay wallet EVM conectada, el contenido está bloqueado
+      if (!hasWalletConnected || !evmWalletAddress) {
+        console.log("⚠️ Sin wallet conectada - contenido bloqueado", {
+          hasWalletConnected,
+          evmWalletAddress,
+        });
+        setIsContentUnlocked(false);
+        setIsContentLocked(true); // ✅ Actualizar contexto global
+        setIsCheckingUnlock(false); // ✅ Terminar verificación
+        return;
+      }
+
+      console.log("✅ Wallet conectada - verificando unlock en backend", {
+        albumId: albumData._id,
+        walletAddress: evmWalletAddress,
+        walletAddressLowercase: evmWalletAddress.toLowerCase(),
+      });
+
+      // ✅ Mantener isCheckingUnlock=true durante la verificación (muestra skeleton loader)
+      try {
+        const checkUrl = `/api/x402/check-unlock/${albumData._id}?address=${evmWalletAddress}`;
+        console.log("🌐 Fetching:", checkUrl);
+
+        // Verificar en segundo plano si el usuario ya pagó por este contenido
+        const response = await fetch(checkUrl);
+
+        console.log("📡 Response status:", response.status);
+
+        const data = await response.json();
+
+        console.log("📥 Respuesta del backend:", {
+          isUnlocked: data.isUnlocked,
+          hasPaid: data.hasPaid,
+          transactionHash: data.transactionHash,
+          fullResponse: data,
+        });
+
+        console.log(
+          `🔍 Checking: data.isUnlocked = ${
+            data.isUnlocked
+          } (type: ${typeof data.isUnlocked})`
+        );
+
+        if (data.isUnlocked) {
+          console.log(
+            "🎉 ✅✅✅ Contenido DESBLOQUEADO para este usuario ✅✅✅"
+          );
+          // Si está desbloqueado, remover overlay con animación
+          setIsContentUnlocked(true);
+          setIsContentLocked(false); // ✅ Actualizar contexto global
+          setIsCheckingUnlock(false); // ✅ Terminar verificación
+          console.log(
+            "🎉 Estados actualizados: isContentUnlocked=true, isContentLocked=false"
+          );
+        } else {
+          console.log("🔒 Contenido BLOQUEADO - usuario no ha pagado");
+          setIsContentUnlocked(false);
+          setIsContentLocked(true); // ✅ Actualizar contexto global
+          setIsCheckingUnlock(false); // ✅ Terminar verificación - ahora sí mostrar overlay
+        }
+      } catch (error) {
+        console.error("❌ Error checking unlock status:", error);
+        setIsContentUnlocked(false);
+        setIsContentLocked(true); // ✅ Actualizar contexto global
+        setIsCheckingUnlock(false); // ✅ Terminar verificación
+      }
+    };
+
+    checkUnlockStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [albumData?._id, x402Config, hasWalletConnected, evmWalletAddress]);
+
+  // x402 Premium - Manejar el pago para desbloquear contenido
+  const handleUnlockContent = async () => {
+    if (!hasWalletConnected) {
+      toast.error(tX402("errors.connectWallet"), {
+        description: tX402("errors.connectWalletDescription"),
+      });
+      return;
+    }
+
+    // Verificar que tenemos una dirección EVM (no Solana)
+    if (!evmWalletAddress) {
+      toast.error(tX402("errors.evmWalletRequired"), {
+        description: tX402("errors.evmWalletRequiredDescription"),
+      });
+      return;
+    }
+
+    if (!x402Config || !x402Config.price) {
+      toast.error(tX402("errors.invalidConfiguration"), {
+        description: tX402("errors.priceNotConfigured"),
+      });
+      return;
+    }
+
+    try {
+      console.log("🔐 x402: Unlocking content", {
+        contentId: albumData._id,
+        price: x402Config.price,
+        network: x402Config.network || "base",
+      });
+
+      // Convertir config del backend al formato esperado por useX402Payment
+      const configForHook = {
+        isLocked: true,
+        price: x402Config.price,
+        network: x402Config.network,
+        description: x402Config.description,
+        currency: "USDC" as const,
+      };
+
+      // ✅ Usar la función del hook x402 (ya inicializado en el nivel superior)
+      await x402UnlockContent(albumData._id, configForHook);
+    } catch (error) {
+      console.error("Error unlocking content:", error);
+      toast.error(tX402("errors.unlockError"), {
+        description:
+          error instanceof Error ? error.message : "Intenta nuevamente",
+      });
+    }
+  };
+
+  // Función simplificada para el botón play/pause - CORREGIDA + BLOQUEADA si premium
   const togglePlay = () => {
+    // ✅ Bloquear si el contenido no está desbloqueado
+    if (!isContentUnlocked) {
+      toast.error(tX402("errors.contentLocked"), {
+        description: tX402("errors.unlockToPlay"),
+      });
+      return;
+    }
+
     if (!scrolling && currentSong) {
       // Usar handlePlayPause del hook directamente
       handlePlayPause();
@@ -394,10 +626,24 @@ export default function CardAlbumMusic({
 
   // Funciones simplificadas para navegación de tracks - ahora usan el contexto global
   const handlePrevTrack = () => {
+    // ✅ Bloquear si el contenido no está desbloqueado
+    if (!isContentUnlocked) {
+      toast.error(tX402("errors.contentLocked"), {
+        description: tX402("errors.unlockToPlay"),
+      });
+      return;
+    }
     handlePrevSong();
   };
 
   const handleNextTrack = () => {
+    // ✅ Bloquear si el contenido no está desbloqueado
+    if (!isContentUnlocked) {
+      toast.error(tX402("errors.contentLocked"), {
+        description: tX402("errors.unlockToPlay"),
+      });
+      return;
+    }
     handleNextSong();
   };
 
@@ -581,6 +827,14 @@ export default function CardAlbumMusic({
 
   // Función simplificada para seleccionar una canción
   const handleSongSelect = (track: NFT, index: number) => {
+    // ✅ Bloquear si el contenido no está desbloqueado
+    if (!isContentUnlocked) {
+      toast.error(tX402("errors.contentLocked"), {
+        description: tX402("errors.unlockToPlay"),
+      });
+      return;
+    }
+
     setCurrentSong(track);
     setActivePlayerId(track._id);
     setIsPlaying(true);
@@ -593,7 +847,101 @@ export default function CardAlbumMusic({
   };
 
   return (
-    <div className="h-full w-full sm:h-[870px] sm:w-full md:w-[540px] md:h-[960px] lg:w-[540px] lg:h-[960px] overflow-hidden font-sans mx-auto">
+    <div className="h-full w-full sm:h-[870px] sm:w-full md:w-[540px] md:h-[960px] lg:w-[540px] lg:h-[960px] overflow-hidden font-sans mx-auto relative">
+      {/* x402 Premium Overlay */}
+      <AnimatePresence>
+        {x402Config &&
+          x402Config.price &&
+          x402Config.recipientAddress &&
+          !isContentUnlocked &&
+          !isCheckingUnlock && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl"
+            >
+              <div className="flex flex-col items-center space-y-6 p-8 max-w-md">
+                {/* Lock Icon */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  className="relative"
+                >
+                  <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center shadow-2xl">
+                    <Lock className="w-12 h-12 text-white" />
+                  </div>
+                  <motion.div
+                    className="absolute inset-0 rounded-full bg-purple-500/30"
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                </motion.div>
+
+                {/* Text Content */}
+                <div className="text-center space-y-3">
+                  <h2 className="text-2xl font-bold text-white">
+                    {tX402("premiumContent")}
+                  </h2>
+                  <p className="text-gray-300 text-sm">
+                    {x402Config.description ||
+                      tX402("unlockDescription", { albumName: albumData.name })}
+                  </p>
+
+                  {/* Price Display */}
+                  <div className="flex items-center justify-center space-x-2 p-4 bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-xl border border-purple-500/30">
+                    <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
+                      {x402Config.price}
+                    </span>
+                    <span className="text-gray-400 text-sm">
+                      {x402Config.currency || "USDC"}
+                    </span>
+                  </div>
+
+                  <p className="text-gray-400 text-xs">
+                    {tX402("oneTimePayment", {
+                      network:
+                        x402Config.network === "base"
+                          ? tX402("baseMainnet")
+                          : tX402("baseSepolia"),
+                    })}
+                  </p>
+                </div>
+
+                {/* Unlock Button */}
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full"
+                >
+                  <Button
+                    onClick={handleUnlockContent}
+                    disabled={!hasWalletConnected || !evmWalletAddress}
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold py-4 px-8 rounded-xl shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {tX402("unlockWithUsdc")}
+                  </Button>
+                </motion.div>
+
+                {/* Benefits List */}
+                {/* <div className="text-left space-y-2 w-full bg-black/40 p-4 rounded-xl border border-gray-700/50">
+                  <p className="text-gray-300 text-xs font-semibold mb-2">
+                    {tX402("includes")}
+                  </p>
+                  <ul className="text-gray-400 text-xs space-y-1">
+                    <li>{tX402("unlimitedAccess")}</li>
+                    <li>{tX402("highQualityStreaming")}</li>
+                    <li>{tX402("directArtistSupport")}</li>
+                    <li>{tX402("noSubscription")}</li>
+                  </ul>
+                </div> */}
+              </div>
+            </motion.div>
+          )}
+      </AnimatePresence>
+
       <div
         ref={containerRef}
         className="h-full snap-y snap-mandatory overflow-y-scroll scrollbar-hide"

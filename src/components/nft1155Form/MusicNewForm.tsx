@@ -49,6 +49,7 @@ import {
   DollarSign,
   Plus,
   Trash2,
+  Lock,
 } from "lucide-react";
 import { useWallets } from "@Src/lib/privy";
 import { ethers } from "ethers";
@@ -57,6 +58,7 @@ import type { CreateCollectionParams } from "@Src/lib/contracts/erc1155";
 import { useRouter } from "next/navigation";
 import { useERC1155Factory } from "@Src/lib/contracts/erc1155";
 import { useTranslations } from "next-intl";
+import { Switch } from "@Src/ui/components/ui/switch";
 
 interface MusicNewFormProps {
   nickname: string;
@@ -98,6 +100,16 @@ export default function MusicNewForm({
 
   // PASO 1: Sistema de pagos
   const [createNewPaymentSystem, setCreateNewPaymentSystem] = useState(true);
+
+  // 🔒 x402: Configuración de contenido premium
+  const [isPremiumAlbum, setIsPremiumAlbum] = useState(false);
+  const [premiumPrice, setPremiumPrice] = useState("0.01");
+  const [premiumNetwork, setPremiumNetwork] = useState<"base" | "base-sepolia">(
+    "base-sepolia"
+  );
+  const [premiumDescription, setPremiumDescription] = useState(
+    "Álbum premium exclusivo"
+  );
   const [paymentSystemName, setPaymentSystemName] = useState("");
   const [paymentSystemDescription, setPaymentSystemDescription] = useState("");
 
@@ -546,6 +558,13 @@ export default function MusicNewForm({
                 >
                   <DollarSign className="w-4 h-4 mr-2" />
                   Moneda
+                </TabsTrigger>
+                <TabsTrigger
+                  value="premium"
+                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white"
+                >
+                  <Lock className="w-4 h-4 mr-2" />
+                  Premium
                 </TabsTrigger>
               </TabsList>
 
@@ -1313,6 +1332,169 @@ export default function MusicNewForm({
                           </div>
                         )}
                       </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* PASO 5: Configuración Premium x402 */}
+                  <TabsContent
+                    value="premium"
+                    className="mt-0 focus-visible:outline-none space-y-4"
+                  >
+                    <div className="space-y-4">
+                      <div className="bg-purple-900/20 border border-purple-600 p-4 rounded-lg">
+                        <h4 className="font-semibold text-purple-400 flex items-center gap-2">
+                          <Lock className="h-5 w-5" />
+                          🔒 Contenido Premium con x402
+                        </h4>
+                        <p className="text-sm text-purple-300 mt-1">
+                          Marca este álbum como premium. Los fans pagarán en
+                          USDC (Base) para desbloquearlo.
+                        </p>
+                      </div>
+
+                      {/* Toggle Premium */}
+                      <div className="flex items-center justify-between p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg">
+                        <div className="space-y-0.5">
+                          <Label
+                            htmlFor="premium-toggle"
+                            className="text-base font-medium text-zinc-100"
+                          >
+                            Álbum Premium
+                          </Label>
+                          <p className="text-sm text-zinc-400">
+                            Requiere pago en USDC para acceder
+                          </p>
+                        </div>
+                        <Switch
+                          id="premium-toggle"
+                          checked={isPremiumAlbum}
+                          onCheckedChange={setIsPremiumAlbum}
+                        />
+                      </div>
+
+                      {/* Configuración (solo visible si isPremiumAlbum) */}
+                      {isPremiumAlbum && (
+                        <div className="space-y-4 p-4 border border-zinc-700 rounded-lg bg-zinc-800/30">
+                          {/* Precio */}
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="premium-price"
+                              className="text-zinc-100"
+                            >
+                              💰 Precio en USDC
+                            </Label>
+                            <div className="flex gap-2">
+                              <span className="flex items-center px-3 bg-zinc-700 rounded-l-md border border-zinc-600 text-zinc-100">
+                                $
+                              </span>
+                              <Input
+                                id="premium-price"
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                value={premiumPrice}
+                                onChange={(e) =>
+                                  setPremiumPrice(e.target.value)
+                                }
+                                placeholder="0.01"
+                                className="flex-1 rounded-l-none bg-zinc-800 border-zinc-700 text-zinc-100"
+                              />
+                            </div>
+                            <p className="text-xs text-zinc-400">
+                              Precio sugerido: $0.01 - $1.00 para álbumes
+                            </p>
+                          </div>
+
+                          {/* Red */}
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="premium-network"
+                              className="text-zinc-100"
+                            >
+                              🌐 Red de Blockchain
+                            </Label>
+                            <Select
+                              value={premiumNetwork}
+                              onValueChange={(v: any) => setPremiumNetwork(v)}
+                            >
+                              <SelectTrigger
+                                id="premium-network"
+                                className="bg-zinc-800 border-zinc-700 text-zinc-100"
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-zinc-800 border-zinc-700">
+                                <SelectItem
+                                  value="base-sepolia"
+                                  className="text-zinc-100 focus:bg-zinc-700"
+                                >
+                                  Base Sepolia (Testnet)
+                                </SelectItem>
+                                <SelectItem
+                                  value="base"
+                                  className="text-zinc-100 focus:bg-zinc-700"
+                                >
+                                  Base (Mainnet)
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-zinc-400">
+                              ⚠️ Usa Sepolia para testing, Base para producción
+                            </p>
+                          </div>
+
+                          {/* Descripción */}
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="premium-description"
+                              className="text-zinc-100"
+                            >
+                              📝 Descripción
+                            </Label>
+                            <Textarea
+                              id="premium-description"
+                              value={premiumDescription}
+                              onChange={(e) =>
+                                setPremiumDescription(e.target.value)
+                              }
+                              placeholder="Ej: Álbum exclusivo para mis fans"
+                              maxLength={100}
+                              className="bg-zinc-800 border-zinc-700 text-zinc-100"
+                            />
+                            <p className="text-xs text-zinc-400">
+                              Se muestra al usuario antes de pagar
+                            </p>
+                          </div>
+
+                          {/* Preview */}
+                          <div className="p-3 bg-zinc-900 border border-zinc-700 rounded-md">
+                            <p className="text-sm font-medium text-zinc-300 mb-2">
+                              Vista previa:
+                            </p>
+                            <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-md">
+                              <p className="text-2xl font-bold text-purple-400">
+                                ${premiumPrice}
+                              </p>
+                              <p className="text-xs text-zinc-400 mt-1">
+                                Pago único en USDC
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Info adicional */}
+                          <div className="text-xs text-zinc-400 space-y-1 p-3 bg-zinc-900/50 rounded-md border border-zinc-700">
+                            <p>ℹ️ Los usuarios pagarán con USDC en Base</p>
+                            <p>
+                              ℹ️ El pago se procesa automáticamente con x402
+                            </p>
+                            <p>ℹ️ Una vez pagado, el acceso es permanente</p>
+                            <p>
+                              ℹ️ Recibes 100% del pago (sin comisiones de
+                              plataforma)
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
                 </form>

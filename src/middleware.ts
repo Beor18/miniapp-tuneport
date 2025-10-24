@@ -1,29 +1,20 @@
 import createMiddleware from "next-intl/middleware";
+import { NextRequest } from "next/server";
 import { locales, defaultLocale } from "./i18n/config";
 
-export default createMiddleware({
-  // A list of all locales that are supported
-  locales: locales,
-
-  // Used when no locale matches
-  defaultLocale: defaultLocale,
-
-  // Always use the default locale for the root path
+// SOLO middleware de internacionalización
+// x402 se maneja en el API route (Node.js runtime sin limitaciones)
+const intlMiddleware = createMiddleware({
+  locales,
+  defaultLocale,
   localePrefix: "as-needed",
-
-  // Detectar idioma desde headers
-  localeDetection: true,
-
-  // Usar redirect en lugar de rewrite para mejor performance
-  alternateLinks: false,
 });
 
+export function middleware(request: NextRequest) {
+  return intlMiddleware(request);
+}
+
 export const config = {
-  // Match only internationalized pathnames
-  matcher: [
-    "/",
-    "/(es|en|pt)/:path*",
-    // Excluir archivos estáticos para mejor performance
-    "/((?!api|_next/static|_next/image|favicon.ico|logo-white.svg|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$|\\.well-known).*)",
-  ],
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  runtime: "nodejs",
 };

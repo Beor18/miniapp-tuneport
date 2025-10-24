@@ -49,6 +49,7 @@ interface PlayerContextType {
   isInitialized: boolean;
   nftData: any[];
   userPlaylist: Track[]; // Nueva propiedad para la playlist del usuario
+  isContentLocked: boolean; // ✅ Estado de bloqueo de contenido premium
   // Estado de transición
   isTransitioning: boolean;
   savedPlaybackState: PlaybackState | null;
@@ -68,6 +69,7 @@ interface PlayerContextType {
   setIsTransitioning: (isTransitioning: boolean) => void;
   setLastNavigationPath: (path: string | null) => void;
   setNftData: (data: any[]) => void;
+  setIsContentLocked: (isLocked: boolean) => void; // ✅ Setter para el estado de bloqueo
   // Nuevos métodos para gestionar la playlist
   addToPlaylist: (track: Track) => void;
   removeFromPlaylist: (trackId: string) => void;
@@ -97,6 +99,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isInitialized, setIsInitialized] = useState(false);
   const [nftData, setNftData] = useState<any[]>([]);
   const [userPlaylist, setUserPlaylist] = useState<Track[]>([]); // Nueva variable de estado para la playlist
+  const [isContentLocked, setIsContentLocked] = useState(false); // ✅ Estado de bloqueo de contenido premium
 
   // Estado para manejar transiciones entre rutas
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -675,6 +678,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     isInitialized,
     nftData,
     userPlaylist,
+    isContentLocked, // ✅ Estado de bloqueo
     isTransitioning,
     savedPlaybackState,
     lastNavigationPath,
@@ -691,6 +695,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsTransitioning,
     setLastNavigationPath: safeSetLastNavigationPath,
     setNftData,
+    setIsContentLocked, // ✅ Setter del estado de bloqueo
     addToPlaylist,
     removeFromPlaylist,
     isInPlaylist,

@@ -9,6 +9,7 @@ import {
   Volume2Icon,
   GiftIcon,
   ListMusicIcon,
+  Lock,
 } from "lucide-react";
 import { Button } from "@Src/ui/components/ui/button";
 import { Slider } from "@Src/ui/components/ui/slider";
@@ -16,14 +17,14 @@ import PaymentDialog from "@Src/components/paymentDialog";
 import { Playlist } from "../playList";
 import Link from "next/link";
 import { usePlayer } from "../../contexts/PlayerContext";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { cn } from "@Src/ui/lib/utils";
 import { LikeButton } from "../ui/LikeButton";
 import { useCandyMachineMint } from "@Src/lib/hooks/solana/useCandyMachineMint";
 import { useBlockchainOperations } from "@Src/lib/hooks/common/useBlockchainOperations";
 import { toast } from "sonner";
 import { useAppKitAccount } from "@Src/lib/privy";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { TradingInterface } from "@Src/components/TradingInterface";
 import { MintModal } from "@Src/components/MintModal";
 import {
@@ -33,6 +34,8 @@ import {
   DialogTitle,
 } from "@Src/ui/components/ui/dialog";
 import { Coins, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useX402Payment } from "@Src/lib/hooks/base/useX402Payment";
 
 interface PlayerBarProps {
   currentSong: any;
@@ -76,6 +79,25 @@ export function PlayerBar({
   setShowPlaylist,
   userId,
 }: PlayerBarProps) {
+  // Traducciones
+  const tX402 = useTranslations("x402");
+
+  // ✅ Hook x402 para desbloquear contenido
+  const { unlockContent: x402UnlockContent, checkUnlockStatus } =
+    useX402Payment({
+      onSuccess: (contentId, txHash) => {
+        console.log("✅ Content unlocked from PlayerBar:", contentId, txHash);
+        toast.success(tX402("success.unlocked"), {
+          description: tX402("success.enjoyContent"),
+        });
+        // Recargar la página para actualizar el estado
+        window.location.reload();
+      },
+      onError: (error) => {
+        console.error("❌ Failed to unlock from PlayerBar:", error);
+      },
+    });
+
   // Hooks para minting
   const { mint, isMinting } = useCandyMachineMint();
   const [mintedNft, setMintedNft] = useState<string | null>(null);
@@ -115,7 +137,72 @@ export function PlayerBar({
     userPlaylist,
     removeFromPlaylist,
     nftData,
+    isContentLocked, // ✅ Estado de bloqueo de contenido premium
+    currentSong: contextCurrentSong, // ✅ Obtener currentSong del contexto que tiene x402Config
+    setIsContentLocked, // ✅ Setter para actualizar el estado de bloqueo
   } = usePlayer();
+
+  // ✅ Usar currentSong del contexto en lugar del prop (tiene más datos)
+  const enrichedCurrentSong = contextCurrentSong || currentSong;
+
+  // ✅ Efecto para verificar el unlock status cuando cambia la canción en PlayerBar
+  useEffect(() => {
+    if (!enrichedCurrentSong || !enrichedCurrentSong.albumId) {
+      setIsContentLocked(false);
+      return;
+    }
+
+    const checkCurrentSongUnlock = async () => {
+      const songConfig = enrichedCurrentSong.x402Config;
+
+      console.log("🎵 PlayerBar - Verificando unlock:", {
+        songName: enrichedCurrentSong.name,
+        albumId: enrichedCurrentSong.albumId,
+        hasSongConfig: !!songConfig,
+        hasPrice: !!songConfig?.price,
+      });
+
+      // Si no tiene configuración x402 o no tiene precio, está desbloqueado
+      if (!songConfig || !songConfig.price || !songConfig.recipientAddress) {
+        console.log("✅ PlayerBar - Contenido libre (no premium)");
+        setIsContentLocked(false);
+        return;
+      }
+
+      // Si no hay wallet, está bloqueado
+      if (!hasWalletConnected || !evmWalletAddress) {
+        console.log("⚠️ PlayerBar - Sin wallet, contenido bloqueado");
+        setIsContentLocked(true);
+        return;
+      }
+
+      console.log("🔍 PlayerBar - Verificando en backend:", {
+        albumId: enrichedCurrentSong.albumId,
+        wallet: evmWalletAddress,
+      });
+
+      // Verificar en el backend
+      try {
+        const status = await checkUnlockStatus(enrichedCurrentSong.albumId);
+        console.log("📥 PlayerBar - Respuesta backend:", {
+          isUnlocked: status.isUnlocked,
+          hasPaid: status.hasPaid,
+        });
+        setIsContentLocked(!status.isUnlocked);
+      } catch (error) {
+        console.error("❌ PlayerBar - Error checking unlock:", error);
+        setIsContentLocked(true);
+      }
+    };
+
+    checkCurrentSongUnlock();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    enrichedCurrentSong?._id,
+    enrichedCurrentSong?.albumId,
+    hasWalletConnected,
+    evmWalletAddress,
+  ]);
 
   // Estados para el formulario de crear playlist
   //console.log("currentSong: ", currentSong);
@@ -405,8 +492,107 @@ export function PlayerBar({
     }
   };
 
+  // ✅ Handler para desbloquear contenido desde PlayerBar
+  const handleUnlockContent = async () => {
+    if (!enrichedCurrentSong || !enrichedCurrentSong.albumId) return;
+
+    const songConfig = enrichedCurrentSong.x402Config;
+    if (!songConfig || !songConfig.price || !songConfig.recipientAddress)
+      return;
+
+    if (!hasWalletConnected || !evmWalletAddress) {
+      toast.error(tX402("errors.walletRequired"), {
+        description: tX402("errors.connectWallet"),
+      });
+      return;
+    }
+
+    try {
+      await x402UnlockContent(enrichedCurrentSong.albumId, songConfig);
+    } catch (error) {
+      console.error("Error unlocking content:", error);
+    }
+  };
+
   return (
     <div className={playerBarClass}>
+      {/* ✅ x402 Premium Overlay - Adaptado al PlayerBar */}
+      <AnimatePresence>
+        {enrichedCurrentSong?.x402Config &&
+          enrichedCurrentSong.x402Config.price &&
+          enrichedCurrentSong.x402Config.recipientAddress &&
+          isContentLocked && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 z-50 flex items-center justify-center bg-zinc-950/95 backdrop-blur-xl border-t border-purple-500/30"
+            >
+              <div className="flex items-center gap-6 px-6">
+                {/* Lock Icon - Más pequeño */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  className="relative flex-shrink-0"
+                >
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center shadow-xl">
+                    <Lock className="w-8 h-8 text-white" />
+                  </div>
+                  <motion.div
+                    className="absolute inset-0 rounded-full bg-purple-500/30"
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                </motion.div>
+
+                {/* Content - Horizontal layout */}
+                <div className="flex items-center gap-6 flex-1">
+                  <div className="text-left">
+                    <h3 className="text-lg font-bold text-white mb-1">
+                      {tX402("premiumContent")}
+                    </h3>
+                    <p className="text-gray-400 text-sm">
+                      {enrichedCurrentSong.x402Config.description ||
+                        tX402("unlockDescription", {
+                          albumName:
+                            enrichedCurrentSong.albumName ||
+                            enrichedCurrentSong.name_album ||
+                            "this content",
+                        })}
+                    </p>
+                  </div>
+
+                  {/* Price Display - Compacto */}
+                  <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-lg border border-purple-500/30">
+                    <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
+                      {enrichedCurrentSong.x402Config.price}
+                    </span>
+                    <span className="text-gray-400 text-xs">
+                      {enrichedCurrentSong.x402Config.currency || "USDC"}
+                    </span>
+                  </div>
+
+                  {/* Unlock Button - Compacto */}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      onClick={handleUnlockContent}
+                      disabled={!hasWalletConnected || !evmWalletAddress}
+                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      {tX402("unlockWithUsdc")}
+                    </Button>
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+      </AnimatePresence>
+
       <div className="w-full bg-zinc-950 border-t border-zinc-900 text-white py-3 px-4">
         {currentSong ? (
           <div className="flex items-center justify-between gap-4">
@@ -450,13 +636,31 @@ export function PlayerBar({
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9 text-zinc-400 hover:text-white hover:bg-zinc-800"
-                  onClick={handlePrevSong}
+                  onClick={() => {
+                    // ✅ Bloquear si el contenido está bloqueado
+                    if (isContentLocked) {
+                      toast.error(tX402("errors.contentLocked"), {
+                        description: tX402("errors.unlockToPlay"),
+                      });
+                      return;
+                    }
+                    handlePrevSong();
+                  }}
                 >
                   <SkipBackIcon className="h-5 w-5" />
                 </Button>
                 <Button
                   className="bg-white hover:bg-white text-black rounded-full w-10 h-10 p-2 flex items-center justify-center"
-                  onClick={handlePlayPause}
+                  onClick={() => {
+                    // ✅ Bloquear si el contenido está bloqueado
+                    if (isContentLocked) {
+                      toast.error(tX402("errors.contentLocked"), {
+                        description: tX402("errors.unlockToPlay"),
+                      });
+                      return;
+                    }
+                    handlePlayPause();
+                  }}
                 >
                   {isPlaying ? (
                     <PauseIcon className="h-10 w-10" />
@@ -468,7 +672,16 @@ export function PlayerBar({
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9 text-zinc-400 hover:text-white hover:bg-zinc-800"
-                  onClick={handleNextSong}
+                  onClick={() => {
+                    // ✅ Bloquear si el contenido está bloqueado
+                    if (isContentLocked) {
+                      toast.error(tX402("errors.contentLocked"), {
+                        description: tX402("errors.unlockToPlay"),
+                      });
+                      return;
+                    }
+                    handleNextSong();
+                  }}
                 >
                   <SkipForwardIcon className="h-5 w-5" />
                 </Button>

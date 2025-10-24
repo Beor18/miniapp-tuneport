@@ -18,6 +18,7 @@ import {
   Music,
   Coins,
   X,
+  Lock,
 } from "lucide-react";
 import PlayerHome from "../playerHome";
 import Link from "next/link";
@@ -26,9 +27,10 @@ import useAudioControls from "../../lib/hooks/useAudioControls";
 import { LikeButton } from "../ui/LikeButton";
 import { useCandyMachineMint } from "@Src/lib/hooks/solana/useCandyMachineMint";
 import { useBlockchainOperations } from "@Src/lib/hooks/common/useBlockchainOperations";
+import { useX402Payment } from "@Src/lib/hooks/base/useX402Payment";
 import { toast } from "sonner";
 import { useAppKitAccount } from "@Src/lib/privy";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { MintModal } from "@Src/components/MintModal";
 import { TradingInterface } from "@Src/components/TradingInterface";
 import { ShareToFarcaster } from "@Src/components/ShareToFarcaster";
@@ -56,6 +58,7 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
   // Hook para traducciones
   const tCommon = useTranslations("common");
   const tMusic = useTranslations("music");
+  const tX402 = useTranslations("x402");
 
   // Hooks para minting
   const { mint, isMinting } = useCandyMachineMint();
@@ -100,7 +103,30 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
     isInPlaylist,
     handleTogglePlaylist,
     handlePlayPause,
+    setIsContentLocked, // ✅ Para controlar el bloqueo global
   } = useAudioControls();
+
+  // x402 Premium States (para la canción actual)
+  const [currentSongUnlockStatus, setCurrentSongUnlockStatus] = useState<
+    Record<string, boolean>
+  >({});
+  const [isCheckingUnlock, setIsCheckingUnlock] = useState(false);
+
+  // ✅ Hook x402 para desbloquear contenido
+  const { unlockContent: x402UnlockContent, checkUnlockStatus } =
+    useX402Payment({
+      onSuccess: (contentId, txHash) => {
+        console.log("✅ Content unlocked:", contentId, txHash);
+        setCurrentSongUnlockStatus((prev) => ({ ...prev, [contentId]: true }));
+        setIsContentLocked(false); // Desbloquear globalmente
+        toast.success(tX402("success.unlocked"), {
+          description: tX402("success.enjoyContent"),
+        });
+      },
+      onError: (error) => {
+        console.error("❌ Failed to unlock:", error);
+      },
+    });
 
   // Preparamos los datos una sola vez sin useEffect
   const enrichedNftData = React.useMemo(() => {
@@ -138,11 +164,17 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
         );
         setCurrentSong(enrichedNftData[0]);
         setActivePlayerId(enrichedNftData[0]._id);
-        setIsPlaying(true);
+
+        // ✅ NO reproducir automáticamente - dejamos que el useEffect de verificación lo maneje
+        setIsPlaying(false);
       }
     }, 1000);
 
-    return () => clearTimeout(loadTimer);
+    return () => {
+      clearTimeout(loadTimer);
+      // ✅ Resetear el estado de bloqueo al salir de /foryou
+      setIsContentLocked(false);
+    };
   }, [
     enrichedNftData,
     currentSong,
@@ -150,6 +182,7 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
     setActivePlayerId,
     setIsPlaying,
     setNftData,
+    setIsContentLocked,
   ]);
 
   // Referencia para controlar si es la primera renderización
@@ -221,7 +254,7 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
         }, 400); // Tiempo suficiente para que termine la navegación
       }
     };
-  }, [setShowFloatingPlayer, currentSong]);
+  }, [setShowFloatingPlayer, currentSong, pathname]);
 
   // Efecto para sincronizar el scroll con la canción actual sin bucles
   useEffect(() => {
@@ -237,6 +270,109 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
       }
     }
   }, [currentSong, scrolling, enrichedNftData]);
+
+  // ✅ Efecto para verificar el unlock status cuando cambia la canción actual
+  useEffect(() => {
+    if (!currentSong || !currentSong.albumId) {
+      // Si no hay canción o no tiene albumId, desbloquear
+      setIsContentLocked(false);
+      return;
+    }
+
+    const checkCurrentSongUnlock = async () => {
+      const songConfig = currentSong.x402Config;
+
+      // Si no tiene configuración x402 o no tiene precio, está desbloqueado
+      if (!songConfig || !songConfig.price || !songConfig.recipientAddress) {
+        setCurrentSongUnlockStatus((prev) => ({
+          ...prev,
+          [currentSong.albumId]: true,
+        }));
+        setIsContentLocked(false);
+        // ✅ Reproducir automáticamente si no está bloqueado
+        setTimeout(() => setIsPlaying(true), 100);
+        return;
+      }
+
+      console.log("🏠 CardMusicHome - Verificando unlock:", {
+        songName: currentSong.name,
+        albumId: currentSong.albumId,
+        previousStatus: currentSongUnlockStatus[currentSong.albumId],
+        hasWallet: hasWalletConnected,
+      });
+
+      // Si ya sabemos que está desbloqueado, no verificar de nuevo
+      if (currentSongUnlockStatus[currentSong.albumId] === true) {
+        console.log("✅ CardMusicHome - Ya desbloqueado (cache)");
+        setIsContentLocked(false);
+        // ✅ Reproducir automáticamente si está desbloqueado
+        setTimeout(() => setIsPlaying(true), 100);
+        return;
+      }
+
+      // Si no hay wallet, está bloqueado
+      if (!hasWalletConnected || !evmWalletAddress) {
+        console.log("⚠️ CardMusicHome - Sin wallet, contenido bloqueado");
+        setCurrentSongUnlockStatus((prev) => ({
+          ...prev,
+          [currentSong.albumId]: false, // ✅ Explícitamente false sin wallet
+        }));
+        setIsContentLocked(true);
+        // 🔒 Pausar inmediatamente si está bloqueado
+        setIsPlaying(false);
+        setIsCheckingUnlock(false); // ✅ Terminar verificación
+        return;
+      }
+
+      // Verificar en el backend solo si no hemos verificado antes
+      if (currentSongUnlockStatus[currentSong.albumId] === undefined) {
+        console.log("🔍 CardMusicHome - Verificando en backend:", {
+          albumId: currentSong.albumId,
+          wallet: evmWalletAddress,
+        });
+        setIsCheckingUnlock(true);
+        try {
+          const status = await checkUnlockStatus(currentSong.albumId);
+          console.log("📥 CardMusicHome - Respuesta backend:", {
+            isUnlocked: status.isUnlocked,
+            hasPaid: status.hasPaid,
+          });
+          setCurrentSongUnlockStatus((prev) => ({
+            ...prev,
+            [currentSong.albumId]: status.isUnlocked,
+          }));
+          setIsContentLocked(!status.isUnlocked);
+
+          // ✅ Reproducir o pausar según el resultado
+          if (status.isUnlocked) {
+            console.log("🎉 CardMusicHome - Desbloqueado, reproduciendo");
+            setTimeout(() => setIsPlaying(true), 100);
+          } else {
+            console.log("🔒 CardMusicHome - Bloqueado, pausando");
+            setIsPlaying(false);
+          }
+        } catch (error) {
+          console.error("❌ CardMusicHome - Error checking unlock:", error);
+          setCurrentSongUnlockStatus((prev) => ({
+            ...prev,
+            [currentSong.albumId]: false, // ✅ Explícitamente false en caso de error
+          }));
+          setIsContentLocked(true);
+          setIsPlaying(false);
+        } finally {
+          setIsCheckingUnlock(false);
+        }
+      } else {
+        // Ya verificamos antes y está bloqueado
+        console.log("🔒 CardMusicHome - Ya bloqueado (cache)");
+        setIsContentLocked(true);
+        setIsPlaying(false);
+      }
+    };
+
+    checkCurrentSongUnlock();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSong?._id, hasWalletConnected, evmWalletAddress]);
 
   // Efecto para detectar scroll y actualizar la canción actual
   useEffect(() => {
@@ -263,7 +399,9 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
           if (newSong && newSong._id !== currentId) {
             setCurrentSong(newSong);
             setActivePlayerId(newSong._id);
-            setIsPlaying(true);
+
+            // ✅ Pausar temporalmente, el useEffect decidirá si reproducir
+            setIsPlaying(false);
           }
         }
       }, 200);
@@ -284,9 +422,42 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
     setIsPlaying,
   ]);
 
+  // ✅ Handler para desbloquear contenido
+  const handleUnlockContent = async () => {
+    if (!currentSong || !currentSong.albumId) return;
+
+    const songConfig = currentSong.x402Config;
+    if (!songConfig || !songConfig.price || !songConfig.recipientAddress)
+      return;
+
+    if (!hasWalletConnected || !evmWalletAddress) {
+      toast.error(tX402("errors.walletRequired"), {
+        description: tX402("errors.connectWallet"),
+      });
+      return;
+    }
+
+    try {
+      await x402UnlockContent(currentSong.albumId, songConfig);
+    } catch (error) {
+      console.error("Error unlocking content:", error);
+    }
+  };
+
   // Función simplificada para el botón play/pause
   const togglePlay = () => {
     if (!scrolling && currentSong) {
+      // ✅ Verificar si la canción actual está bloqueada
+      const songConfig = currentSong.x402Config;
+      if (songConfig?.price && songConfig?.recipientAddress) {
+        const isUnlocked = currentSongUnlockStatus[currentSong.albumId];
+        if (!isUnlocked) {
+          toast.error(tX402("errors.contentLocked"), {
+            description: tX402("errors.unlockToPlay"),
+          });
+          return;
+        }
+      }
       // Usar handlePlayPause del hook directamente
       handlePlayPause();
     } else if (!currentSong && enrichedNftData.length > 0) {
@@ -294,17 +465,74 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
       const firstSong = enrichedNftData[0];
       setCurrentSong(firstSong);
       setActivePlayerId(firstSong._id);
-      setIsPlaying(true);
+
+      // Verificar si está bloqueada
+      const firstSongConfig = firstSong.x402Config;
+      if (firstSongConfig?.price && firstSongConfig?.recipientAddress) {
+        setIsPlaying(false);
+      } else {
+        setIsPlaying(true);
+      }
     }
   };
 
   // Funciones para navegación de tracks
   const handlePrevTrack = () => {
-    handlePrevSong();
+    // Encontrar la canción anterior
+    const currentIndex = enrichedNftData.findIndex(
+      (song: any) => song._id === currentSong?._id
+    );
+    const prevIndex =
+      currentIndex > 0 ? currentIndex - 1 : enrichedNftData.length - 1;
+    const prevSong = enrichedNftData[prevIndex];
+
+    if (prevSong) {
+      setCurrentSong(prevSong);
+      setActivePlayerId(prevSong._id);
+
+      // ✅ Solo reproducir si NO está bloqueada
+      const prevSongConfig = prevSong.x402Config;
+      const isPrevUnlocked = currentSongUnlockStatus[prevSong.albumId];
+
+      if (
+        !prevSongConfig?.price ||
+        !prevSongConfig?.recipientAddress ||
+        isPrevUnlocked === true
+      ) {
+        setIsPlaying(true);
+      } else {
+        setIsPlaying(false);
+      }
+    }
   };
 
   const handleNextTrack = () => {
-    handleNextSong();
+    // Encontrar la canción siguiente
+    const currentIndex = enrichedNftData.findIndex(
+      (song: any) => song._id === currentSong?._id
+    );
+    const nextIndex =
+      currentIndex < enrichedNftData.length - 1 ? currentIndex + 1 : 0;
+    const nextSong = enrichedNftData[nextIndex];
+
+    if (nextSong) {
+      setCurrentSong(nextSong);
+      setActivePlayerId(nextSong._id);
+
+      // ✅ Solo reproducir si NO está bloqueada
+      const nextSongConfig = nextSong.x402Config;
+      const isNextUnlocked = currentSongUnlockStatus[nextSong.albumId];
+
+      if (
+        !nextSongConfig?.price ||
+        !nextSongConfig?.recipientAddress ||
+        isNextUnlocked === true
+      ) {
+        setIsPlaying(true);
+      } else {
+        setIsPlaying(false);
+      }
+    }
   };
 
   // Función para manejar el procesamiento de minting
@@ -558,6 +786,98 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60" />
                 </div>
+
+                {/* ✅ x402 Premium Overlay - Solo si es la canción actual Y confirmamos que está bloqueada */}
+                <AnimatePresence>
+                  {currentSong?._id === song._id &&
+                    song.x402Config?.price &&
+                    song.x402Config?.recipientAddress &&
+                    currentSongUnlockStatus[song.albumId] === false &&
+                    !isCheckingUnlock && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                        className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xl"
+                      >
+                        <div className="flex flex-col items-center space-y-6 p-8 max-w-md">
+                          {/* Lock Icon */}
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 200,
+                              damping: 15,
+                            }}
+                            className="relative"
+                          >
+                            <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center shadow-2xl">
+                              <Lock className="w-12 h-12 text-white" />
+                            </div>
+                            <motion.div
+                              className="absolute inset-0 rounded-full bg-purple-500/30"
+                              animate={{
+                                scale: [1, 1.2, 1],
+                                opacity: [0.5, 0, 0.5],
+                              }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            />
+                          </motion.div>
+
+                          {/* Text Content */}
+                          <div className="text-center space-y-3">
+                            <h2 className="text-2xl font-bold text-white">
+                              {tX402("premiumContent")}
+                            </h2>
+                            <p className="text-gray-300 text-sm">
+                              {song.x402Config.description ||
+                                tX402("unlockDescription", {
+                                  albumName: song.albumName || "this album",
+                                })}
+                            </p>
+
+                            {/* Price Display */}
+                            <div className="flex items-center justify-center space-x-2 p-4 bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-xl border border-purple-500/30">
+                              <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
+                                {song.x402Config.price}
+                              </span>
+                              <span className="text-gray-400 text-sm">
+                                {song.x402Config.currency || "USDC"}
+                              </span>
+                            </div>
+
+                            <p className="text-gray-400 text-xs">
+                              {tX402("oneTimePayment", {
+                                network:
+                                  song.x402Config.network === "base"
+                                    ? tX402("baseMainnet")
+                                    : tX402("baseSepolia"),
+                              })}
+                            </p>
+                          </div>
+
+                          {/* Unlock Button */}
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="w-full"
+                          >
+                            <Button
+                              onClick={handleUnlockContent}
+                              disabled={
+                                !hasWalletConnected || !evmWalletAddress
+                              }
+                              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold py-4 px-8 rounded-xl shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {tX402("unlockWithUsdc")}
+                            </Button>
+                          </motion.div>
+                        </div>
+                      </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Layout principal con flexbox */}
                 <div className="relative h-full flex flex-col">

@@ -582,5 +582,29 @@
       "verified": "Verified",
       "tip": "TIP"
     }
+  },
+  "x402": {
+    "premiumContent": "Premium Content",
+    "unlockDescription": "Unlock {albumName} to access all tracks",
+    "oneTimePayment": "One-time payment on {network}",
+    "unlockWithUsdc": "Unlock",
+    "includes": "Includes:",
+    "unlimitedAccess": "• Unlimited access to all tracks",
+    "highQualityStreaming": "• High quality streaming",
+    "directArtistSupport": "• Direct artist support",
+    "noSubscription": "• No subscription, one-time payment",
+    "baseMainnet": "Base",
+    "baseSepolia": "Base Sepolia",
+    "errors": {
+      "connectWallet": "Connect your wallet",
+      "connectWalletDescription": "You need to connect your wallet to unlock this premium content",
+      "evmWalletRequired": "EVM wallet required",
+      "evmWalletRequiredDescription": "x402 requires a Base/Ethereum wallet. Connect a compatible wallet.",
+      "invalidConfiguration": "Invalid configuration",
+      "priceNotConfigured": "Content price is not configured correctly",
+      "unlockError": "Error unlocking content",
+      "contentLocked": "Content Locked",
+      "unlockToPlay": "Unlock this premium content to play"
+    }
   }
 }

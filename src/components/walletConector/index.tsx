@@ -688,12 +688,12 @@ export default function WalletConnector() {
 
   // RESTO DEL RENDER LOGIC SOLO PARA ENTORNOS NORMALES (no Mini Apps)
   // ❗ IMPORTANTE: Mini Apps ya están completamente manejados arriba (líneas 565-636)
-  console.log("🚨 RENDER NORMAL - Checks:", {
-    isReady,
-    isMiniApp,
-    hasWalletConnected,
-    isRegistered,
-  });
+  // console.log("🚨 RENDER NORMAL - Checks:", {
+  //   isReady,
+  //   isMiniApp,
+  //   hasWalletConnected,
+  //   isRegistered,
+  // });
 
   if (isRegistered === null) {
     return null;
@@ -727,14 +727,14 @@ export default function WalletConnector() {
     );
   }
 
-  console.log("🎯 RENDER FINAL - CustomUserPill:", {
-    isRegistered,
-    userData: !!userData,
-    isMiniApp,
-    isConnected,
-    address: !!address,
-    hasWalletConnected,
-  });
+  // console.log("🎯 RENDER FINAL - CustomUserPill:", {
+  //   isRegistered,
+  //   userData: !!userData,
+  //   isMiniApp,
+  //   isConnected,
+  //   address: !!address,
+  //   hasWalletConnected,
+  // });
 
   return (
     <div className="flex items-center gap-3">
