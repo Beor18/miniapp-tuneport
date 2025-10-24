@@ -58,7 +58,10 @@
     "couldNotCreateCollection": "Could not create the collection",
     "errorCreatingCollection": "Error creating collection",
     "pleaseTryAgain": "Please try again",
-    "address": "Address"
+    "address": "Address",
+    "step": "Step",
+    "of": "of",
+    "stepProgress": "Step {current} of {total}"
   },
   "navigation": {
     "home": "Home",
@@ -266,7 +269,16 @@
     "royaltyPercentageError": "Commission percentages must add up to 100%",
     "maxSupplyDescription": "Limit songs to create",
     "myMusicProject": "My Music Project",
-    "musicProjectDescription": "Music project with my collaborators"
+    "musicProjectDescription": "Music project with my collaborators",
+    "completeNameAndSymbol": "Please complete the name and symbol",
+    "enterPaymentSystemName": "Please enter a name for the payment system",
+    "completeAllWalletAddresses": "Please complete all wallet addresses",
+    "enterValidPremiumPrice": "Please enter a valid price for premium content",
+    "stepInfo": "Info",
+    "stepPayments": "Payments",
+    "stepCollaborators": "Collabs",
+    "stepCurrency": "Currency",
+    "stepPremium": "Premium"
   },
   "album": {
     "createMusicAlbum": "🎵 Create Album",

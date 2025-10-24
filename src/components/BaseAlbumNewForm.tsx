@@ -110,6 +110,8 @@ export default function BaseAlbumNewForm({
   const [transactionPending, setTransactionPending] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [activeTab, setActiveTab] = useState("collection");
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 5;
 
   // PASO 1: Sistema de pagos
   const [createNewPaymentSystem, setCreateNewPaymentSystem] = useState(true);
@@ -319,6 +321,81 @@ export default function BaseAlbumNewForm({
     []
   );
 
+  // Navegación entre pasos
+  const getTabFromStep = (step: number): string => {
+    const tabs = [
+      "collection",
+      "payments",
+      "collaborators",
+      "payment",
+      "premium",
+    ];
+    return tabs[step - 1] || "collection";
+  };
+
+  const validateCurrentStep = (): boolean => {
+    switch (currentStep) {
+      case 1: // Collection info
+        if (!name || !symbol) {
+          toast.error(tForms("completeNameAndSymbol"));
+          return false;
+        }
+        return true;
+      case 2: // Payments
+        if (!paymentSystemName) {
+          toast.error(tForms("enterPaymentSystemName"));
+          return false;
+        }
+        return true;
+      case 3: // Collaborators
+        if (getTotalMintPercentage() !== 100) {
+          toast.error(tForms("mintPercentageError"));
+          return false;
+        }
+        if (getTotalRoyaltyPercentage() !== 100) {
+          toast.error(tForms("royaltyPercentageError"));
+          return false;
+        }
+        const hasInvalidAddress = collaborators.some(
+          (c) => !c.address || c.address.length < 10
+        );
+        if (hasInvalidAddress) {
+          toast.error(tForms("completeAllWalletAddresses"));
+          return false;
+        }
+        return true;
+      case 4: // Payment token
+        return true;
+      case 5: // Premium
+        if (
+          isPremiumAlbum &&
+          (!premiumPrice || parseFloat(premiumPrice) <= 0)
+        ) {
+          toast.error(tForms("enterValidPremiumPrice"));
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  };
+
+  const goToNextStep = () => {
+    if (validateCurrentStep() && currentStep < totalSteps) {
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      setActiveTab(getTabFromStep(nextStep));
+    }
+  };
+
+  const goToPreviousStep = () => {
+    if (currentStep > 1) {
+      const prevStep = currentStep - 1;
+      setCurrentStep(prevStep);
+      setActiveTab(getTabFromStep(prevStep));
+    }
+  };
+
   // Resetear el formulario
   const resetForm = useCallback(() => {
     setName("");
@@ -333,6 +410,7 @@ export default function BaseAlbumNewForm({
     setCollectionType("SINGLE");
     setIsCreated(false);
     setActiveTab("collection");
+    setCurrentStep(1);
 
     // Reset payment system
     setCreateNewPaymentSystem(true);
@@ -548,6 +626,23 @@ export default function BaseAlbumNewForm({
             <DialogTitle className="text-xl font-semibold text-zinc-100 pr-10">
               {getDialogTitle()}
             </DialogTitle>
+
+            {/* Indicador de progreso */}
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center justify-between text-sm text-zinc-400">
+                <span>
+                  {tCommon("step")} {currentStep} {tCommon("of")} {totalSteps}
+                </span>
+                <span>{Math.round((currentStep / totalSteps) * 100)}%</span>
+              </div>
+              <div className="w-full bg-zinc-800 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-blue-600 to-blue-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                />
+              </div>
+            </div>
+
             <Button
               variant="ghost"
               size="sm"
@@ -605,46 +700,74 @@ export default function BaseAlbumNewForm({
 
             <Tabs
               value={activeTab}
-              onValueChange={setActiveTab}
+              onValueChange={() => {}} // Deshabilitar cambio directo de tabs
               className="flex-grow flex flex-col min-h-0"
             >
-              <TabsList className="px-4 pt-2 pb-2 justify-start bg-zinc-900 w-full overflow-x-auto gap-1 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-900">
-                <TabsTrigger
-                  value="collection"
-                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-xs whitespace-nowrap px-2 py-2 flex-shrink-0"
-                >
-                  <Music2Icon className="w-4 h-4 md:mr-1.5" />
-                  <span className="hidden md:inline">Info</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="payments"
-                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-xs whitespace-nowrap px-2 py-2 flex-shrink-0"
-                >
-                  <Zap className="w-4 h-4 md:mr-1.5" />
-                  <span className="hidden md:inline">Pagos</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="collaborators"
-                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-xs whitespace-nowrap px-2 py-2 flex-shrink-0"
-                >
-                  <Users className="w-4 h-4 md:mr-1.5" />
-                  <span className="hidden md:inline">Colabs</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="payment"
-                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-xs whitespace-nowrap px-2 py-2 flex-shrink-0"
-                >
-                  <DollarSign className="w-4 h-4 md:mr-1.5" />
-                  <span className="hidden md:inline">Moneda</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="premium"
-                  className="text-zinc-400 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-xs whitespace-nowrap px-2 py-2 flex-shrink-0"
-                >
-                  <Lock className="w-4 h-4 md:mr-1.5" />
-                  <span className="hidden md:inline">Premium</span>
-                </TabsTrigger>
-              </TabsList>
+              {/* Indicadores de pasos (visual, no clickeable) */}
+              <div className="px-4 pt-2 pb-2 bg-zinc-900 w-full border-b border-zinc-800">
+                <div className="flex items-center justify-between gap-2">
+                  <div
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${
+                      currentStep === 1
+                        ? "bg-zinc-800 text-white"
+                        : "text-zinc-500"
+                    }`}
+                  >
+                    <Music2Icon className="w-4 h-4" />
+                    <span className="text-xs font-medium hidden sm:inline">
+                      {tForms("stepInfo")}
+                    </span>
+                  </div>
+                  <div
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${
+                      currentStep === 2
+                        ? "bg-zinc-800 text-white"
+                        : "text-zinc-500"
+                    }`}
+                  >
+                    <Zap className="w-4 h-4" />
+                    <span className="text-xs font-medium hidden sm:inline">
+                      {tForms("stepPayments")}
+                    </span>
+                  </div>
+                  <div
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${
+                      currentStep === 3
+                        ? "bg-zinc-800 text-white"
+                        : "text-zinc-500"
+                    }`}
+                  >
+                    <Users className="w-4 h-4" />
+                    <span className="text-xs font-medium hidden sm:inline">
+                      {tForms("stepCollaborators")}
+                    </span>
+                  </div>
+                  <div
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${
+                      currentStep === 4
+                        ? "bg-zinc-800 text-white"
+                        : "text-zinc-500"
+                    }`}
+                  >
+                    <DollarSign className="w-4 h-4" />
+                    <span className="text-xs font-medium hidden sm:inline">
+                      {tForms("stepCurrency")}
+                    </span>
+                  </div>
+                  <div
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${
+                      currentStep === 5
+                        ? "bg-zinc-800 text-white"
+                        : "text-zinc-500"
+                    }`}
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span className="text-xs font-medium hidden sm:inline">
+                      {tForms("stepPremium")}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
               <div className="flex-grow overflow-y-auto p-4 sm:p-6">
                 <form className="space-y-6 text-zinc-100">
@@ -1497,23 +1620,52 @@ export default function BaseAlbumNewForm({
           </div>
 
           <DialogFooter className="px-6 py-4 border-t border-zinc-800 bg-zinc-900">
-            <Button
-              onClick={createCollectionFunc}
-              disabled={
-                isCreating ||
-                isCreated ||
-                !name ||
-                !symbol ||
-                !evmAddress ||
-                isUploadingImage ||
-                getTotalMintPercentage() !== 100 ||
-                getTotalRoyaltyPercentage() !== 100 ||
-                false // collectionType is always SINGLE
-              }
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 hover:shadow-lg text-white disabled:opacity-50 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-500 transition-all font-medium"
-            >
-              {getButtonText()}
-            </Button>
+            <div className="flex gap-3 w-full">
+              {/* Botón Anterior */}
+              {currentStep > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={goToPreviousStep}
+                  disabled={isCreating || isCreated}
+                  className="flex-1 bg-zinc-800 border-zinc-700 text-zinc-100 hover:bg-zinc-700 hover:text-zinc-100 disabled:opacity-50 transition-all"
+                >
+                  ← {tCommon("previous")}
+                </Button>
+              )}
+
+              {/* Botón Siguiente o Crear */}
+              {currentStep < totalSteps ? (
+                <Button
+                  type="button"
+                  onClick={goToNextStep}
+                  disabled={isCreating || isCreated}
+                  className={`bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 hover:shadow-lg text-white disabled:opacity-50 transition-all font-medium ${
+                    currentStep === 1 ? "w-full" : "flex-1"
+                  }`}
+                >
+                  {tCommon("next")} →
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={createCollectionFunc}
+                  disabled={
+                    isCreating ||
+                    isCreated ||
+                    !name ||
+                    !symbol ||
+                    !evmAddress ||
+                    isUploadingImage ||
+                    getTotalMintPercentage() !== 100 ||
+                    getTotalRoyaltyPercentage() !== 100
+                  }
+                  className="flex-1 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 hover:shadow-lg text-white disabled:opacity-50 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-500 transition-all font-medium"
+                >
+                  {getButtonText()}
+                </Button>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -58,7 +58,10 @@
     "couldNotCreateCollection": "No se pudo crear la colección",
     "errorCreatingCollection": "Error al crear la colección",
     "pleaseTryAgain": "Por favor inténtalo de nuevo",
-    "address": "Dirección"
+    "address": "Dirección",
+    "step": "Paso",
+    "of": "de",
+    "stepProgress": "Paso {current} de {total}"
   },
   "navigation": {
     "home": "Inicio",
@@ -225,7 +228,16 @@
     "royaltyPercentageError": "Los porcentajes de comisiones deben sumar 100%",
     "maxSupplyDescription": "Limite canciones a crear",
     "myMusicProject": "Mi Proyecto Musical",
-    "musicProjectDescription": "Proyecto musical con mis colaboradores"
+    "musicProjectDescription": "Proyecto musical con mis colaboradores",
+    "completeNameAndSymbol": "Por favor completa el nombre y símbolo",
+    "enterPaymentSystemName": "Por favor ingresa un nombre para el sistema de pagos",
+    "completeAllWalletAddresses": "Por favor completa todas las direcciones de wallet",
+    "enterValidPremiumPrice": "Por favor ingresa un precio válido para el contenido premium",
+    "stepInfo": "Info",
+    "stepPayments": "Pagos",
+    "stepCollaborators": "Colabs",
+    "stepCurrency": "Moneda",
+    "stepPremium": "Premium"
   },
   "album": {
     "createMusicAlbum": "🎵 Crear Álbum",
