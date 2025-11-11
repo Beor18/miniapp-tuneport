@@ -556,179 +556,180 @@ export function PlayerBarMobile({
 
   return (
     <>
-      {/* Player compacto (siempre visible en móvil) */}
-      <div
-        className={`fixed ${bottomPosition} left-0 right-0 z-[40] bg-zinc-900 text-white md:hidden shadow-2xl relative`}
-      >
-        {/* ✅ x402 Premium Overlay - Vista Compacta Mobile */}
-        <AnimatePresence>
-          {enrichedCurrentSong?.x402Config &&
-            enrichedCurrentSong.x402Config.price &&
-            enrichedCurrentSong.x402Config.recipientAddress &&
-            isContentLocked && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.3 }}
-                className="absolute inset-0 z-50 flex items-center justify-between px-4 bg-gradient-to-r from-purple-900/95 via-blue-900/95 to-purple-900/95 backdrop-blur-xl border-t border-purple-500/30"
-              >
+      {/* ✅ x402 Premium Overlay - Vista Compacta Mobile */}
+      <AnimatePresence>
+        {enrichedCurrentSong?.x402Config &&
+          enrichedCurrentSong.x402Config.price &&
+          enrichedCurrentSong.x402Config.recipientAddress &&
+          isContentLocked && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className={`fixed ${bottomPosition} left-0 right-0 z-[60] md:hidden bg-gradient-to-r from-purple-900/95 via-blue-900/95 to-purple-900/95 backdrop-blur-xl border-t border-purple-500/30 py-3 px-4 pointer-events-auto`}
+            >
+              <div className="flex items-center gap-3 w-full">
                 {/* Lock Icon + Info */}
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                    className="relative flex-shrink-0"
-                  >
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center shadow-xl">
-                      <Lock className="w-6 h-6 text-white" />
-                    </div>
-                  </motion.div>
-
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-bold text-white truncate">
-                      {tX402("premiumContent")}
-                    </h4>
-                    <p className="text-xs text-gray-300 truncate">
-                      {enrichedCurrentSong.x402Config.price}{" "}
-                      {enrichedCurrentSong.x402Config.currency || "USDC"}
-                    </p>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  className="flex-shrink-0"
+                >
+                  <div className="p-2 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full">
+                    <Lock className="h-5 w-5 text-white" />
                   </div>
+                </motion.div>
+
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold text-white mb-0.5 truncate">
+                    {tX402("premiumContent")}
+                  </h4>
+                  <p className="text-xs text-zinc-400 truncate">
+                    {enrichedCurrentSong.x402Config.price}{" "}
+                    {enrichedCurrentSong.x402Config.currency || "USDC"}
+                  </p>
                 </div>
 
                 {/* Unlock Button */}
-                <motion.div whileTap={{ scale: 0.95 }}>
-                  <Button
-                    onClick={handleUnlockContent}
-                    disabled={!hasWalletConnected || !evmWalletAddress}
-                    className="bg-white hover:bg-gray-100 text-purple-900 font-semibold px-4 py-2 rounded-lg shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                  >
-                    {tX402("unlockWithUsdc")}
-                  </Button>
-                </motion.div>
-              </motion.div>
-            )}
-        </AnimatePresence>
+                <Button
+                  onClick={handleUnlockContent}
+                  disabled={!hasWalletConnected || !evmWalletAddress}
+                  className="bg-white hover:bg-gray-100 text-purple-900 font-semibold px-4 py-2 rounded-lg shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap flex-shrink-0"
+                  size="sm"
+                >
+                  {tX402("unlockWithUsdc")}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+      </AnimatePresence>
 
-        {/* Barra compacta */}
+      {/* Player compacto (siempre visible en móvil) - Hidden cuando está bloqueado */}
+      {!isContentLocked && (
         <div
-          className="flex items-center px-4 py-3 border-t border-zinc-800 cursor-pointer"
-          onClick={toggleExpanded}
+          className={`fixed ${bottomPosition} left-0 right-0 z-[40] bg-zinc-900 text-white md:hidden shadow-2xl`}
         >
-          {/* Imagen del álbum */}
-          <Link
-            href={`/album/${currentSong.slug}`}
-            onClick={(e) => e.stopPropagation()}
+          {/* Barra compacta */}
+          <div
+            className="flex items-center px-4 py-3 border-t border-zinc-800 cursor-pointer"
+            onClick={toggleExpanded}
           >
-            <img
-              src={`${currentSong.image}`}
-              alt="Album cover"
-              width={48}
-              height={48}
-              className="w-12 h-12 rounded-md object-cover"
+            {/* Imagen del álbum */}
+            <Link
+              href={`/album/${currentSong.slug}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={`${currentSong.image}`}
+                alt="Album cover"
+                width={48}
+                height={48}
+                className="w-12 h-12 rounded-md object-cover"
+              />
+            </Link>
+
+            {/* Info de la canción */}
+            <div className="flex-1 ml-3 min-w-0">
+              <h3 className="font-medium text-white truncate text-sm">
+                {currentSong.name}
+              </h3>
+              <p className="text-xs text-zinc-400 truncate">
+                {currentSong.artist_name ||
+                  currentSong.artist ||
+                  "Unknown artist"}
+              </p>
+            </div>
+
+            {/* Like Button compacto */}
+            <LikeButton
+              nftId={currentSong?._id || ""}
+              variant="minimal"
+              size="sm"
+              showCount={false}
+              className="mr-2"
             />
-          </Link>
 
-          {/* Info de la canción */}
-          <div className="flex-1 ml-3 min-w-0">
-            <h3 className="font-medium text-white truncate text-sm">
-              {currentSong.name}
-            </h3>
-            <p className="text-xs text-zinc-400 truncate">
-              {currentSong.artist_name ||
-                currentSong.artist ||
-                "Unknown artist"}
-            </p>
-          </div>
-
-          {/* Like Button compacto */}
-          <LikeButton
-            nftId={currentSong?._id || ""}
-            variant="minimal"
-            size="sm"
-            showCount={false}
-            className="mr-2"
-          />
-
-          {/* Trading Button compacto */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsTradingModalOpen(true);
-            }}
-            className="mr-2 text-zinc-400 hover:text-white hover:bg-zinc-800 h-8 w-8"
-            title="Trade Tokens"
-          >
-            <Coins className="h-4 w-4" />
-          </Button>
-
-          {/* Add/Remove Playlist Button compacto */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (currentSong) {
-                handleTogglePlaylist(currentSong);
-              }
-            }}
-            className="mr-2 text-zinc-400 hover:text-white hover:bg-zinc-800 h-8 w-8 relative"
-            title={
-              isCurrentSongInPlaylist ? "Remove from queue" : "Add to queue"
-            }
-          >
-            <ListMusicIcon className="h-4 w-4" />
-            {isCurrentSongInPlaylist ? (
-              <MinusIcon className="h-2 w-2 absolute -top-1 -right-1 text-white bg-red-500 rounded-full p-[1px]" />
-            ) : (
-              <PlusIcon className="h-2 w-2 absolute -top-1 -right-1 text-white bg-green-500 rounded-full p-[1px]" />
-            )}
-          </Button>
-
-          {/* Botón de play/pause */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              // ✅ Bloquear si el contenido está bloqueado
-              if (isContentLocked) {
-                toast.error(tX402("errors.contentLocked"), {
-                  description: tX402("errors.unlockToPlay"),
-                });
-                return;
-              }
-              handlePlayPause();
-            }}
-            className="mr-2 text-white hover:bg-zinc-800"
-          >
-            {isPlaying ? (
-              <PauseIcon className="h-5 w-5" />
-            ) : (
-              <PlayIcon className="h-5 w-5" />
-            )}
-          </Button>
-
-          {/* Icono para expandir */}
-          <ChevronUpIcon className="h-5 w-5 text-zinc-400" />
-        </div>
-
-        {/* Barra de progreso muy fina */}
-        <div className="pb-1">
-          <div className="w-full bg-zinc-800 h-1 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-red-800 transition-all duration-300"
-              style={{
-                width:
-                  duration > 0 ? `${(currentTime / duration) * 100}%` : "0%",
+            {/* Trading Button compacto */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsTradingModalOpen(true);
               }}
-            />
+              className="mr-2 text-zinc-400 hover:text-white hover:bg-zinc-800 h-8 w-8"
+              title="Trade Tokens"
+            >
+              <Coins className="h-4 w-4" />
+            </Button>
+
+            {/* Add/Remove Playlist Button compacto */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (currentSong) {
+                  handleTogglePlaylist(currentSong);
+                }
+              }}
+              className="mr-2 text-zinc-400 hover:text-white hover:bg-zinc-800 h-8 w-8 relative"
+              title={
+                isCurrentSongInPlaylist ? "Remove from queue" : "Add to queue"
+              }
+            >
+              <ListMusicIcon className="h-4 w-4" />
+              {isCurrentSongInPlaylist ? (
+                <MinusIcon className="h-2 w-2 absolute -top-1 -right-1 text-white bg-red-500 rounded-full p-[1px]" />
+              ) : (
+                <PlusIcon className="h-2 w-2 absolute -top-1 -right-1 text-white bg-green-500 rounded-full p-[1px]" />
+              )}
+            </Button>
+
+            {/* Botón de play/pause */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                // ✅ Bloquear si el contenido está bloqueado
+                if (isContentLocked) {
+                  toast.error(tX402("errors.contentLocked"), {
+                    description: tX402("errors.unlockToPlay"),
+                  });
+                  return;
+                }
+                handlePlayPause();
+              }}
+              className="mr-2 text-white hover:bg-zinc-800"
+            >
+              {isPlaying ? (
+                <PauseIcon className="h-5 w-5" />
+              ) : (
+                <PlayIcon className="h-5 w-5" />
+              )}
+            </Button>
+
+            {/* Icono para expandir */}
+            <ChevronUpIcon className="h-5 w-5 text-zinc-400" />
+          </div>
+
+          {/* Barra de progreso muy fina */}
+          <div className="pb-1">
+            <div className="w-full bg-zinc-800 h-1 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-red-800 transition-all duration-300"
+                style={{
+                  width:
+                    duration > 0 ? `${(currentTime / duration) * 100}%` : "0%",
+                }}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Player expandido (pantalla completa) */}
       <AnimatePresence>
@@ -743,7 +744,7 @@ export function PlayerBarMobile({
               stiffness: 300,
               duration: 0.4,
             }}
-            className="fixed inset-0 z-[200] bg-gradient-to-b from-zinc-900 via-zinc-900 to-black text-white md:hidden flex flex-col relative"
+            className="fixed inset-0 z-[9999] bg-gradient-to-b from-zinc-900 via-zinc-900 to-black text-white md:hidden flex flex-col relative"
           >
             {/* ✅ x402 Premium Overlay - Vista Expandida Mobile */}
             <AnimatePresence>
