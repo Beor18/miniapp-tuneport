@@ -223,6 +223,7 @@ export default function Providers({ children }: { children: ReactNode }) {
               loginMethods: ["farcaster", "wallet"],
               embeddedWallets: {
                 createOnLogin: "all-users",
+                showWalletUIs: false,
               },
               // Configurar cadena por defecto dinámicamente
               defaultChain: getDefaultChain(),
