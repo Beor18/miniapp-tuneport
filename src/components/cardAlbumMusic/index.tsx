@@ -28,6 +28,7 @@ import {
 import { LikeButton } from "../ui/LikeButton";
 import PlayerHome from "../playerHome";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import useAudioControls from "../../lib/hooks/useAudioControls";
 import { useCandyMachineMint } from "@Src/lib/hooks/solana/useCandyMachineMint";
@@ -179,6 +180,10 @@ export default function CardAlbumMusic({
   albumData,
   nftsData,
 }: CardAlbumMusicProps) {
+  // ✅ Traducciones
+  const t = useTranslations();
+  const router = useRouter();
+
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isTrackListOpen, setIsTrackListOpen] = useState(false);
   const [scrolling, setScrolling] = useState(false);
@@ -221,12 +226,25 @@ export default function CardAlbumMusic({
   // ✅ Hook x402 debe llamarse en el nivel superior del componente
   const { unlockContent: x402UnlockContent } = useX402Payment({
     onSuccess: (contentId, txHash) => {
-      console.log("✅ Content unlocked:", contentId, txHash);
+      console.log(
+        "✅ Content unlocked from CardAlbumMusic:",
+        contentId,
+        txHash
+      );
+
+      // Actualizar el estado de unlock localmente
       setIsContentUnlocked(true);
       setIsContentLocked(false); // ✅ Actualizar contexto global
+
+      toast.success(t("x402.content_unlocked"), {
+        description: t("x402.enjoy_premium_content"),
+      });
+
+      // Refrescar datos del servidor sin perder estado del cliente
+      router.refresh();
     },
     onError: (error) => {
-      console.error("❌ Failed to unlock:", error);
+      console.error("❌ Failed to unlock from CardAlbumMusic:", error);
     },
   });
 

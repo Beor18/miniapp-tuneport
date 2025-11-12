@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import PlayerHome from "../playerHome";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import useAudioControls from "../../lib/hooks/useAudioControls";
 import { LikeButton } from "../ui/LikeButton";
 import { useCandyMachineMint } from "@Src/lib/hooks/solana/useCandyMachineMint";
@@ -47,6 +47,7 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrolling, setScrolling] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isMintModalOpen, setIsMintModalOpen] = useState(false);
   const [selectedSongForMint, setSelectedSongForMint] = useState<any>(null);
@@ -117,11 +118,19 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
     useX402Payment({
       onSuccess: (contentId, txHash) => {
         console.log("✅ Content unlocked:", contentId, txHash);
-        setCurrentSongUnlockStatus((prev) => ({ ...prev, [contentId]: true }));
-        setIsContentLocked(false); // Desbloquear globalmente
+
+        // Actualizar el estado de unlock localmente
+        setCurrentSongUnlockStatus((prev) => ({
+          ...prev,
+          [contentId]: true,
+        }));
+
         toast.success(tX402("success.unlocked"), {
           description: tX402("success.enjoyContent"),
         });
+
+        // Refrescar datos del servidor sin perder estado del cliente
+        router.refresh();
       },
       onError: (error) => {
         console.error("❌ Failed to unlock:", error);
@@ -148,6 +157,37 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
       };
     });
   }, [nftData, collectionData]);
+
+  // ✅ Referencia para guardar el último estado de unlock verificado
+  const lastUnlockStatusRef = useRef<Record<string, boolean>>({});
+
+  // ✅ Efecto reactivo para manejar cambios en el unlock status
+  useEffect(() => {
+    if (!currentSong?.albumId) return;
+
+    const unlockStatus = currentSongUnlockStatus[currentSong.albumId];
+    const lastStatus = lastUnlockStatusRef.current[currentSong.albumId];
+
+    // Solo actuar si el status cambió realmente
+    if (unlockStatus !== lastStatus && unlockStatus !== undefined) {
+      lastUnlockStatusRef.current[currentSong.albumId] = unlockStatus;
+
+      if (unlockStatus === true) {
+        setIsContentLocked(false);
+        // Si se desbloquea, activar reproducción
+        setIsPlaying(true);
+      } else if (unlockStatus === false) {
+        setIsContentLocked(true);
+        // Si está bloqueado, pausar
+        setIsPlaying(false);
+      }
+    }
+  }, [
+    currentSongUnlockStatus,
+    currentSong?.albumId,
+    setIsContentLocked,
+    setIsPlaying,
+  ]);
 
   // Efecto para cargar la primera canción automáticamente al entrar en la página
   // y actualizar la lista global de canciones (nftData)
@@ -279,21 +319,47 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
       return;
     }
 
+    const songConfig = currentSong.x402Config;
+
+    // Si no tiene configuración x402 o no tiene precio, está desbloqueado
+    if (!songConfig || !songConfig.price || !songConfig.recipientAddress) {
+      setCurrentSongUnlockStatus((prev) => ({
+        ...prev,
+        [currentSong.albumId]: true,
+      }));
+      return;
+    }
+
+    // ✅ Si el usuario es el dueño (recipientAddress), desbloquear automáticamente
+    if (
+      hasWalletConnected &&
+      evmWalletAddress &&
+      songConfig.recipientAddress &&
+      evmWalletAddress.toLowerCase() ===
+        songConfig.recipientAddress.toLowerCase()
+    ) {
+      console.log("👑 CardMusicHome - Usuario es el dueño, desbloqueando");
+      setCurrentSongUnlockStatus((prev) => ({
+        ...prev,
+        [currentSong.albumId]: true,
+      }));
+      setIsContentLocked(false);
+      return;
+    }
+
+    // 🔒 INMEDIATAMENTE: Si no hay wallet, está bloqueado (sin async)
+    if (!hasWalletConnected || !evmWalletAddress) {
+      console.log("⚠️ CardMusicHome - Sin wallet, contenido bloqueado");
+      setCurrentSongUnlockStatus((prev) => ({
+        ...prev,
+        [currentSong.albumId]: false,
+      }));
+      setIsCheckingUnlock(false);
+      return;
+    }
+
+    // Función async solo para cuando SÍ hay wallet
     const checkCurrentSongUnlock = async () => {
-      const songConfig = currentSong.x402Config;
-
-      // Si no tiene configuración x402 o no tiene precio, está desbloqueado
-      if (!songConfig || !songConfig.price || !songConfig.recipientAddress) {
-        setCurrentSongUnlockStatus((prev) => ({
-          ...prev,
-          [currentSong.albumId]: true,
-        }));
-        setIsContentLocked(false);
-        // ✅ Reproducir automáticamente si no está bloqueado
-        setTimeout(() => setIsPlaying(true), 100);
-        return;
-      }
-
       console.log("🏠 CardMusicHome - Verificando unlock:", {
         songName: currentSong.name,
         albumId: currentSong.albumId,
@@ -304,23 +370,6 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
       // Si ya sabemos que está desbloqueado, no verificar de nuevo
       if (currentSongUnlockStatus[currentSong.albumId] === true) {
         console.log("✅ CardMusicHome - Ya desbloqueado (cache)");
-        setIsContentLocked(false);
-        // ✅ Reproducir automáticamente si está desbloqueado
-        setTimeout(() => setIsPlaying(true), 100);
-        return;
-      }
-
-      // Si no hay wallet, está bloqueado
-      if (!hasWalletConnected || !evmWalletAddress) {
-        console.log("⚠️ CardMusicHome - Sin wallet, contenido bloqueado");
-        setCurrentSongUnlockStatus((prev) => ({
-          ...prev,
-          [currentSong.albumId]: false, // ✅ Explícitamente false sin wallet
-        }));
-        setIsContentLocked(true);
-        // 🔒 Pausar inmediatamente si está bloqueado
-        setIsPlaying(false);
-        setIsCheckingUnlock(false); // ✅ Terminar verificación
         return;
       }
 
@@ -341,38 +390,29 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
             ...prev,
             [currentSong.albumId]: status.isUnlocked,
           }));
-          setIsContentLocked(!status.isUnlocked);
-
-          // ✅ Reproducir o pausar según el resultado
-          if (status.isUnlocked) {
-            console.log("🎉 CardMusicHome - Desbloqueado, reproduciendo");
-            setTimeout(() => setIsPlaying(true), 100);
-          } else {
-            console.log("🔒 CardMusicHome - Bloqueado, pausando");
-            setIsPlaying(false);
-          }
         } catch (error) {
           console.error("❌ CardMusicHome - Error checking unlock:", error);
           setCurrentSongUnlockStatus((prev) => ({
             ...prev,
-            [currentSong.albumId]: false, // ✅ Explícitamente false en caso de error
+            [currentSong.albumId]: false,
           }));
-          setIsContentLocked(true);
-          setIsPlaying(false);
         } finally {
           setIsCheckingUnlock(false);
         }
       } else {
         // Ya verificamos antes y está bloqueado
         console.log("🔒 CardMusicHome - Ya bloqueado (cache)");
-        setIsContentLocked(true);
-        setIsPlaying(false);
       }
     };
 
     checkCurrentSongUnlock();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSong?._id, hasWalletConnected, evmWalletAddress]);
+  }, [
+    currentSong?._id,
+    currentSong?.albumId,
+    hasWalletConnected,
+    evmWalletAddress,
+  ]);
 
   // Efecto para detectar scroll y actualizar la canción actual
   useEffect(() => {
