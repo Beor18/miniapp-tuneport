@@ -27,5 +27,5 @@
   "baseBuilder": {
     "allowedAddresses": ["0x308D03A537baAf5A7F54060d28718BEe77F700EF"]
   },
-  "tags": ["music", "playlist", "miniapp", "artist", "baseapp"]
+  "tags": ["music", "earnings", "artists", "playlists", "audio"]
 }
