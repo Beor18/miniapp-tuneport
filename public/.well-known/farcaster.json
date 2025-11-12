@@ -17,7 +17,8 @@
     "tagline": "Where sound becomes value",
     "ogTitle": "Tuneport",
     "ogDescription": "Create, earn, and own your music. Tuneport gives value to every second of sound.",
-    "ogImageUrl": "https://miniapp.tuneport.xyz/preview.png"
+    "ogImageUrl": "https://miniapp.tuneport.xyz/preview.png",
+    "tags": ["music", "baseapp", "artist", "playlist", "sound"]
   },
   "accountAssociation": {
     "header": "eyJmaWQiOjExMjk4OTgsInR5cGUiOiJhdXRoIiwia2V5IjoiMHgwQjNkNEM2RTI0NjREZWRhMTE4QTlmZDA4RDNjOUJGZjVCZGQyQ2ZjIn0",
@@ -26,6 +27,5 @@
   },
   "baseBuilder": {
     "allowedAddresses": ["0x308D03A537baAf5A7F54060d28718BEe77F700EF"]
-  },
-  "tags": ["music", "baseapp", "artist", "playlist", "audio"]
+  }
 }
