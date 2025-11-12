@@ -34,6 +34,7 @@ import { useLocale } from "next-intl";
 // Cache global para evitar re-verificaciones innecesarias
 const userDataCache = new Map<string, any>();
 const verificationPromises = new Map<string, Promise<any>>();
+const fidAddressCache = new Map<number, string | null>(); // Cache para addresses de Neynar por FID
 
 // Hook optimizado que previene re-renders durante navegación
 function useStableAuth() {
@@ -134,11 +135,18 @@ export default function WalletConnector() {
     console.log("🚨 SIMPLE DETECTION:", isMiniApp);
   }, [isMiniApp]);
 
-  // 🆕 NEYNAR API: Obtener address desde FID (mejorada para ENS)
+  // 🆕 NEYNAR API: Obtener address desde FID (mejorada para ENS) con CACHE
   const getAddressFromFID = useCallback(
     async (fid: number): Promise<string | null> => {
+      // ⚡ OPTIMIZACIÓN: Verificar cache primero
+      if (fidAddressCache.has(fid)) {
+        const cached = fidAddressCache.get(fid);
+        console.log("⚡ FID address desde cache:", fid, "->", cached);
+        return cached!;
+      }
+
       try {
-        console.log("🔍 Obteniendo address desde FID:", fid);
+        console.log("🔍 Obteniendo address desde FID (sin cache):", fid);
 
         const response = await fetch(
           `https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`,
@@ -157,45 +165,33 @@ export default function WalletConnector() {
         const data = await response.json();
         const user = data.users?.[0];
 
-        console.log(
-          "📋 Respuesta completa de Neynar para FID",
-          fid,
-          ":",
-          JSON.stringify(user, null, 2)
-        );
-
         if (!user) {
           console.log("❌ No se encontró usuario para FID:", fid);
+          fidAddressCache.set(fid, null);
           return null;
         }
 
+        let finalAddress: string | null = null;
+
         // 🎯 PRIORIDAD 1: Direcciones ETH verificadas
         if (user?.verified_addresses?.eth_addresses?.[0]) {
-          const ethAddress = user.verified_addresses.eth_addresses[0];
-          console.log("✅ Address ETH verificada encontrada:", ethAddress);
-          return ethAddress;
+          finalAddress = user.verified_addresses.eth_addresses[0];
+          console.log("✅ Address ETH verificada encontrada:", finalAddress);
         }
-
         // 🎯 PRIORIDAD 2: Dirección custodial (para usuarios con wallets embedded)
-        if (user?.custodial_address) {
-          console.log(
-            "✅ Address custodial encontrada:",
-            user.custodial_address
-          );
-          return user.custodial_address;
+        else if (user?.custodial_address) {
+          finalAddress = user.custodial_address;
+          console.log("✅ Address custodial encontrada:", finalAddress);
         }
-
         // 🎯 PRIORIDAD 3: Buscar en connected_addresses si existe
-        if (user?.connected_addresses?.length > 0) {
-          const connectedAddress = user.connected_addresses[0]?.address;
-          if (connectedAddress) {
-            console.log("✅ Address conectada encontrada:", connectedAddress);
-            return connectedAddress;
+        else if (user?.connected_addresses?.length > 0) {
+          finalAddress = user.connected_addresses[0]?.address || null;
+          if (finalAddress) {
+            console.log("✅ Address conectada encontrada:", finalAddress);
           }
         }
-
         // 🎯 PRIORIDAD 4: Si tiene ENS, intentar resolver desde Privy
-        if (
+        else if (
           user?.username?.endsWith(".eth") ||
           user?.display_name?.endsWith(".eth")
         ) {
@@ -207,15 +203,19 @@ export default function WalletConnector() {
             ensName,
             "- usando address vacía temporalmente"
           );
-          // Por ahora retornamos null, pero podríamos implementar resolución ENS aquí
-          return null;
+          finalAddress = null;
         }
 
-        console.log("⚠️ No se encontró ninguna address para FID:", fid);
-        console.log("📋 Campos disponibles:", Object.keys(user));
-        return null;
+        if (!finalAddress) {
+          console.log("⚠️ No se encontró ninguna address para FID:", fid);
+        }
+
+        // ⚡ OPTIMIZACIÓN: Guardar en cache
+        fidAddressCache.set(fid, finalAddress);
+        return finalAddress;
       } catch (error) {
         console.error("❌ Error obteniendo address desde Neynar:", error);
+        fidAddressCache.set(fid, null);
         return null;
       }
     },
@@ -224,104 +224,94 @@ export default function WalletConnector() {
 
   // 🎯 AUTO-REGISTRO: Solo cuando Privy ya está autenticado (no interferir con Privy login)
   useEffect(() => {
-    console.log("🔍 AUTO-REGISTRO CHECK:", {
-      isMiniApp,
-      isAuthenticated,
-      verificationInProgress: verificationRef.current,
-      farcasterData: !!farcasterData,
-      fid: farcasterData?.fid,
-    });
+    // ⚡ OPTIMIZACIÓN: Early returns más agresivos
+    if (!isMiniApp || !isAuthenticated) {
+      return;
+    }
 
-    if (!isMiniApp || !isAuthenticated || verificationRef.current) {
-      console.log("⏭️ AUTO-REGISTRO: Saltando por condiciones");
+    // ⚡ OPTIMIZACIÓN: Si ya está verificando, no duplicar
+    if (verificationRef.current) {
+      return;
+    }
+
+    // ⚡ OPTIMIZACIÓN: Si ya está registrado, no verificar de nuevo
+    if (isRegistered === true && userData) {
       return;
     }
 
     // Solo usar datos de Privy (simplificado)
     const fid = farcasterData?.fid;
 
-    if (fid && isAuthenticated) {
-      console.log("🚀 MiniKit: INICIANDO AUTO-REGISTRO para FID:", fid);
-      verificationRef.current = true;
-      setIsProcessingMiniApp(true);
-
-      const registerAfterPrivyAuth = async () => {
-        try {
-          console.log("🔍 MiniKit: Verificando si usuario existe...");
-
-          // 🎯 PASO 1: Verificar si el usuario ya existe por farcaster_username
-          const existingUser = await getUserData({
-            farcaster_username: farcasterData.username || undefined,
-          });
-
-          if (existingUser) {
-            console.log("✅ MiniKit: Usuario ya existe");
-            setUserData(existingUser);
-            setIsRegistered(true);
-            return;
-          }
-
-          console.log("🆕 MiniKit: Usuario no existe, creando nuevo...");
-
-          // 🎯 PASO 2: Si no existe, crear usuario nuevo
-          const verifiedAddress = await getAddressFromFID(fid);
-
-          // 🔧 FALLBACK: Si no hay address desde Neynar, usar la de Privy si está disponible
-          const finalAddress = verifiedAddress || evmWalletAddress || "";
-
-          console.log("🏠 Direcciones disponibles:", {
-            neynarAddress: verifiedAddress,
-            privyEvmAddress: evmWalletAddress,
-            finalAddress: finalAddress,
-          });
-
-          const nickname = farcasterData.username
-            ? `${farcasterData.username}${fid}`
-            : `user${fid}`;
-
-          const userData = {
-            name:
-              farcasterData.displayName ||
-              farcasterData.username ||
-              `User ${fid}`,
-            nickname,
-            email: userParams.email || "",
-            address: finalAddress || wallets[0].address || "",
-            address_solana: solanaWalletAddress || "",
-            type: "artist",
-            farcaster_fid: fid,
-            farcaster_username: farcasterData.username || "",
-            farcaster_display_name: farcasterData.displayName || "",
-            farcaster_pfp: farcasterData.pfp || "",
-            farcaster_bio: farcasterData.bio || "",
-            farcaster_verified: true,
-          };
-
-          const newUser = await createUser(userData);
-          if (newUser) {
-            setUserData(newUser);
-            setIsRegistered(true);
-            console.log("✅ MiniKit: Auto-registro exitoso");
-          }
-        } catch (error) {
-          console.error("❌ MiniKit: Error en auto-registro:", error);
-        } finally {
-          verificationRef.current = false;
-          setIsProcessingMiniApp(false);
-        }
-      };
-
-      registerAfterPrivyAuth();
+    if (!fid) {
+      return;
     }
-  }, [
-    isMiniApp,
-    isAuthenticated,
-    farcasterData,
-    getAddressFromFID,
-    userParams.email,
-    setUserData,
-    setIsRegistered,
-  ]);
+
+    console.log("🚀 MiniKit: INICIANDO AUTO-REGISTRO para FID:", fid);
+    verificationRef.current = true;
+    setIsProcessingMiniApp(true);
+
+    const registerAfterPrivyAuth = async () => {
+      try {
+        // 🎯 PASO 1: Verificar si el usuario ya existe por farcaster_username
+        const existingUser = await getUserData({
+          farcaster_username: farcasterData.username || undefined,
+        });
+
+        if (existingUser) {
+          console.log("✅ MiniKit: Usuario ya existe (cache evitó creación)");
+          setUserData(existingUser);
+          setIsRegistered(true);
+          return;
+        }
+
+        console.log("🆕 MiniKit: Usuario no existe, creando nuevo...");
+
+        // 🎯 PASO 2: Si no existe, crear usuario nuevo
+        const verifiedAddress = await getAddressFromFID(fid);
+
+        // 🔧 FALLBACK: Si no hay address desde Neynar, usar la de Privy si está disponible
+        const finalAddress = verifiedAddress || evmWalletAddress || "";
+
+        const nickname = farcasterData.username
+          ? `${farcasterData.username}${fid}`
+          : `user${fid}`;
+
+        const userData = {
+          name:
+            farcasterData.displayName ||
+            farcasterData.username ||
+            `User ${fid}`,
+          nickname,
+          email: userParams.email || "",
+          address: finalAddress || wallets[0]?.address || "",
+          address_solana: solanaWalletAddress || "",
+          type: "artist",
+          farcaster_fid: fid,
+          farcaster_username: farcasterData.username || "",
+          farcaster_display_name: farcasterData.displayName || "",
+          farcaster_pfp: farcasterData.pfp || "",
+          farcaster_bio: farcasterData.bio || "",
+          farcaster_verified: true,
+        };
+
+        const newUser = await createUser(userData);
+        if (newUser) {
+          setUserData(newUser);
+          setIsRegistered(true);
+          console.log("✅ MiniKit: Auto-registro exitoso");
+        }
+      } catch (error) {
+        console.error("❌ MiniKit: Error en auto-registro:", error);
+      } finally {
+        verificationRef.current = false;
+        setIsProcessingMiniApp(false);
+      }
+    };
+
+    registerAfterPrivyAuth();
+    // ⚡ OPTIMIZACIÓN: Reducir dependencias para evitar re-ejecuciones innecesarias
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMiniApp, isAuthenticated, farcasterData?.fid, isRegistered, userData]);
 
   // 🚫 FUNCIÓN DUPLICADA ELIMINADA: getAddressFromFID ya está definida arriba
 
@@ -395,6 +385,7 @@ export default function WalletConnector() {
       setUserData(null);
       return null;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     farcasterData,
     userParams.email,
@@ -556,18 +547,25 @@ export default function WalletConnector() {
 
   // Effect para verificación - altamente optimizado (SOLO para entornos normales, NO Mini Apps)
   useEffect(() => {
+    // ⚡ OPTIMIZACIÓN: Early returns más agresivos
     if (!isReady || isMiniApp) {
-      console.log("⏭️ VERIFICACIÓN NORMAL: Saltando", { isReady, isMiniApp });
       return;
     }
-
-    console.log("🔍 VERIFICACIÓN NORMAL: Ejecutando para entorno normal");
 
     const currentAddressKey = `${userParams.evm || ""}-${
       userParams.solana || ""
     }-${userParams.farcaster_username || ""}-${userParams.nickname || ""}`;
 
     if (hasWalletConnected) {
+      // ⚡ OPTIMIZACIÓN: Verificar si ya está registrado antes de verificar de nuevo
+      if (
+        isRegistered === true &&
+        userData &&
+        addressKeyRef.current === currentAddressKey
+      ) {
+        return; // Ya verificado con estos mismos datos
+      }
+
       // Solo verificar si cambió algún parámetro Y hay al menos un parámetro válido
       const hasValidParam =
         userParams.evm ||
@@ -595,6 +593,8 @@ export default function WalletConnector() {
         addressKeyRef.current = "";
       }
     }
+    // ⚡ OPTIMIZACIÓN: Remover dependencias innecesarias que causan re-renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isReady,
     isMiniApp,
@@ -603,16 +603,16 @@ export default function WalletConnector() {
     userParams.solana,
     userParams.farcaster_username,
     userParams.nickname,
-    verifyUser,
-    setIsRegistered,
-    setUserData,
+    isRegistered,
+    userData,
   ]);
 
   // Función de logout simplificada SIN interfaz con el player
   const handleLogout = useCallback(() => {
-    // Solo limpiar cache y referencias del wallet
+    // ⚡ OPTIMIZACIÓN: Limpiar todos los caches
     userDataCache.clear();
     verificationPromises.clear();
+    fidAddressCache.clear(); // Limpiar cache de FIDs de Neynar
     verificationRef.current = false;
     addressKeyRef.current = "";
 
