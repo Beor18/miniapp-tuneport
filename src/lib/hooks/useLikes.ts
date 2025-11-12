@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 import { useLikesContext } from "@Src/contexts/LikesContext";
-import { useAuthUser } from "./useAuthUser";
+import { useAuthUser } from "@Src/contexts/AuthUserContext"; // 🔥 Usar Context en lugar del hook directo
 
 interface UseLikesProps {
   nftId: string;
@@ -42,26 +42,51 @@ export function useLikes({
         isLoading: false,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nftId]); // Solo depender del nftId para evitar loops
 
-  // Cargar estado desde el servidor si hay userId y no hay datos
-  useEffect(() => {
-    if (userId && nftId && !likeState.isLoading && isAuthenticated) {
-      // Solo cargar si no tenemos datos o si son los datos iniciales por defecto
-      const shouldLoad = likeState.likesCount === 0 && !likeState.isLiked;
-      if (shouldLoad) {
-        loadLikeStatusGlobal(nftId, userId);
-      }
-    }
-  }, [userId, nftId, isAuthenticated]); // Simplificamos las dependencias
+  // 🔥 DESHABILITADO: Carga automática de likes causa loop infinito (30+ fetches simultáneos)
+  // Los likes ahora solo se cargan cuando el usuario interactúa con el botón de like
+  // o cuando se pasa initialLikesCount/initialIsLiked desde el servidor
+
+  // useEffect(() => {
+  //   if (!userId || !nftId || !isAuthenticated) return;
+  //   const currentState = getLikeState(nftId);
+  //   const shouldLoad =
+  //     currentState.likesCount === 0 &&
+  //     !currentState.isLiked &&
+  //     !currentState.isLoading;
+  //   if (shouldLoad) {
+  //     loadLikeStatusGlobal(nftId, userId);
+  //   }
+  // }, [userId, nftId, isAuthenticated]);
 
   const handleToggleLike = useCallback(async () => {
     if (!isAuthenticated || !userId) {
       console.warn("Usuario no autenticado para dar like");
       return;
     }
+
+    // 🔥 Cargar estado antes del toggle si no hay datos
+    const currentState = getLikeState(nftId);
+    const hasNoData =
+      currentState.likesCount === 0 &&
+      !currentState.isLiked &&
+      !currentState.isLoading;
+
+    if (hasNoData) {
+      await loadLikeStatusGlobal(nftId, userId);
+    }
+
     await toggleLikeGlobal(nftId, userId);
-  }, [nftId, userId, isAuthenticated, toggleLikeGlobal]);
+  }, [
+    nftId,
+    userId,
+    isAuthenticated,
+    toggleLikeGlobal,
+    getLikeState,
+    loadLikeStatusGlobal,
+  ]);
 
   const loadLikeStatus = useCallback(async () => {
     if (!userId || !nftId || !isAuthenticated) return;

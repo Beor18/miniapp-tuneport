@@ -73,6 +73,7 @@ export default function WalletConnector() {
   const locale = useLocale();
   const verificationRef = useRef<boolean>(false);
   const addressKeyRef = useRef<string>("");
+  const lastVerificationTimeRef = useRef<number>(0); // 🔥 Rate limiting timestamp
 
   // Obtener específicamente las wallets de Solana para mejor detección
   //const { wallets: solanaWallets, ready: solanaReady } = useSolanaWallets();
@@ -545,7 +546,7 @@ export default function WalletConnector() {
 
   // 🚫 AUTO-REGISTRO COMPLEJO ELIMINADO: Ya tenemos auto-registro inmediato con FID
 
-  // Effect para verificación - altamente optimizado (SOLO para entornos normales, NO Mini Apps)
+  // Effect para verificación - altamente optimizado CON DEBOUNCE Y RATE LIMITING (SOLO para entornos normales, NO Mini Apps)
   useEffect(() => {
     // ⚡ OPTIMIZACIÓN: Early returns más agresivos
     if (!isReady || isMiniApp) {
@@ -557,33 +558,43 @@ export default function WalletConnector() {
     }-${userParams.farcaster_username || ""}-${userParams.nickname || ""}`;
 
     if (hasWalletConnected) {
-      // ⚡ OPTIMIZACIÓN: Verificar si ya está registrado antes de verificar de nuevo
-      if (
-        isRegistered === true &&
-        userData &&
-        addressKeyRef.current === currentAddressKey
-      ) {
-        return; // Ya verificado con estos mismos datos
-      }
+      // 🔥 CRÍTICO: Solo verificar si hay al menos una dirección válida (no undefined)
+      const hasValidAddress =
+        (userParams.evm && userParams.evm !== "undefined") ||
+        (userParams.solana && userParams.solana !== "undefined");
 
-      // Solo verificar si cambió algún parámetro Y hay al menos un parámetro válido
-      const hasValidParam =
-        userParams.evm ||
-        userParams.solana ||
-        userParams.farcaster_username ||
-        userParams.nickname;
+      // 🔥 RATE LIMITING: No verificar si ya verificamos hace menos de 2 segundos
+      const now = Date.now();
+      const timeSinceLastVerification = now - lastVerificationTimeRef.current;
+      const minTimeBetweenVerifications = 2000; // 2 segundos
 
+      // Solo verificar si:
+      // 1. Hay al menos una dirección válida
+      // 2. El addressKey cambió
+      // 3. No estamos verificando actualmente
+      // 4. Han pasado al menos 2 segundos desde la última verificación
       if (
-        hasValidParam &&
+        hasValidAddress &&
         addressKeyRef.current !== currentAddressKey &&
-        !verificationRef.current
+        !verificationRef.current &&
+        timeSinceLastVerification >= minTimeBetweenVerifications
       ) {
         verificationRef.current = true;
         addressKeyRef.current = currentAddressKey;
+        lastVerificationTimeRef.current = now;
 
-        verifyUser(currentAddressKey).finally(() => {
+        // 🔥 DEBOUNCE: Esperar 500ms antes de verificar para evitar llamadas repetidas
+        const verificationTimeout = setTimeout(() => {
+          verifyUser(currentAddressKey).finally(() => {
+            verificationRef.current = false;
+          });
+        }, 500);
+
+        // Cleanup: cancelar verificación si el component se desmonta o las deps cambian
+        return () => {
+          clearTimeout(verificationTimeout);
           verificationRef.current = false;
-        });
+        };
       }
     } else {
       // Reset cuando no hay wallet
@@ -603,8 +614,7 @@ export default function WalletConnector() {
     userParams.solana,
     userParams.farcaster_username,
     userParams.nickname,
-    isRegistered,
-    userData,
+    // NO incluir isRegistered ni userData para evitar loops innecesarios
   ]);
 
   // Función de logout simplificada SIN interfaz con el player

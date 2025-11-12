@@ -1,5 +1,4 @@
 import CardMusicHome from "@Src/components/cardMusicHome";
-import { MiniKitInitializer } from "@Src/components/MiniKitInitializer";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -21,9 +20,13 @@ export const metadata: Metadata = {
   },
 };
 
+// 🚀 OPTIMIZACIÓN: Revalidar cada 30 segundos en lugar de no cachear
+// Esto reduce drásticamente los fetches repetidos durante la conexión de wallet
+export const revalidate = 30; // Revalidación ISR cada 30 segundos
+
 async function fetchNFTData() {
   const res = await fetch(`${process.env.API_ELEI}/api/nft`, {
-    cache: "no-store",
+    next: { revalidate: 30 }, // 🔥 Cache con revalidación cada 30 segundos
   });
   if (!res.ok) {
     throw new Error("Failed to fetch NFT data");
@@ -33,7 +36,7 @@ async function fetchNFTData() {
 
 async function fetchAlbumData() {
   const res = await fetch(`${process.env.API_ELEI}/api/collections`, {
-    cache: "no-store",
+    next: { revalidate: 30 }, // 🔥 Cache con revalidación cada 30 segundos
   });
   if (!res.ok) {
     throw new Error("Failed to fetch album data");
@@ -41,18 +44,20 @@ async function fetchAlbumData() {
   return res.json();
 }
 
-// Obtener configuración x402 de un álbum
+// ✅ Función para obtener configuración x402 de un álbum
 async function fetchX402Config(albumId: string) {
   try {
     const res = await fetch(
       `${process.env.API_ELEI}/api/x402/config/${albumId}`,
-      { cache: "no-store" }
+      { next: { revalidate: 30 } } // 🔥 Cache con revalidación cada 30 segundos
     );
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.config === null ? null : data;
+    if (res.ok) {
+      const config = await res.json();
+      return config;
+    }
+    return null;
   } catch (error) {
-    console.error("Error fetching x402 config:", error);
+    console.error(`Error fetching x402 config for ${albumId}:`, error);
     return null;
   }
 }
@@ -61,16 +66,7 @@ function shuffleArray(array: any[]) {
   return array.sort(() => Math.random() - 0.5);
 }
 
-export default function Page() {
-  return (
-    <>
-      <MiniKitInitializer />
-      <PageContent />
-    </>
-  );
-}
-
-async function PageContent() {
+export default async function Page() {
   // Ejecutar todos los fetches en paralelo para eliminar el flash
   const [nftData, albumData] = await Promise.all([
     fetchNFTData(),
@@ -78,12 +74,12 @@ async function PageContent() {
   ]);
   //console.log("nftData FER >>>>> ", nftData);
 
-  // Obtener configuraciones x402 para todos los álbumes en paralelo
+  // ✅ Obtener configuraciones x402 para todos los álbumes en paralelo
   const x402Configs = await Promise.all(
     albumData.map((album: any) => fetchX402Config(album._id))
   );
 
-  // Crear mapa de configuraciones x402
+  // ✅ Crear mapa de configuraciones x402
   const x402ConfigMap = new Map(
     albumData.map((album: any, index: number) => [
       album._id,
@@ -109,7 +105,7 @@ async function PageContent() {
       .map((nftId: string) => nftMap.get(nftId))
       .filter(Boolean);
 
-    // Obtener configuración x402 del álbum
+    // ✅ Obtener configuración x402 del álbum
     const x402Config = x402ConfigMap.get(album._id);
 
     return albumNfts.map((nft: any) => ({

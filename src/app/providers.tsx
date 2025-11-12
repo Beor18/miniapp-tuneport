@@ -19,6 +19,7 @@ import React, {
 import { solanaDevnet } from "@Src/lib/privy/networks";
 import AppWalletProvider from "./AppWalletProvider";
 import { FarcasterProvider } from "@Src/components/FarcasterProvider";
+import { AuthUserProvider } from "@Src/contexts/AuthUserContext"; // 🔥 Context singleton para useAuthUser
 
 // Importaciones de Privy
 import { PrivyProvider } from "@privy-io/react-auth";
@@ -272,7 +273,8 @@ export default function Providers({ children }: { children: ReactNode }) {
               {/* 🎯 FarcasterProvider DESPUÉS de PrivyProvider para poder usar hooks de Privy */}
               <FarcasterProvider>
                 <QueryClientProvider client={queryClient}>
-                  {children}
+                  {/* 🔥 AuthUserProvider: Una sola instancia de useAuthUser para toda la app */}
+                  <AuthUserProvider>{children}</AuthUserProvider>
                 </QueryClientProvider>
               </FarcasterProvider>
             </SmartWalletsProvider>
