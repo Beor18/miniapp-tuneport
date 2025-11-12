@@ -11,8 +11,13 @@
     "splashBackgroundColor": "#18181b",
     "webhookUrl": "https://miniapp.tuneport.xyz/api/webhook",
     "primaryCategory": "music",
-    "subtitle": "Listen, create, monetize",
-    "description": "Platform music in web3"
+    "subtitle": "Where sound becomes value",
+    "description": "Platform music in web3",
+    "heroImageUrl": "https://miniapp.tuneport.xyz/preview.png",
+    "tagline": "Where sound becomes value",
+    "ogTitle": "Tuneport",
+    "ogDescription": "Where every second of music becomes value. Platform music in web3",
+    "ogImageUrl": "https://miniapp.tuneport.xyz/preview.png"
   },
   "accountAssociation": {
     "header": "eyJmaWQiOjExMjk4OTgsInR5cGUiOiJhdXRoIiwia2V5IjoiMHgwQjNkNEM2RTI0NjREZWRhMTE4QTlmZDA4RDNjOUJGZjVCZGQyQ2ZjIn0",
@@ -22,5 +27,13 @@
   "baseBuilder": {
     "allowedAddresses": ["0x308D03A537baAf5A7F54060d28718BEe77F700EF"]
   },
-  "tags": ["music", "web3", "platform", "playlist"]
+  "tags": [
+    "music",
+    "web3",
+    "platform",
+    "playlist",
+    "miniapp",
+    "artist",
+    "baseapp"
+  ]
 }
