@@ -12,11 +12,11 @@
     "webhookUrl": "https://miniapp.tuneport.xyz/api/webhook",
     "primaryCategory": "music",
     "subtitle": "Where sound becomes value",
-    "description": "Platform music in web3",
+    "description": "Tuneport lets artists upload music, split earnings, and offer locked content, while listeners earn by creating monetizable playlists.",
     "heroImageUrl": "https://miniapp.tuneport.xyz/preview.png",
     "tagline": "Where sound becomes value",
     "ogTitle": "Tuneport",
-    "ogDescription": "Where every second of music becomes value. Platform music in web3",
+    "ogDescription": "Create, earn, and own your music. Tuneport gives value to every second of sound.",
     "ogImageUrl": "https://miniapp.tuneport.xyz/preview.png"
   },
   "accountAssociation": {
@@ -27,13 +27,5 @@
   "baseBuilder": {
     "allowedAddresses": ["0x308D03A537baAf5A7F54060d28718BEe77F700EF"]
   },
-  "tags": [
-    "music",
-    "web3",
-    "platform",
-    "playlist",
-    "miniapp",
-    "artist",
-    "baseapp"
-  ]
+  "tags": ["music", "playlist", "miniapp", "artist", "baseapp"]
 }
