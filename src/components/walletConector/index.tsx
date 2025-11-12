@@ -223,96 +223,75 @@ export default function WalletConnector() {
     []
   );
 
-  // 🎯 AUTO-REGISTRO: Solo cuando Privy ya está autenticado (no interferir con Privy login)
+  // 🔥 OPTIMIZACIÓN: Usar useMemo para calcular el FID y evitar re-renders
+  const fidToRegister = useMemo(() => {
+    if (!isMiniApp || !isAuthenticated || !farcasterData?.fid) return null;
+    if (isRegistered === true && userData) return null;
+    return farcasterData.fid;
+  }, [isMiniApp, isAuthenticated, farcasterData?.fid, isRegistered, userData]);
+
+  // 🎯 AUTO-REGISTRO: INMEDIATO cuando tenemos FID, no esperar useEffect
   useEffect(() => {
-    // ⚡ OPTIMIZACIÓN: Early returns más agresivos
-    if (!isMiniApp || !isAuthenticated) {
-      return;
-    }
+    if (!fidToRegister || verificationRef.current) return;
 
-    // ⚡ OPTIMIZACIÓN: Si ya está verificando, no duplicar
-    if (verificationRef.current) {
-      return;
-    }
-
-    // ⚡ OPTIMIZACIÓN: Si ya está registrado, no verificar de nuevo
-    if (isRegistered === true && userData) {
-      return;
-    }
-
-    // Solo usar datos de Privy (simplificado)
-    const fid = farcasterData?.fid;
-
-    if (!fid) {
-      return;
-    }
-
-    console.log("🚀 MiniKit: INICIANDO AUTO-REGISTRO para FID:", fid);
+    console.log("🚀 MiniKit: AUTO-REGISTRO INMEDIATO para FID:", fidToRegister);
     verificationRef.current = true;
     setIsProcessingMiniApp(true);
 
-    const registerAfterPrivyAuth = async () => {
+    // 🔥 Ejecutar inmediatamente, sin función wrapper
+    (async () => {
       try {
-        // 🎯 PASO 1: Verificar si el usuario ya existe por farcaster_username
-        const existingUser = await getUserData({
-          farcaster_username: farcasterData.username || undefined,
-        });
+        // 🔥 PARALELIZAR: getUserData + getAddressFromFID simultáneos
+        const [existingUser, verifiedAddress] = await Promise.all([
+          getUserData({
+            farcaster_username: farcasterData?.username || undefined,
+          }),
+          getAddressFromFID(fidToRegister),
+        ]);
 
         if (existingUser) {
-          console.log("✅ MiniKit: Usuario ya existe (cache evitó creación)");
+          console.log("✅ MiniKit: Usuario existe");
           setUserData(existingUser);
           setIsRegistered(true);
           return;
         }
 
-        console.log("🆕 MiniKit: Usuario no existe, creando nuevo...");
+        console.log("🆕 MiniKit: Creando usuario...");
 
-        // 🎯 PASO 2: Si no existe, crear usuario nuevo
-        const verifiedAddress = await getAddressFromFID(fid);
-
-        // 🔧 FALLBACK: Si no hay address desde Neynar, usar la de Privy si está disponible
-        const finalAddress = verifiedAddress || evmWalletAddress || "";
-
-        const nickname = farcasterData.username
-          ? `${farcasterData.username}${fid}`
-          : `user${fid}`;
-
-        const userData = {
+        const newUser = await createUser({
           name:
-            farcasterData.displayName ||
-            farcasterData.username ||
-            `User ${fid}`,
-          nickname,
+            farcasterData?.displayName ||
+            farcasterData?.username ||
+            `User ${fidToRegister}`,
+          nickname: farcasterData?.username
+            ? `${farcasterData.username}${fidToRegister}`
+            : `user${fidToRegister}`,
           email: userParams.email || "",
-          address: finalAddress || wallets[0]?.address || "",
+          address:
+            verifiedAddress || evmWalletAddress || wallets[0]?.address || "",
           address_solana: solanaWalletAddress || "",
           type: "artist",
-          farcaster_fid: fid,
-          farcaster_username: farcasterData.username || "",
-          farcaster_display_name: farcasterData.displayName || "",
-          farcaster_pfp: farcasterData.pfp || "",
-          farcaster_bio: farcasterData.bio || "",
+          farcaster_fid: fidToRegister,
+          farcaster_username: farcasterData?.username || "",
+          farcaster_display_name: farcasterData?.displayName || "",
+          farcaster_pfp: farcasterData?.pfp || "",
+          farcaster_bio: farcasterData?.bio || "",
           farcaster_verified: true,
-        };
+        });
 
-        const newUser = await createUser(userData);
         if (newUser) {
           setUserData(newUser);
           setIsRegistered(true);
           console.log("✅ MiniKit: Auto-registro exitoso");
         }
       } catch (error) {
-        console.error("❌ MiniKit: Error en auto-registro:", error);
+        console.error("❌ MiniKit: Error:", error);
       } finally {
         verificationRef.current = false;
         setIsProcessingMiniApp(false);
       }
-    };
-
-    registerAfterPrivyAuth();
-    // ⚡ OPTIMIZACIÓN: Reducir dependencias para evitar re-ejecuciones innecesarias
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMiniApp, isAuthenticated, farcasterData?.fid, isRegistered, userData]);
+    })();
+  }, [fidToRegister]); // Solo depende de fidToRegister calculado
 
   // 🚫 FUNCIÓN DUPLICADA ELIMINADA: getAddressFromFID ya está definida arriba
 
