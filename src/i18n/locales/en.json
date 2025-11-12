@@ -72,7 +72,9 @@
     "albums": "Albums",
     "profile": "Profile",
     "settings": "Settings",
-    "logout": "Logout"
+    "logout": "Logout",
+    "feedback": "Feedback",
+    "more": "More"
   },
   "home": {
     "title": "Tuneport",

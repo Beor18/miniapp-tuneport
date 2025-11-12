@@ -62,7 +62,9 @@
     "albums": "Álbuns",
     "profile": "Perfil",
     "settings": "Configurações",
-    "logout": "Sair"
+    "logout": "Sair",
+    "feedback": "Feedback",
+    "more": "Mais"
   },
   "home": {
     "title": "Tuneport",

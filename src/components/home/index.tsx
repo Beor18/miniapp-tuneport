@@ -11,6 +11,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@Src/ui/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@Src/ui/components/ui/dropdown-menu";
 
 import {
   Bell,
@@ -32,7 +39,9 @@ import {
   ShareIcon,
   MedalIcon,
   Trophy,
+  MoreHorizontal,
   MessageCircle,
+  InfoIcon,
 } from "lucide-react";
 import BaseAlbumNewForm from "@Src/components/BaseAlbumNewForm";
 import { useAppKitAccount } from "@Src/lib/privy";
@@ -101,8 +110,8 @@ const getNavItems = (
   locale: string,
   tCommon: any
 ) => {
-  // Siempre mostrar los elementos básicos de navegación
-  const baseItems = [
+  // Items principales siempre visibles
+  const mainItems = [
     {
       href: `/${locale}/foryou`,
       icon: Music2Icon,
@@ -119,7 +128,7 @@ const getNavItems = (
 
   // Solo añadir Create si el usuario es artista Y está conectado
   if (publicKey?.toString() && userType === "artist") {
-    baseItems.push({
+    mainItems.push({
       href: "#",
       icon: Plus,
       label: tCommon("create"),
@@ -127,23 +136,61 @@ const getNavItems = (
     });
   }
 
-  // Añadir feedback antes del perfil
-  baseItems.push({
+  // Feedback siempre visible como item principal (no requiere wallet)
+  mainItems.push({
     href: "https://t.me/+G6OwWKboQYA0ZjRh",
     icon: MessageCircle,
-    label: "Feedback",
+    label: tNav("feedback"),
     type: "external",
   });
 
-  // Siempre añadir el perfil al final
-  baseItems.push({
-    href: userNickname ? `/${locale}/u/${userNickname}` : `/${locale}/u`,
-    icon: User,
-    label: tNav("profile"),
-    type: "link",
+  // Items del menú desplegable (móvil) - Solo Profile
+  const menuItems = [];
+
+  // Profile siempre va en el menú desplegable para móvil
+  if (userNickname) {
+    menuItems.push({
+      href: `/${locale}/u/${userNickname}`,
+      icon: User,
+      label: tNav("profile"),
+      type: "link",
+    });
+  } else if (publicKey?.toString()) {
+    menuItems.push({
+      href: "#",
+      icon: User,
+      label: tNav("profile"),
+      type: "disabled",
+    });
+  }
+
+  // Para desktop, incluir profile en la lista principal
+  const desktopItems = [...mainItems];
+  if (userNickname) {
+    desktopItems.push({
+      href: `/${locale}/u/${userNickname}`,
+      icon: User,
+      label: tNav("profile"),
+      type: "link",
+    });
+  } else if (publicKey?.toString()) {
+    desktopItems.push({
+      href: "#",
+      icon: User,
+      label: tNav("profile"),
+      type: "disabled",
+    });
+  }
+
+  // Feedback siempre visible en desktop también
+  desktopItems.push({
+    href: "https://t.me/+G6OwWKboQYA0ZjRh",
+    icon: MessageCircle,
+    label: tNav("feedback"),
+    type: "external",
   });
 
-  return baseItems;
+  return { mainItems, menuItems, desktopItems };
 };
 
 export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
@@ -259,7 +306,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   }, [stableMockUsers, address, isRegistered, userData]);
 
   // Memoizar navItems para evitar re-cálculos innecesarios
-  const navItems = useMemo(() => {
+  const { mainItems, menuItems, desktopItems } = useMemo(() => {
     return getNavItems(
       address?.toString(),
       userNickname,
@@ -346,7 +393,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
       </header>
 
       {/* Banner informativo - Live announcement */}
-      <div className="bg-gradient-to-r from-blue-600/90 to-purple-600/90 text-white px-4 py-2.5 text-center border-b border-blue-500/30 shadow-lg">
+      {/* <div className="bg-gradient-to-r from-blue-600/90 to-purple-600/90 text-white px-4 py-2.5 text-center border-b border-blue-500/30 shadow-lg">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2">
           <span className="flex items-center gap-1.5 text-xs sm:text-sm font-medium">
             <span className="relative flex h-2 w-2 flex-shrink-0">
@@ -368,7 +415,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
             </a>
           </span>
         </div>
-      </div>
+      </div> */}
 
       <div className="flex flex-1 overflow-hidden">
         {/* Navegación de escritorio - solo mostrar en páginas de perfil */}
@@ -400,7 +447,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
                   isCollapsed ? "p-2" : "p-6"
                 }`}
               >
-                {navItems.map((item) => (
+                {desktopItems.map((item) => (
                   <NavLink
                     key={item.href}
                     {...item}
@@ -450,7 +497,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
       {layoutFlags.showNavigation && (
         <nav className="fixed bottom-0 left-0 right-0 z-30 bg-zinc-900/95 backdrop-blur border-t border-zinc-800 md:hidden">
           <div className="flex items-center justify-around px-1 py-3 h-16 max-w-screen-sm mx-auto">
-            {navItems.slice(0, 5).map((item) => (
+            {mainItems.map((item) => (
               <MobileNavLink
                 key={item.href}
                 {...item}
@@ -458,6 +505,13 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
                 onCreateClick={() => setIsCreateModalOpen(true)}
               />
             ))}
+            {/* Menú desplegable para más opciones */}
+            {menuItems.length > 0 && (
+              <MobileMenuDropdown
+                menuItems={menuItems}
+                isConnected={isConnected}
+              />
+            )}
           </div>
         </nav>
       )}
@@ -689,5 +743,89 @@ function MobileNavLink({
         {label}
       </span>
     </Link>
+  );
+}
+
+function MobileMenuDropdown({
+  menuItems,
+  isConnected,
+}: {
+  menuItems: any[];
+  isConnected: boolean;
+}) {
+  const router = useRouter();
+  const tNav = useTranslations("navigation");
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={`
+            flex flex-col items-center justify-center px-2 py-1 min-w-0 flex-1 transition-all duration-200
+            ${
+              isConnected
+                ? "text-zinc-400 hover:text-zinc-200 active:scale-95"
+                : "text-zinc-600 cursor-not-allowed"
+            }
+            touch-manipulation
+          `}
+          disabled={!isConnected}
+        >
+          <div
+            className={`p-2 rounded-lg transition-all duration-200 ${
+              isConnected ? "hover:bg-zinc-800/50" : ""
+            }`}
+          >
+            <MoreHorizontal
+              className={`h-5 w-5 ${
+                isConnected ? "text-zinc-300" : "text-zinc-600"
+              }`}
+            />
+          </div>
+          <span
+            className={`text-[10px] font-medium truncate max-w-full mt-1 leading-none ${
+              isConnected ? "text-zinc-400" : "text-zinc-600"
+            }`}
+          >
+            {tNav("more")}
+          </span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        side="top"
+        className="w-56 mb-2 bg-zinc-900 border-zinc-800"
+      >
+        {menuItems.map((item, index) => {
+          const Icon = item.icon;
+          const isDisabled = item.type === "disabled";
+          const isExternal = item.type === "external";
+
+          return (
+            <DropdownMenuItem
+              key={item.href}
+              disabled={isDisabled}
+              onClick={() => {
+                if (!isDisabled && item.href !== "#") {
+                  if (isExternal) {
+                    window.open(item.href, "_blank", "noopener,noreferrer");
+                  } else {
+                    router.push(item.href);
+                  }
+                }
+              }}
+              className={`flex items-center gap-3 px-3 py-2 ${
+                isDisabled
+                  ? "text-zinc-600 cursor-not-allowed"
+                  : "text-zinc-300 hover:text-white hover:bg-zinc-800"
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+              <span className="text-sm">{item.label}</span>
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
