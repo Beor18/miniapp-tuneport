@@ -38,10 +38,12 @@ import { TradingInterface } from "@Src/components/TradingInterface";
 import { MintModal } from "@Src/components/MintModal";
 import {
   Dialog,
-  DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogPortal,
+  DialogOverlay,
 } from "@Src/ui/components/ui/dialog";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Coins, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useX402Payment } from "@Src/lib/hooks/base/useX402Payment";
@@ -869,26 +871,26 @@ export function PlayerBarMobile({
             </div>
 
             {/* Contenido principal del player - Responsive layout */}
-            <div className="flex-1 flex flex-col justify-between p-6 min-h-0">
-              {/* Top section: Album art + Info */}
-              <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
-                {/* Imagen del álbum - Responsive */}
-                <div className="mb-6 w-full max-w-60">
+            <div className="flex-1 flex flex-col p-4 sm:p-6 min-h-0 overflow-y-auto">
+              {/* Top section: Album art + Info - Con scroll si es necesario */}
+              <div className="flex flex-col items-center justify-start max-w-sm mx-auto w-full mb-2 sm:mb-4">
+                {/* Imagen del álbum - Responsive con diferentes tamaños según altura */}
+                <div className="mb-3 sm:mb-4 w-full max-w-[240px] sm:max-w-60">
                   {/* <Link href={`/album/${currentSong.slug}`}> */}
                   <img
                     src={`${currentSong.image}`}
                     alt="Album cover"
-                    className="w-full aspect-square rounded-3xl object-cover shadow-2xl shadow-black/50"
+                    className="w-full aspect-square rounded-2xl sm:rounded-3xl object-cover shadow-2xl shadow-black/50"
                   />
                   {/* </Link> */}
                 </div>
 
                 {/* Info de la canción */}
-                <div className="text-center mb-6 w-full">
-                  <h1 className="text-xl font-bold text-white mb-2 leading-tight line-clamp-2">
+                <div className="text-center mb-3 sm:mb-4 w-full">
+                  <h1 className="text-lg sm:text-xl font-bold text-white mb-1 sm:mb-2 leading-tight line-clamp-2">
                     {currentSong.name}
                   </h1>
-                  <p className="text-base text-zinc-400">
+                  <p className="text-sm sm:text-base text-zinc-400">
                     {currentSong.artist_name ||
                       currentSong.artist ||
                       "Unknown artist"}
@@ -897,9 +899,9 @@ export function PlayerBarMobile({
               </div>
 
               {/* Bottom section: Controls */}
-              <div className="space-y-2">
+              <div className="space-y-1.5 sm:space-y-2 flex-shrink-0">
                 {/* Action buttons */}
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                   {/* Botón Claim NFT */}
                   <motion.div
                     whileHover={{ scale: 1.05 }}
@@ -909,11 +911,11 @@ export function PlayerBarMobile({
                       variant="outline"
                       onClick={handleClaimClick}
                       disabled={!hasWalletConnected || isMintingAny}
-                      className={`w-full h-12 ${
+                      className={`w-full h-10 sm:h-12 ${
                         !hasWalletConnected || isMintingAny
                           ? "bg-zinc-800/30 text-zinc-600 border-zinc-700/50"
                           : "bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30 hover:border-zinc-500/50"
-                      } rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm`}
+                      } rounded-xl sm:rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm`}
                       title={
                         !hasWalletConnected ? "Connect wallet" : "Claim NFT"
                       }
@@ -928,7 +930,7 @@ export function PlayerBarMobile({
                           }}
                         >
                           <svg
-                            className="h-6 w-6"
+                            className="h-5 w-5 sm:h-6 sm:w-6"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -949,7 +951,7 @@ export function PlayerBarMobile({
                           </svg>
                         </motion.div>
                       ) : (
-                        <GiftIcon className="h-6 w-6" />
+                        <GiftIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                       )}
                     </Button>
                   </motion.div>
@@ -962,10 +964,10 @@ export function PlayerBarMobile({
                     <Button
                       onClick={() => setIsTradingModalOpen(true)}
                       variant="outline"
-                      className="w-full h-12 bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30 hover:border-zinc-500/50 rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm"
+                      className="w-full h-10 sm:h-12 bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30 hover:border-zinc-500/50 rounded-xl sm:rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm"
                       title="Trade Tokens"
                     >
-                      <Coins className="h-6 w-6" />
+                      <Coins className="h-5 w-5 sm:h-6 sm:w-6" />
                     </Button>
                   </motion.div>
 
@@ -977,18 +979,18 @@ export function PlayerBarMobile({
                     <Button
                       onClick={togglePlaylist}
                       variant="outline"
-                      className={`w-full h-12 relative ${
+                      className={`w-full h-10 sm:h-12 relative ${
                         showPlaylist
                           ? "bg-zinc-700/40 text-white border-zinc-600/70"
                           : "bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30"
-                      } rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm`}
+                      } rounded-xl sm:rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm`}
                       title={`Queue ${
                         userPlaylist.length > 0
                           ? `(${userPlaylist.length})`
                           : ""
                       }`}
                     >
-                      <ListMusicIcon className="h-6 w-6" />
+                      <ListMusicIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                       {userPlaylist.length > 0 && (
                         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold text-[10px] shadow-lg">
                           {userPlaylist.length > 9 ? "9+" : userPlaylist.length}
@@ -1009,18 +1011,18 @@ export function PlayerBarMobile({
                         }
                       }}
                       variant="outline"
-                      className={`w-full h-12 relative ${
+                      className={`w-full h-10 sm:h-12 relative ${
                         isCurrentSongInPlaylist
                           ? "bg-green-800/30 text-white border-green-600/50 hover:bg-green-700/40"
                           : "bg-zinc-800/20 text-white border-zinc-600/50 hover:bg-zinc-700/30"
-                      } rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm`}
+                      } rounded-xl sm:rounded-2xl transition-all duration-300 flex items-center justify-center backdrop-blur-sm`}
                       title={
                         isCurrentSongInPlaylist
                           ? "Remove from queue"
                           : "Add to queue"
                       }
                     >
-                      <ListMusicIcon className="h-6 w-6" />
+                      <ListMusicIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                       {isCurrentSongInPlaylist ? (
                         <MinusIcon className="h-3 w-3 absolute -top-1 -right-1 text-white bg-red-500 rounded-full p-[1px]" />
                       ) : (
@@ -1086,7 +1088,7 @@ export function PlayerBarMobile({
                 </div>
 
                 {/* Main playback controls */}
-                <div className="flex items-center justify-center space-x-6">
+                <div className="flex items-center justify-center space-x-4 sm:space-x-6">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -1100,9 +1102,9 @@ export function PlayerBarMobile({
                       }
                       handlePrevSong();
                     }}
-                    className="text-white hover:bg-zinc-800/50 h-12 w-12 rounded-full"
+                    className="text-white hover:bg-zinc-800/50 h-10 w-10 sm:h-12 sm:w-12 rounded-full"
                   >
-                    <SkipBackIcon className="h-7 w-7" />
+                    <SkipBackIcon className="h-6 w-6 sm:h-7 sm:w-7" />
                   </Button>
 
                   <Button
@@ -1116,12 +1118,12 @@ export function PlayerBarMobile({
                       }
                       handlePlayPause();
                     }}
-                    className="bg-white hover:bg-zinc-200 text-black rounded-full h-16 w-16 flex items-center justify-center shadow-xl transition-transform hover:scale-105"
+                    className="bg-white hover:bg-zinc-200 text-black rounded-full h-14 w-14 sm:h-16 sm:w-16 flex items-center justify-center shadow-xl transition-transform hover:scale-105"
                   >
                     {isPlaying ? (
-                      <PauseIcon className="h-8 w-8" />
+                      <PauseIcon className="h-7 w-7 sm:h-8 sm:w-8" />
                     ) : (
-                      <PlayIcon className="h-8 w-8 ml-1" />
+                      <PlayIcon className="h-7 w-7 sm:h-8 sm:w-8 ml-1" />
                     )}
                   </Button>
 
@@ -1138,9 +1140,9 @@ export function PlayerBarMobile({
                       }
                       handleNextSong();
                     }}
-                    className="text-white hover:bg-zinc-800/50 h-12 w-12 rounded-full"
+                    className="text-white hover:bg-zinc-800/50 h-10 w-10 sm:h-12 sm:w-12 rounded-full"
                   >
-                    <SkipForwardIcon className="h-7 w-7" />
+                    <SkipForwardIcon className="h-6 w-6 sm:h-7 sm:w-7" />
                   </Button>
                 </div>
               </div>
@@ -1168,35 +1170,35 @@ export function PlayerBarMobile({
 
       {/* Trading Modal */}
       <Dialog open={isTradingModalOpen} onOpenChange={setIsTradingModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-neutral-800 shadow-2xl z-[300] data-[state=open]:z-[300]">
-          <DialogHeader className="border-b border-neutral-800 pb-4 relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsTradingModalOpen(false)}
-              className="absolute right-0 top-0 h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-800"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            <DialogTitle className="flex items-center gap-3 text-white text-xl font-semibold pr-8">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
-                <Coins className="h-4 w-4 text-blue-400" />
-              </div>
-              Trade {currentSong?.name || "Song"} Tokens
-            </DialogTitle>
-            <p className="text-neutral-400 text-sm mt-2">
-              Buy tokens for {currentSong?.name || "this song"} and use them to
-              claim NFTs
-            </p>
-          </DialogHeader>
-          <TradingInterface
-            coinAddress={currentSong?.coin_address}
-            title={`Trade ${currentSong?.name || "Song"} Tokens`}
-            description={`Buy tokens for ${
-              currentSong?.name || "this song"
-            } and use them to claim NFTs`}
-          />
-        </DialogContent>
+        <DialogPortal>
+          <DialogOverlay className="z-[10000]" />
+          <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-[10000] grid w-full max-w-4xl translate-x-[-50%] translate-y-[-50%] gap-4 border bg-[#0a0a0a] border-neutral-800 p-6 shadow-2xl duration-200 max-h-[90vh] overflow-y-auto data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+            <DialogHeader className="border-b border-neutral-800 pb-4 relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsTradingModalOpen(false)}
+                className="absolute right-0 top-0 h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-800"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              <DialogTitle className="flex items-center gap-3 text-white text-xl font-semibold pr-8">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
+                  <Coins className="h-4 w-4 text-blue-400" />
+                </div>
+                Trade {currentSong?.name || "Song"} Coins
+              </DialogTitle>
+              <p className="text-neutral-400 text-sm mt-2">
+                Buy Coins for {currentSong?.name || "this song"}
+              </p>
+            </DialogHeader>
+            <TradingInterface
+              coinAddress={currentSong?.coin_address}
+              title={`Trade ${currentSong?.name || "Song"} Coins`}
+              description={`Buy Coins for ${currentSong?.name || "this song"}`}
+            />
+          </DialogPrimitive.Content>
+        </DialogPortal>
       </Dialog>
 
       {/* Mint Modal */}
