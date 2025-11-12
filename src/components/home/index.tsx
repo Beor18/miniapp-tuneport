@@ -203,6 +203,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [hostname, setHostname] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   // 🎯 MINIKIT: Simplificar - solo usar useAppKitAccount directamente
@@ -394,6 +395,15 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+            {/* Botón de búsqueda para móvil */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileSearchOpen(true)}
+              className="md:hidden text-zinc-400 hover:text-white hover:bg-zinc-800"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
             <LanguageSelector />
             <WalletConnector />
           </div>
@@ -538,6 +548,36 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
         onOpenChange={setIsCreateModalOpen}
         showButton={false}
       />
+
+      {/* Modal de búsqueda para móvil */}
+      {isMobileSearchOpen && (
+        <div className="fixed inset-0 z-[100] bg-zinc-900 md:hidden">
+          <div className="flex flex-col h-full">
+            {/* Header del modal */}
+            <div className="flex items-center gap-4 p-4 border-b border-zinc-800">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMobileSearchOpen(false)}
+                className="text-zinc-400 hover:text-white"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </Button>
+              <h2 className="text-lg font-semibold text-white">
+                {tCommon("search")}
+              </h2>
+            </div>
+
+            {/* SearchBar full-width */}
+            <div className="p-4">
+              <SearchBar
+                artists={stableMockUsers}
+                onNavigate={() => setIsMobileSearchOpen(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
