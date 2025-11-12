@@ -47,6 +47,7 @@ import BaseAlbumNewForm from "@Src/components/BaseAlbumNewForm";
 import { useAppKitAccount } from "@Src/lib/privy";
 import WalletConnector from "@Src/components/walletConector";
 import LanguageSelector from "@Src/components/LanguageSelector";
+import SearchBar from "@Src/components/SearchBar";
 import { useTranslations, useLocale } from "next-intl";
 import { usePlayer } from "@Src/contexts/PlayerContext";
 import { UserRegistrationContext, MiniAppContext } from "@Src/app/providers";
@@ -363,7 +364,7 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
   return (
     <div className="flex h-screen flex-col bg-[#18181b]">
       <header className="sticky top-0 z-50 w-full border-b border-zinc-800 bg-zinc-900/95 backdrop-blur supports-[backdrop-filter]:bg-zinc-900/75">
-        <div className="mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 min-h-[64px]">
+        <div className="mx-auto flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 min-h-[64px]">
           <Link
             href={`/${locale}`}
             className="flex items-center gap-2 transition-opacity hover:opacity-90 flex-shrink-0"
@@ -376,7 +377,9 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
               className="h-8 w-8"
             />
             <div className="flex items-center">
-              <h1 className="text-lg font-bold text-white">TUNEPORT</h1>
+              <h1 className="text-lg font-bold text-white hidden sm:block">
+                TUNEPORT
+              </h1>
               {/* <span
                 className={`ml-2 rounded-md ${getEnvironmentColor()} px-1.5 py-0.5 text-[11px] font-medium text-white`}
               >
@@ -384,6 +387,11 @@ export default function HomeLayout({ children, mockUsers }: HomeLayoutProps) {
               </span> */}
             </div>
           </Link>
+
+          {/* SearchBar - Visible solo en desktop (md+) */}
+          <div className="hidden md:block flex-1 max-w-2xl">
+            <SearchBar artists={stableMockUsers} onNavigate={() => {}} />
+          </div>
 
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <LanguageSelector />
