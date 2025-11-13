@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { useState, useCallback, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   SkipBackIcon,
   SkipForwardIcon,
@@ -93,6 +93,9 @@ export function PlayerBarMobile({
   // Traducciones
   const tX402 = useTranslations("x402");
 
+  // ✅ Router para refrescar después de desbloquear
+  const router = useRouter();
+
   // ✅ Hook x402 para desbloquear contenido
   const { unlockContent: x402UnlockContent, checkUnlockStatus } =
     useX402Payment({
@@ -102,11 +105,11 @@ export function PlayerBarMobile({
           contentId,
           txHash
         );
-        toast.success(tX402("success.unlocked"), {
-          description: tX402("success.enjoyContent"),
+        toast.success(tX402("content_unlocked"), {
+          description: tX402("enjoy_premium_content"),
         });
-        // Recargar la página para actualizar el estado
-        window.location.reload();
+        // ✅ Refrescar la página con router.refresh() en lugar de window.location.reload()
+        router.refresh();
       },
       onError: (error) => {
         console.error("❌ Failed to unlock from PlayerBarMobile:", error);
@@ -199,6 +202,19 @@ export function PlayerBarMobile({
       // Si no tiene configuración x402 o no tiene precio, está desbloqueado
       if (!songConfig || !songConfig.price || !songConfig.recipientAddress) {
         console.log("✅ PlayerBarMobile - Contenido libre (no premium)");
+        setIsContentLocked(false);
+        return;
+      }
+
+      // ✅ Si el usuario es el dueño (recipientAddress), desbloquear automáticamente
+      if (
+        hasWalletConnected &&
+        evmWalletAddress &&
+        songConfig.recipientAddress &&
+        evmWalletAddress.toLowerCase() ===
+          songConfig.recipientAddress.toLowerCase()
+      ) {
+        console.log("👑 PlayerBarMobile - Usuario es el dueño, desbloqueando");
         setIsContentLocked(false);
         return;
       }
@@ -534,18 +550,14 @@ export function PlayerBarMobile({
     }
   };
 
-  // ✅ Handler para desbloquear contenido desde PlayerBarMobile
+  // ✅ Handler para desbloquear contenido x402
   const handleUnlockContent = async () => {
-    if (!enrichedCurrentSong || !enrichedCurrentSong.albumId) return;
+    if (!enrichedCurrentSong || !enrichedCurrentSong.x402Config) return;
 
     const songConfig = enrichedCurrentSong.x402Config;
-    if (!songConfig || !songConfig.price || !songConfig.recipientAddress)
-      return;
 
-    if (!hasWalletConnected || !evmWalletAddress) {
-      toast.error(tX402("errors.walletRequired"), {
-        description: tX402("errors.connectWallet"),
-      });
+    if (!songConfig.price || !songConfig.recipientAddress) {
+      toast.error("Configuración de pago inválida");
       return;
     }
 
@@ -558,47 +570,51 @@ export function PlayerBarMobile({
 
   return (
     <>
-      {/* ✅ x402 Premium Overlay - Vista Compacta Mobile */}
+      {/* ✅ x402 Premium Overlay - Adaptado al PlayerBarMobile */}
       <AnimatePresence>
         {enrichedCurrentSong?.x402Config &&
           enrichedCurrentSong.x402Config.price &&
           enrichedCurrentSong.x402Config.recipientAddress &&
+          // ✅ No mostrar overlay si el usuario es el dueño
+          evmWalletAddress?.toLowerCase() !==
+            enrichedCurrentSong.x402Config.recipientAddress?.toLowerCase() &&
           isContentLocked && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.3 }}
-              className={`fixed ${bottomPosition} left-0 right-0 z-[60] md:hidden bg-gradient-to-r from-purple-900/95 via-blue-900/95 to-purple-900/95 backdrop-blur-xl border-t border-purple-500/30 py-3 px-4 pointer-events-auto`}
+              className={`fixed ${bottomPosition} left-0 right-0 z-[60] md:hidden bg-zinc-950/95 backdrop-blur-xl border-t border-purple-500/30 py-3 px-4 pointer-events-auto`}
             >
               <div className="flex items-center gap-3 w-full">
-                {/* Lock Icon + Info */}
+                {/* Lock Icon - Más pequeño */}
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 200, damping: 15 }}
                   className="flex-shrink-0"
                 >
-                  <div className="p-2 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full">
+                  <div className="p-2 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full">
                     <Lock className="h-5 w-5 text-white" />
                   </div>
                 </motion.div>
 
+                {/* Content - Layout horizontal y compacto */}
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-semibold text-white mb-0.5 truncate">
+                  <h3 className="text-sm font-semibold text-white mb-0.5 truncate">
                     {tX402("premiumContent")}
-                  </h4>
+                  </h3>
                   <p className="text-xs text-zinc-400 truncate">
                     {enrichedCurrentSong.x402Config.price}{" "}
                     {enrichedCurrentSong.x402Config.currency || "USDC"}
                   </p>
                 </div>
 
-                {/* Unlock Button */}
+                {/* Botón - Más compacto */}
                 <Button
                   onClick={handleUnlockContent}
-                  disabled={!hasWalletConnected || !evmWalletAddress}
-                  className="bg-white hover:bg-gray-100 text-purple-900 font-semibold px-4 py-2 rounded-lg shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap flex-shrink-0"
+                  disabled={!hasWalletConnected}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-sm whitespace-nowrap flex-shrink-0 h-9"
                   size="sm"
                 >
                   {tX402("unlockWithUsdc")}
@@ -698,8 +714,8 @@ export function PlayerBarMobile({
                 e.stopPropagation();
                 // ✅ Bloquear si el contenido está bloqueado
                 if (isContentLocked) {
-                  toast.error(tX402("errors.contentLocked"), {
-                    description: tX402("errors.unlockToPlay"),
+                  toast.error("Contenido bloqueado", {
+                    description: "Desbloquea el contenido para reproducirlo",
                   });
                   return;
                 }
@@ -753,13 +769,16 @@ export function PlayerBarMobile({
               {enrichedCurrentSong?.x402Config &&
                 enrichedCurrentSong.x402Config.price &&
                 enrichedCurrentSong.x402Config.recipientAddress &&
+                // ✅ No mostrar overlay si el usuario es el dueño
+                evmWalletAddress?.toLowerCase() !==
+                  enrichedCurrentSong.x402Config.recipientAddress?.toLowerCase() &&
                 isContentLocked && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.3 }}
-                    className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl"
+                    className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl"
                   >
                     <div className="flex flex-col items-center space-y-6 p-8 max-w-md">
                       {/* Lock Icon */}
@@ -773,8 +792,8 @@ export function PlayerBarMobile({
                         }}
                         className="relative"
                       >
-                        <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center shadow-2xl">
-                          <Lock className="w-10 h-10 text-white" />
+                        <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center shadow-2xl">
+                          <Lock className="w-12 h-12 text-white" />
                         </div>
                         <motion.div
                           className="absolute inset-0 rounded-full bg-purple-500/30"
@@ -797,6 +816,7 @@ export function PlayerBarMobile({
                               albumName:
                                 enrichedCurrentSong.albumName ||
                                 enrichedCurrentSong.name_album ||
+                                enrichedCurrentSong.name ||
                                 "this content",
                             })}
                         </p>
@@ -829,7 +849,7 @@ export function PlayerBarMobile({
                       >
                         <Button
                           onClick={handleUnlockContent}
-                          disabled={!hasWalletConnected || !evmWalletAddress}
+                          disabled={!hasWalletConnected}
                           className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold py-4 px-8 rounded-xl shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {tX402("unlockWithUsdc")}
@@ -1095,8 +1115,9 @@ export function PlayerBarMobile({
                     onClick={() => {
                       // ✅ Bloquear si el contenido está bloqueado
                       if (isContentLocked) {
-                        toast.error(tX402("errors.contentLocked"), {
-                          description: tX402("errors.unlockToPlay"),
+                        toast.error("Contenido bloqueado", {
+                          description:
+                            "Desbloquea el contenido para reproducirlo",
                         });
                         return;
                       }
@@ -1111,8 +1132,9 @@ export function PlayerBarMobile({
                     onClick={() => {
                       // ✅ Bloquear si el contenido está bloqueado
                       if (isContentLocked) {
-                        toast.error(tX402("errors.contentLocked"), {
-                          description: tX402("errors.unlockToPlay"),
+                        toast.error("Contenido bloqueado", {
+                          description:
+                            "Desbloquea el contenido para reproducirlo",
                         });
                         return;
                       }
@@ -1133,8 +1155,9 @@ export function PlayerBarMobile({
                     onClick={() => {
                       // ✅ Bloquear si el contenido está bloqueado
                       if (isContentLocked) {
-                        toast.error(tX402("errors.contentLocked"), {
-                          description: tX402("errors.unlockToPlay"),
+                        toast.error("Contenido bloqueado", {
+                          description:
+                            "Desbloquea el contenido para reproducirlo",
                         });
                         return;
                       }

@@ -832,16 +832,21 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
                   {currentSong?._id === song._id &&
                     song.x402Config?.price &&
                     song.x402Config?.recipientAddress &&
-                    currentSongUnlockStatus[song.albumId] === false &&
+                    // ✅ No mostrar overlay si el usuario es el dueño
+                    evmWalletAddress?.toLowerCase() !==
+                      song.x402Config.recipientAddress?.toLowerCase() &&
+                    (currentSongUnlockStatus[song.albumId] === false ||
+                      (!hasWalletConnected &&
+                        currentSongUnlockStatus[song.albumId] !== true)) &&
                     !isCheckingUnlock && (
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.3 }}
-                        className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xl"
+                        className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl"
                       >
-                        <div className="flex flex-col items-center space-y-6 p-8 max-w-md">
+                        <div className="flex flex-col items-center gap-6 px-6 text-center max-w-md">
                           {/* Lock Icon */}
                           <motion.div
                             initial={{ scale: 0 }}
@@ -853,67 +858,61 @@ export default function CardMusicHome({ nftData, collectionData }: any) {
                             }}
                             className="relative"
                           >
-                            <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center shadow-2xl">
-                              <Lock className="w-12 h-12 text-white" />
+                            <div className="p-6 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full shadow-2xl">
+                              <Lock className="h-12 w-12 text-white" />
                             </div>
-                            <motion.div
-                              className="absolute inset-0 rounded-full bg-purple-500/30"
-                              animate={{
-                                scale: [1, 1.2, 1],
-                                opacity: [0.5, 0, 0.5],
-                              }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                            />
                           </motion.div>
 
-                          {/* Text Content */}
-                          <div className="text-center space-y-3">
-                            <h2 className="text-2xl font-bold text-white">
-                              {tX402("premiumContent")}
-                            </h2>
-                            <p className="text-gray-300 text-sm">
-                              {song.x402Config.description ||
-                                tX402("unlockDescription", {
-                                  albumName: song.albumName || "this album",
-                                })}
+                          {/* Content */}
+                          <div>
+                            <h3 className="text-2xl font-bold text-white mb-2">
+                              {song.name}
+                            </h3>
+                            <p className="text-sm text-zinc-400 mb-4">
+                              {tX402("unlock_song_to_listen")}
                             </p>
 
-                            {/* Price Display */}
-                            <div className="flex items-center justify-center space-x-2 p-4 bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-xl border border-purple-500/30">
-                              <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
-                                {song.x402Config.price}
-                              </span>
-                              <span className="text-gray-400 text-sm">
-                                {song.x402Config.currency || "USDC"}
-                              </span>
+                            <div className="flex flex-col items-center gap-4">
+                              <div className="px-6 py-3 bg-zinc-900 rounded-xl border border-purple-500/30">
+                                <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                                  {song.x402Config.price}
+                                </p>
+                                <p className="text-xs text-zinc-500 mt-1">
+                                  {song.x402Config.currency || "USDC"}
+                                </p>
+                              </div>
+
+                              <Button
+                                onClick={async () => {
+                                  if (!hasWalletConnected) {
+                                    toast.error(tX402("connect_wallet_first"));
+                                    return;
+                                  }
+                                  try {
+                                    await x402UnlockContent(
+                                      song.albumId,
+                                      song.x402Config
+                                    );
+                                  } catch (error) {
+                                    console.error("Error unlocking:", error);
+                                  }
+                                }}
+                                disabled={!hasWalletConnected}
+                                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                size="lg"
+                              >
+                                {!hasWalletConnected
+                                  ? tCommon("connect_wallet")
+                                  : tX402("unlock_now")}
+                              </Button>
+
+                              <div className="text-xs text-zinc-500 space-y-1">
+                                <p>✓ {tX402("secure_payment")}</p>
+                                <p>✓ {tX402("access_30_days")}</p>
+                                <p>✓ {tX402("support_artist")}</p>
+                              </div>
                             </div>
-
-                            <p className="text-gray-400 text-xs">
-                              {tX402("oneTimePayment", {
-                                network:
-                                  song.x402Config.network === "base"
-                                    ? tX402("baseMainnet")
-                                    : tX402("baseSepolia"),
-                              })}
-                            </p>
                           </div>
-
-                          {/* Unlock Button */}
-                          <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="w-full"
-                          >
-                            <Button
-                              onClick={handleUnlockContent}
-                              disabled={
-                                !hasWalletConnected || !evmWalletAddress
-                              }
-                              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold py-4 px-8 rounded-xl shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {tX402("unlockWithUsdc")}
-                            </Button>
-                          </motion.div>
                         </div>
                       </motion.div>
                     )}

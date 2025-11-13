@@ -35,6 +35,7 @@
     "processing": "Processing...",
     "viewInBlockExplorer": "View in block explorer",
     "checking": "Checking...",
+    "connect_wallet": "Connect Wallet",
     "saveChanges": "Save Changes",
     "comingSoon": "Coming soon",
     "creating": "Creating...",
@@ -616,6 +617,18 @@
     "noSubscription": "• No subscription, one-time payment",
     "baseMainnet": "Base",
     "baseSepolia": "Base Sepolia",
+    "locked_content": "Locked Content",
+    "verifying_access": "Verifying Access...",
+    "checking_access_description": "Checking your access to this content",
+    "unlock_to_listen": "Unlock to listen to this album",
+    "unlock_song_to_listen": "Unlock to listen to this song",
+    "unlock_now": "Unlock Now",
+    "content_unlocked": "Content Unlocked!",
+    "enjoy_premium_content": "Enjoy your premium content",
+    "connect_wallet_first": "Please connect your wallet first",
+    "secure_payment": "Secure payment via blockchain",
+    "access_30_days": "30 days unlimited access",
+    "support_artist": "Support the artist directly",
     "errors": {
       "connectWallet": "Connect your wallet",
       "connectWalletDescription": "You need to connect your wallet to unlock this premium content",
@@ -627,5 +640,8 @@
       "contentLocked": "Content Locked",
       "unlockToPlay": "Unlock this premium content to play"
     }
+  },
+  "wallet": {
+    "connect": "Connect Wallet"
   }
 }
