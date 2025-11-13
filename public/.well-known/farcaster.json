@@ -18,7 +18,12 @@
     "ogTitle": "Tuneport",
     "ogDescription": "Create, earn, and own your music. Tuneport gives value to every second of sound.",
     "ogImageUrl": "https://miniapp.tuneport.xyz/preview.png",
-    "tags": ["music", "baseapp", "artist", "playlist", "sound"]
+    "tags": ["music", "baseapp", "artist", "playlist", "sound"],
+    "screenshotUrls": [
+      "https://miniapp.tuneport.xyz/screenshots/1.png",
+      "https://miniapp.tuneport.xyz/screenshots/2.png",
+      "https://miniapp.tuneport.xyz/screenshots/3.png"
+    ]
   },
   "accountAssociation": {
     "header": "eyJmaWQiOjExMjk4OTgsInR5cGUiOiJhdXRoIiwia2V5IjoiMHgwQjNkNEM2RTI0NjREZWRhMTE4QTlmZDA4RDNjOUJGZjVCZGQyQ2ZjIn0",
